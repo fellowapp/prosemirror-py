@@ -1,7 +1,7 @@
 from .fragment import Fragment
 
 
-class ReplaceError(Exception):
+class ReplaceError(ValueError):
     pass
 
 
@@ -117,9 +117,9 @@ Slice.empty = Slice(Fragment.empty, 0, 0)
 
 def replace(from_, to, slice):
     if slice.open_start > from_.depth:
-        raise ValueError("Inserted content deeper than insertion position")
+        raise ReplaceError("Inserted content deeper than insertion position")
     if from_.depth - slice.open_start != to.depth - slice.open_end:
-        raise ValueError("Inconsistent open depths")
+        raise ReplaceError("Inconsistent open depths")
     return replace_outer(from_, to, slice, 0)
 
 
@@ -153,7 +153,7 @@ def replace_outer(from_, to, slice: Slice, depth):
 
 def check_join(main, sub):
     if not sub.type.compatible_content(main.type):
-        raise ValueError(f"Cannot join {sub.type.name} onto {main.type.name}")
+        raise ReplaceError(f"Cannot join {sub.type.name} onto {main.type.name}")
 
 
 def joinable(before, after, depth):
@@ -191,7 +191,7 @@ def add_range(start, end, depth, target):
 
 def close(node, content):
     if not node.type.valid_content(content):
-        raise ValueError(f"Invalid content for node {node.type.name}")
+        raise ReplaceError(f"Invalid content for node {node.type.name}")
     return node.copy(content)
 
 
