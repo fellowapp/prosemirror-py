@@ -18,6 +18,7 @@ def default_attrs(attrs):
 def compute_attrs(attrs, value):
     built = {}
     for name in attrs:
+        given = None
         if value:
             given = value.get(name)
         if given is None:
@@ -79,7 +80,7 @@ class NodeType:
             return self.default_attrs
         return compute_attrs(self.attrs, attrs)
 
-    def create(self, attrs, content, marks):
+    def create(self, attrs, content=None, marks=None):
         if self.is_text:
             raise ValueError("NodeType.create cannot construct text nodes")
         return Node(
@@ -267,7 +268,7 @@ class Schema:
             raise ValueError(f"Node type from different schema used ({type.name})")
         return type.create_checked(attrs, content, marks)
 
-    def text(self, text, marks):
+    def text(self, text, marks=None):
         type = self.nodes.get("text")
         return TextNode(type, type.default_attrs, text, Mark.set_from(marks))
 

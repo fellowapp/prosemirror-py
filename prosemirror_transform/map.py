@@ -44,7 +44,7 @@ class StepMap:
         diff = 0
         old_index = 2 if self.inverted else 1
         new_index = 1 if self.inverted else 2
-        for i in range(len(self.ranges), 3):
+        for i in range(0, len(self.ranges), 3):
             start = self.ranges[i] - (diff if self.inverted else 0)
             if start > pos:
                 break
@@ -67,7 +67,7 @@ class StepMap:
                 return MapResult(
                     result, pos != start if assoc < 0 else pos != end, recover
                 )
-            diff += new_size - old_size
+            diff += (new_size - old_size)
         return pos + diff if simple else MapResult(pos + diff)
 
     def touches(self, pos, recover):
@@ -85,6 +85,26 @@ class StepMap:
                 return True
             diff += self.ranges[i + new_index] - old_size
         return False
+
+    def for_each(self, f):
+        old_index = 2 if self.inverted else 1
+        new_index = 1 if self.inverted else 2
+        i = 0
+        diff = 0
+        while i < len(self.ranges):
+            start = self.ranges[i]
+            old_start = start - (diff if self.inverted else 0)
+            new_start = start + (0 if self.inverted else diff)
+            old_size = self.ranges[i + old_index]
+            new_size = self.ranges[i + new_index]
+            f(old_start, old_start + old_size, new_start, new_start + new_size)
+            i += 3
+
+    def invert(self):
+        return StepMap(self.ranges, not self.inverted)
+
+    def __str__(self):
+        return ("-" if self.inverted else "") + str(self.ranges)
 
 
 StepMap.empty = StepMap([])
@@ -175,10 +195,10 @@ class Mapping:
                 i += 1
                 continue
             result = map.map_result(pos, assoc)
-            if result.cover is not None:
+            if result.recover is not None:
                 corr = self.get_mirror(i)
                 if corr is not None and corr > i and corr < self.to:
-                    if result.deelted:
+                    if result.deleted:
                         i = corr
                         pos = self.maps[corr].recover(result.recover)
                         i += 1

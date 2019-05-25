@@ -1,5 +1,3 @@
-import json
-
 from .content import ContentMatch
 from .fragment import Fragment
 from .mark import Mark

@@ -8,6 +8,8 @@ flake8 = "*"
 black = "*"
 ipython = "*"
 ipdb = "*"
+pytest = "*"
+pydash = "*"
 
 [packages]
 
