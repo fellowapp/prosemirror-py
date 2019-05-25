@@ -6,7 +6,7 @@ def map_fragment(fragment: Fragment, f, parent=None):
     mapped = []
     for i in range(fragment.child_count):
         child = fragment.child(i)
-        if child.content.size:
+        if getattr(child.content, 'size', None):
             child = child.copy(map_fragment(child.content, f, child))
         if child.is_inline:
             child = f(child, parent, i)
@@ -38,7 +38,7 @@ class AddMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self):
+    def invert(self, doc=None):
         return RemoveMarkStep(self.from_, self.to, self.mark)
 
     def map(self, mapping):
@@ -79,7 +79,7 @@ class AddMarkStep(Step):
         ):
             raise ValueError("Invalid input for AddMarkStep.from_json")
         return AddMarkStep(
-            json_data["from"], json_data["to"], schema.mark_from_json(json["mark"])
+            json_data["from"], json_data["to"], schema.mark_from_json(json_data["mark"])
         )
 
 
@@ -106,7 +106,7 @@ class RemoveMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self):
+    def invert(self, doc=None):
         return AddMarkStep(self.from_, self.to, self.mark)
 
     def map(self, mapping):

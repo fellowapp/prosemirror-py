@@ -42,7 +42,7 @@ class Step(metaclass=abc.ABCMeta):
         type = STEPS_BY_ID.get(json_data["stepType"])
         if not type:
             raise ValueError(f'no step type {json_data["stepType"]} defined')
-        return type.from_json(schema, json)
+        return type.from_json(schema, json_data)
 
     @staticmethod
     def json_id(id, step_class):
@@ -69,6 +69,6 @@ class StepResult:
     @classmethod
     def from_replace(cls, doc, from_, to, slice):
         try:
-            cls.ok(doc.replace(from_, to, slice))
+            return cls.ok(doc.replace(from_, to, slice))
         except ReplaceError as e:
             return cls.fail(e.args[0])

@@ -57,7 +57,7 @@ class Node:
             self.same_markup(other) and self.content.eq(other.content)
         )
 
-    def samke_markup(self, other: "Node"):
+    def same_markup(self, other: "Node"):
         return self.has_markup(other.type, other.attrs, other.marks)
 
     def has_markup(self, type, attrs, marks):
@@ -89,7 +89,7 @@ class Node:
             return Slice.empty
         from__ = self.resolve(from_)
         to_ = self.resolve(to)
-        depth = 0 if include_parents else from__.sahred_depth(to)
+        depth = 0 if include_parents else from__.shared_depth(to)
         start = from__.start(depth)
         node = from__.node(depth)
         content = node.content.cut(from__.pos - start, to_.pos - start)
@@ -184,6 +184,9 @@ class Node:
         if self.content.size:
             name += f"({self.content.to_string_inner()})"
         return wrap_marks(self.marks, name)
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} {self.__str__()}>'
 
     def content_match_at(self, index):
         match = self.type.content_match.match_fragment(self.content, 0, index)
@@ -282,7 +285,7 @@ class TextNode(Node):
         return self.content
 
     def text_between(self, from_, to):
-        return self.text[from_, to]
+        return self.text[from_:to]
 
     @property
     def node_size(self):
@@ -305,10 +308,10 @@ class TextNode(Node):
             to = len(self.text)
         if from_ == 0 and to == len(self.text):
             return self
-        return self.with_text(self.text[from_, to])
+        return self.with_text(self.text[from_:to])
 
     def eq(self, other):
-        return self.samke_markup(other) and self.text == getattr(other, "text", None)
+        return self.same_markup(other) and self.text == getattr(other, "text", None)
 
     def to_json(self):
         base = super().to_json()

@@ -8,12 +8,23 @@ def flatten(schema, children, f):
     result, pos, tag = [], 0, NO_TAG
 
     for child in children:
-        if hasattr(child, 'tag') and child.tag != Node.tag:
+        if hasattr(child, "tag") and child.tag != NO_TAG:
             if tag == NO_TAG:
                 tag = {}
             for id in child.tag:
                 tag[id] = (
-                    child.tag[id] + (child.flat or (0 if child.is_text else 1)) + pos
+                    child.tag[id]
+                    + (0 if child.is_text else 1)
+                    + pos
+                )
+        if isinstance(child, dict) and "tag" in child and child["tag"] != Node.tag:
+            if tag == NO_TAG:
+                tag = {}
+            for id in child["tag"]:
+                tag[id] = (
+                    child["tag"][id]
+                    + (0 if "flat" in child else 1)
+                    + pos
                 )
         if isinstance(child, str):
             at = 0
@@ -29,8 +40,8 @@ def flatten(schema, children, f):
             pos += len(child) - at
             if out:
                 result.append(f(schema.text(out)))
-        elif hasattr(child, "flat"):
-            for item in child.flat:
+        elif isinstance(child, dict) and "flat" in child:
+            for item in child["flat"]:
                 node = f(item)
                 pos += node.node_size
                 result.append(node)
@@ -79,7 +90,8 @@ def mark(type, attrs):
         if (
             args
             and args[0]
-            and (isinstance(args[0], (str, Node)) or getattr(args[0], "flat", None))
+            and not isinstance(args[0], (str, Node))
+            and not getattr(args[0], "flat", None)
         ):
             my_attrs.update(args[0])
             args = args[1:]

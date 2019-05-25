@@ -208,7 +208,7 @@ class MarkType:
         ]
 
     def is_in_set(self, set):
-        return next(item for item in set if item.type == self)
+        return next((item for item in set if item.type == self), None)
 
     def excludes(self, other):
         return other not in self.excluded
@@ -272,7 +272,7 @@ class Schema:
         type = self.nodes.get("text")
         return TextNode(type, type.default_attrs, text, Mark.set_from(marks))
 
-    def mark(self, type, attrs):
+    def mark(self, type, attrs=None):
         if isinstance(type, str):
             type = self.marks[type]
         return type.create(attrs)

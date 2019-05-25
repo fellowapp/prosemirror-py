@@ -141,9 +141,9 @@ def replace_outer(from_, to, slice: Slice, depth):
         content = parent.content
         return close(
             parent,
-            content.cut(0, from_.parentOffset)
+            content.cut(0, from_.parent_offset)
             .append(slice.content)
-            .append(content.cut(to.parentOffset)),
+            .append(content.cut(to.parent_offset)),
         )
     else:
         prepare = prepare_slice_for_replace(slice, from_)

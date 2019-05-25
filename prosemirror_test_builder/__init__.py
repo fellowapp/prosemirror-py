@@ -8,10 +8,9 @@ from .build import builders
 test_schema = Schema(
     {
         "nodes": add_list_nodes(schema.spec["nodes"], "paragraph block*", "block*"),
-        "makrs": schema.spec["marks"],
+        "marks": schema.spec["marks"],
     }
 )
-
 
 out = builders(
     test_schema,

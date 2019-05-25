@@ -5,11 +5,11 @@ class ResolvedPos:
     def __init__(self, pos, path, parent_offset):
         self.pos = pos
         self.path = path
-        self.depth = len(path) / 3 - 1
+        self.depth = int(len(path) / 3 - 1)
         self.parent_offset = parent_offset
 
     def resolve_depth(self, val):
-        if not val:
+        if val is None:
             return self.depth
         return self.depth + val if val < 0 else val
 
@@ -123,6 +123,7 @@ class ResolvedPos:
             if self.start(depth) <= pos and self.end(depth) >= pos:
                 return depth
             depth -= 1
+        return 0
 
     def block_range(self, other=None, pred=None):
         if other is None:
@@ -158,13 +159,13 @@ class ResolvedPos:
             raise ValueError(f"Position {pos} out of range")
         path = []
         start = 0
-        parent_offset = 0
+        parent_offset = pos
         node = doc
         while True:
             index_info = node.content.find_index(parent_offset)
             index, offset = index_info["index"], index_info["offset"]
             rem = parent_offset - offset
-            path.concat([node, index, start + offset])
+            path.extend([node, index, start + offset])
             if not rem:
                 break
             node = node.child(index)

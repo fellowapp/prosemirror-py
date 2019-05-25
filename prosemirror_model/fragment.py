@@ -55,7 +55,7 @@ class Fragment:
         self.nodes_between(from_, to, iteratee, 0)
         return text
 
-    def apend(self, other):
+    def append(self, other):
         if not other.size:
             return
         if not self.size:
@@ -70,7 +70,7 @@ class Fragment:
             content[len(content) - 1] = last.with_text(last.text + first.text)
             i = 1
         while i < len(other.content):
-            content.push(other.content[i])
+            content.append(other.content[i])
             i += 1
         return Fragment(content, self.size + other.size)
 
@@ -97,8 +97,8 @@ class Fragment:
                             max(0, from_ - pos - 1),
                             min(child.content.size, to - pos - 1),
                         )
-            result.append(child)
-            size += child.node_size
+                result.append(child)
+                size += child.node_size
             pos = end
             i += 1
         return Fragment(result, size)
@@ -185,6 +185,7 @@ class Fragment:
                     return retIndex(i + 1, end)
                 return retIndex(i, cur_pos)
             i += 1
+            cur_pos = end
 
     def to_json(self):
         if self.content:
@@ -212,7 +213,7 @@ class Fragment:
             size += node.node_size
             if i and node.is_text and array[i - 1].same_markup(node):
                 if not joined:
-                    joined = array[0, i]
+                    joined = array[0:i]
                 joined[-1] = node.with_text(joined[-1].text + node.text)
             elif joined:
                 joined.append(node)
@@ -235,6 +236,9 @@ class Fragment:
 
     def __str__(self):
         return f'<{self.to_string_inner()}>'
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} {self.__str__()}>'
 
 
 Fragment.empty = Fragment([], 0)

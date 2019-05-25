@@ -23,7 +23,7 @@ class ContentMatch:
         return match
 
     def match_type(self, type):
-        for i in range(0, self.next.length, 2):
+        for i in range(0, len(self.next), 2):
             if self.next[i] == type:
                 return self.next[i + 1]
         return None

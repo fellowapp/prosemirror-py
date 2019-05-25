@@ -41,7 +41,7 @@ class Mark:
     def eq(self, other):
         if self == other:
             return True
-        return self.type == other.type and compare_deep(self.attrs, other.attrs)
+        return self.type.name == other.type.name and compare_deep(self.attrs, other.attrs)
 
     def to_json(self):
         return {
