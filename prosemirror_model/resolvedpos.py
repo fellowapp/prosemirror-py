@@ -8,7 +8,7 @@ class ResolvedPos:
         self.depth = int(len(path) / 3 - 1)
         self.parent_offset = parent_offset
 
-    def resolve_depth(self, val):
+    def resolve_depth(self, val=None):
         if val is None:
             return self.depth
         return self.depth + val if val < 0 else val
@@ -33,7 +33,7 @@ class ResolvedPos:
             0 if depth == self.depth and not self.text_offset else 1
         )
 
-    def start(self, depth):
+    def start(self, depth=0):
         depth = self.resolve_depth(depth)
         return 0 if depth == 0 else self.path[depth * 3 - 1] + 1
 

@@ -5,7 +5,7 @@ from .step import Step, StepResult
 
 
 class ReplaceStep(Step):
-    def __init__(self, from_, to, slice, structure):
+    def __init__(self, from_, to, slice, structure=None):
         super().__init__()
         self.from_ = from_
         self.to = to
@@ -88,7 +88,7 @@ class ReplaceStep(Step):
         return ReplaceStep(
             json_data["from"],
             json_data["to"],
-            Slice.from_json(schema, json.get(slice)),
+            Slice.from_json(schema, json_data.get("slice")),
             bool(json_data.get("structure")),
         )
 

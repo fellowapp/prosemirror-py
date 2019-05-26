@@ -196,7 +196,7 @@ def close(node, content):
 
 
 def replace_three_way(from_, start, end, to, depth):
-    open_start = joinable(from_, start, depth + 1) if from_.depth > depth else None
+    open_start = joinable(from_, start, depth + 1) if from_.depth > depth else False
     open_end = joinable(end, to, depth + 1) if to.depth > depth else None
     content = []
     add_range(None, from_, depth, content)
@@ -211,7 +211,7 @@ def replace_three_way(from_, start, end, to, depth):
             add_node(
                 close(open_start, replace_two_way(from_, start, depth + 1)), content
             )
-            pass
+        add_range(start, end, depth, content)
         if open_end:
             add_node(close(open_end, replace_two_way(end, to, depth + 1)), content)
     add_range(to, None, depth, content)
@@ -223,7 +223,7 @@ def replace_two_way(from_, to, depth):
     add_range(None, from_, depth, content)
     if from_.depth > depth:
         type = joinable(from_, to, depth + 1)
-        add_node(close(type, replace_two_way(from_, to, depth + 1), content))
+        add_node(close(type, replace_two_way(from_, to, depth + 1)), content)
     add_range(to, None, depth, content)
     return Fragment(content)
 

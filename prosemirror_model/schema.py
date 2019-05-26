@@ -85,7 +85,7 @@ class NodeType:
             return self.default_attrs
         return compute_attrs(self.attrs, attrs)
 
-    def create(self, attrs, content=None, marks=None):
+    def create(self, attrs=None, content=None, marks=None):
         if self.is_text:
             raise ValueError("NodeType.create cannot construct text nodes")
         return Node(
@@ -101,7 +101,7 @@ class NodeType:
             raise ValueError("Invalid content for node " + self.name)
         return Node(self, self.compute_attrs(attrs), content, Mark.set_from(marks))
 
-    def create_and_fill(self, attrs, content, marks):
+    def create_and_fill(self, attrs=None, content=None, marks=None):
         attrs = self.compute_attrs(attrs)
         content = Fragment.from_(content)
         if content.size:
@@ -191,7 +191,7 @@ class MarkType:
         if defaults:
             self.instance = Mark(self, defaults)
 
-    def create(self, attrs):
+    def create(self, attrs=None):
         if not attrs and self.instance:
             return self.instance
         return Mark(self, compute_attrs(self.attrs, attrs))
@@ -264,7 +264,7 @@ class Schema:
         self.cached = {}
         self.cached["wrappings"] = {}
 
-    def node(self, type, attrs, content, marks=None):
+    def node(self, type, attrs=None, content=None, marks=None):
         if isinstance(type, str):
             type = self.node_type(type)
         elif not isinstance(type, NodeType):

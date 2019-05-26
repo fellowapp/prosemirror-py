@@ -83,7 +83,7 @@ def test_transform():
         assert mapped == new_pos
         remap = Mapping([m.invert() for m in mapping.maps])
         for i, map in enumerate(mapping.maps):
-            remap.append_map(map, len(mapping.maps) - i)
+            remap.append_map(map, len(mapping.maps) - 1 - i)
         assert remap.map(pos, 1) == pos
 
     def test_transform(tr, expect):

@@ -45,6 +45,11 @@ def flatten(schema, children, f):
                 node = f(item)
                 pos += node.node_size
                 result.append(node)
+        elif getattr(child, "flat", 0):
+            for item in child.flat:
+                node = f(item)
+                pos += node.node_size
+                result.append(node)
         else:
             node = f(child)
             pos += node.node_size

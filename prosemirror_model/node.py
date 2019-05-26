@@ -62,7 +62,7 @@ class Node:
 
     def has_markup(self, type, attrs, marks):
         return (
-            self.type == type
+            self.type.name == type.name
             and (compare_deep(self.attrs, attrs or type.default_attrs or empty_attrs))
             and (Mark.same_set(self.marks, marks or Mark.none))
         )
@@ -259,7 +259,7 @@ class Node:
             marks = [schema.mark_from_json(item) for item in json_data["marks"]]
         if json_data["type"] == "text":
             return schema.text(json_data["text"], marks)
-        content = Fragment.from_json(schema, json_data["content"])
+        content = Fragment.from_json(schema, json_data.get("content"))
         return schema.node_type(json_data["type"]).create(
             json_data.get("attrs"), content, marks
         )

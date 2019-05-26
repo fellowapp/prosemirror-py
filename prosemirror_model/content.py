@@ -24,7 +24,7 @@ class ContentMatch:
 
     def match_type(self, type):
         for i in range(0, len(self.next), 2):
-            if self.next[i] == type:
+            if self.next[i].name == type.name:
                 return self.next[i + 1]
         return None
 
@@ -66,15 +66,15 @@ class ContentMatch:
             nonlocal seen
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
-                return Fragment.from_([tp.createAndFill() for tp in types])
+                return Fragment.from_([tp.create_and_fill() for tp in types])
             for i in range(0, len(match.next), 2):
                 type = match.next[i]
                 next = match.next[i + 1]
                 if not (type.is_text or type.has_required_attrs()) and next not in seen:
                     seen.append(next)
-                found = search(next, types + [type])
-                if found:
-                    return found
+                    found = search(next, types + [type])
+                    if found:
+                        return found
 
         return search(self, [])
 
@@ -83,7 +83,7 @@ class ContentMatch:
             if self.wrap_cache[i] == target:
                 return self.wrap_cache[i + 1]
         computed = self.compute_wrapping(target)
-        self.wrap_cache.append(target, computed)
+        self.wrap_cache.extend([target, computed])
         return computed
 
     def compute_wrapping(self, target):
@@ -98,7 +98,7 @@ class ContentMatch:
                 while obj["type"]:
                     result.append(obj["type"])
                     obj = obj["via"]
-                return reversed(result)
+                return list(reversed(result))
             for i in range(0, len(match.next), 2):
                 type = match.next[i]
                 if (
@@ -107,7 +107,7 @@ class ContentMatch:
                     and type.name not in seen
                     and (not current["type"] or match.next[i + 1].valid_end)
                 ):
-                    active.push({"match": type.content_match, "via": current})
+                    active.append({"match": type.content_match, "via": current, "type": type})
                     seen[type.name] = True
 
     @property

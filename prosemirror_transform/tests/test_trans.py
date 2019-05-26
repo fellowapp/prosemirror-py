@@ -155,3 +155,45 @@ def test_remove_mark(doc, mark, expect, test_transform):
         Transform(doc).remove_mark(doc.tag.get("a", 0), doc.tag.get("b", 0), mark),
         expect,
     )
+
+
+@pytest.mark.parametrize(
+    "doc,nodes,expect",
+    [
+        (
+            doc(p("hello<a>there")),
+            schema.node("hard_break"),
+            doc(p("hello", br, "<a>there")),
+        ),
+        (
+            doc(p("one"), "<a>", p("two<2>")),
+            schema.node("paragraph"),
+            doc(p("one"), p(), "<a>", p("two<2>")),
+        ),
+        (
+            doc(p("one"), "<a>", p("two<2>")),
+            [
+                schema.node("paragraph", None, [schema.text("hi")]),
+                schema.node("horizontal_rule"),
+            ],
+            doc(p("one"), p("hi"), hr, "<a>", p("two<2>")),
+        ),
+        (
+            doc(blockquote(p("he<before>y"), "<a>"), p("after<after>")),
+            schema.node("paragraph"),
+            doc(blockquote(p("he<before>y"), p()), p("after<after>")),
+        ),
+        (
+            doc(blockquote("<a>", p("he<1>y")), p("after<2>")),
+            schema.node("paragraph"),
+            doc(blockquote(p(), "<a>", p("he<1>y")), p("after<2>")),
+        ),
+        (
+            doc(p("foo<a>bar")),
+            schema.nodes['list_item'].create_and_fill(),
+            doc(p("foo"), ol(li(p())), p("bar")),
+        ),
+    ],
+)
+def test_insert(doc, nodes, expect, test_transform):
+    test_transform(Transform(doc).insert(doc.tag.get("a", 0), nodes), expect)

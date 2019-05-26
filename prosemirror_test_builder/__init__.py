@@ -7,7 +7,7 @@ from .build import builders
 
 test_schema = Schema(
     {
-        "nodes": add_list_nodes(schema.spec["nodes"], "paragraph block*", "block*"),
+        "nodes": add_list_nodes(schema.spec["nodes"], "paragraph block*", "block"),
         "marks": schema.spec["marks"],
     }
 )

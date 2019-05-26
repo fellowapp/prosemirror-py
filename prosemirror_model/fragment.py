@@ -103,12 +103,12 @@ class Fragment:
             i += 1
         return Fragment(result, size)
 
-    def cut_by_index(self, from_, to):
+    def cut_by_index(self, from_, to=None):
         if from_ == to:
             return Fragment.empty
         if from_ == 0 and to == len(self.content):
             return self
-        return Fragment(self.content[from_, to])
+        return Fragment(self.content[from_:to])
 
     def replace_child(self, index, node):
         current = self.content[index]

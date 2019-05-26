@@ -6,7 +6,7 @@ from .replace_step import ReplaceStep, ReplaceAroundStep
 
 from .replace import (
     replace_step,
-    first_trivially,
+    fits_trivially,
     covered_depths,
     close_fragment,
 )
@@ -184,7 +184,7 @@ class Transform:
             return self.delete_range(from_, to)
         from__ = self.doc.resolve(from_)
         to_ = self.doc.resolve(to)
-        if first_trivially(from__, to_, slice):
+        if fits_trivially(from__, to_, slice):
             return self.step(ReplaceStep(from_, to, slice))
         target_depths = covered_depths(from__, self.doc.resolve(to))
         if target_depths and target_depths[-1] == 0:
