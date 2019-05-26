@@ -92,6 +92,6 @@ def test_transform():
         test_step_json(tr)
 
         for tag in expect.tag:
-            test_mapping(tr.mapping, tr.before.tag.get("tag"), expect.tag.get(tag))
+            test_mapping(tr.mapping, tr.before.tag.get(tag), expect.tag.get(tag))
 
     return test_transform

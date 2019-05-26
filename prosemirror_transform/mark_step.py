@@ -147,5 +147,8 @@ class RemoveMarkStep(Step):
         ):
             raise ValueError("Invalid input for RemoveMarkStep.from_json")
         return RemoveMarkStep(
-            json_data["from"], json_data["to"], schema.mark_from_json(json["mark"])
+            json_data["from"], json_data["to"], schema.mark_from_json(json_data["mark"])
         )
+
+
+Step.json_id("removeMark", RemoveMarkStep)

@@ -46,7 +46,7 @@ class Mark:
     def to_json(self):
         return {
             'type': self.type.name,
-            **self.attrs
+            'attrs': self.attrs,
         }
 
     @classmethod

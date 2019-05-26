@@ -91,8 +91,67 @@ def test_can_remote_multiple_excluded_marks():
         }
     )
     tr = Transform(
-        schema.node("doc", None, schema.text("hi", [schema.mark("small1"), schema.mark("small2")]))
+        schema.node(
+            "doc",
+            None,
+            schema.text("hi", [schema.mark("small1"), schema.mark("small2")]),
+        )
     )
     assert len(tr.doc.first_child.marks) == 2
     tr.add_mark(0, 2, schema.mark("big"))
     assert len(tr.doc.first_child.marks) == 1
+
+
+@pytest.mark.parametrize(
+    "doc,mark,expect",
+    [
+        (
+            doc(p(em("hello <a>world<b>!"))),
+            schema.mark("em"),
+            doc(p(em("hello "), "world", em("!"))),
+        ),
+        (
+            doc(p(em("hello"), " <a>world<b>!")),
+            schema.mark("em"),
+            doc(p(em("hello"), " <a>world<b>!")),
+        ),
+        (
+            doc(p("<a>hello ", a("link<b>"))),
+            schema.mark("link", {"href": "foo"}),
+            doc(p("hello link")),
+        ),
+        (
+            doc(p("<a>hello ", a("link<b>"))),
+            schema.mark("link", {"href": "foo"}),
+            doc(p("hello link")),
+        ),
+        (
+            doc(p("hello ", a("link"))),
+            schema.mark("link", {"href": "bar"}),
+            doc(p("hello ", a("link"))),
+        ),
+        (
+            doc(
+                blockquote(p(em("much <a>em")), p(em("here too"))),
+                p("between", em("...")),
+                p(em("end<b>")),
+            ),
+            schema.mark("em"),
+            doc(
+                blockquote(p(em("much "), "em"), p("here too")),
+                p("between..."),
+                p("end"),
+            ),
+        ),
+        (
+            doc(p("<a>hello, ", em("this is ", strong("much"), " ", a("markup<b>")))),
+            None,
+            doc(p("<a>hello, this is much markup")),
+        ),
+    ],
+)
+def test_remove_mark(doc, mark, expect, test_transform):
+    test_transform(
+        Transform(doc).remove_mark(doc.tag.get("a", 0), doc.tag.get("b", 0), mark),
+        expect,
+    )

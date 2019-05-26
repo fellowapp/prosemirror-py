@@ -75,6 +75,11 @@ class NodeType:
                 return True
         return False
 
+    def compatible_content(self, other):
+        return self == other or (
+            self.content_match.compatible(other.content_match)
+        )
+
     def compute_attrs(self, attrs):
         if not attrs and self.default_attrs:
             return self.default_attrs

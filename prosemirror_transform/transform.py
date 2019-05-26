@@ -99,6 +99,7 @@ class Transform:
             if not node.is_inline:
                 return
             step += 1
+            to_remove = None
             if isinstance(mark, MarkType):
                 found = mark.is_in_set(node.marks)
                 if found:
@@ -111,26 +112,22 @@ class Transform:
             if to_remove:
                 end = min(pos + node.node_size, to)
                 for style in to_remove:
-                    found = next(
-                        (
-                            m
-                            for m in matched
-                            if m["step"] == step - 1 and style.eq(m["style"])
-                        ),
-                        None,
-                    )
-                if found:
-                    found["to"] = end
-                    found["step"] = step
-                else:
-                    matched.append(
-                        {
-                            "style": style,
-                            "from": max(pos, from_),
-                            "to": end,
-                            "step": step,
-                        }
-                    )
+                    found = None
+                    for m in matched:
+                        if m['step'] == step - 1 and style.eq(m['style']):
+                            found = m
+                    if found:
+                        found["to"] = end
+                        found["step"] = step
+                    else:
+                        matched.append(
+                            {
+                                "style": style,
+                                "from": max(pos, from_),
+                                "to": end,
+                                "step": step,
+                            }
+                        )
 
         self.doc.nodes_between(from_, to, iteratee)
         for item in matched:

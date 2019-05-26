@@ -165,7 +165,7 @@ def joinable(before, after, depth):
 def add_node(child, target):
     last = len(target) - 1
     if last >= 0 and child.is_text and child.same_markup(target[last]):
-        target[last] = child.with_text(target[last] + child.text)
+        target[last] = child.with_text(target[last].text + child.text)
     else:
         target.append(child)
 
