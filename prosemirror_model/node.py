@@ -267,7 +267,7 @@ class Node:
 
 class TextNode(Node):
     def __init__(self, type, attrs, content, marks):
-        super().__init__(type, attrs, content, marks)
+        super().__init__(type, attrs, None, marks)
         if not content:
             raise ValueError("Empty text nodes are not allowed")
         self.text = content

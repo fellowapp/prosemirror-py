@@ -14,19 +14,19 @@ class Mark:
             if self.eq(other):
                 return set
             if self.type.excludes(other.type):
-                if not copy:
-                    copy = set[0, i]
+                if copy is None:
+                    copy = set[0:i]
             elif other.type.excludes(self.type):
                 return set
             else:
                 if not placed and other.type.rank > self.type.rank:
-                    if not copy:
-                        copy = set[0, i]
+                    if copy is None:
+                        copy = set[0:i]
                     copy.append(self)
                     placed = True
                 if copy:
                     copy.append(other)
-        if not copy:
+        if copy is None:
             copy = set[:]
         if not placed:
             copy.append(self)

@@ -64,6 +64,7 @@ def block(type, attrs):
             and args[0]
             and not isinstance(args[0], (str, Node))
             and not getattr(args[0], "flat", None)
+            and "flat" not in args[0]
         ):
             my_attrs.update(args[0])
             args = args[1:]
@@ -92,6 +93,7 @@ def mark(type, attrs):
             and args[0]
             and not isinstance(args[0], (str, Node))
             and not getattr(args[0], "flat", None)
+            and "flat" not in args[0]
         ):
             my_attrs.update(args[0])
             args = args[1:]

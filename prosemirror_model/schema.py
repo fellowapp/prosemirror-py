@@ -211,7 +211,7 @@ class MarkType:
         return next((item for item in set if item.type == self), None)
 
     def excludes(self, other):
-        return other not in self.excluded
+        return other in self.excluded
 
 
 class Schema:
@@ -249,7 +249,7 @@ class Schema:
         for prop in self.marks:
             type = self.marks.get(prop)
             excl = type.spec.get('excludes')
-            self.excluded = [type] if excl is None else (
+            type.excluded = [type] if excl is None else (
                 [] if excl == "" else (
                     gather_marks(self, excl.split(' '))
                 )
@@ -259,7 +259,7 @@ class Schema:
         self.cached = {}
         self.cached["wrappings"] = {}
 
-    def node(self, type, attrs, content, marks):
+    def node(self, type, attrs, content, marks=None):
         if isinstance(type, str):
             type = self.node_type(type)
         elif not isinstance(type, NodeType):

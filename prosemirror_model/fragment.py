@@ -57,7 +57,7 @@ class Fragment:
 
     def append(self, other):
         if not other.size:
-            return
+            return self
         if not self.size:
             return other
         last, first, content, i = (
