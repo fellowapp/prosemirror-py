@@ -33,21 +33,21 @@ class ResolvedPos:
             0 if depth == self.depth and not self.text_offset else 1
         )
 
-    def start(self, depth=0):
+    def start(self, depth=None):
         depth = self.resolve_depth(depth)
         return 0 if depth == 0 else self.path[depth * 3 - 1] + 1
 
-    def end(self, depth):
+    def end(self, depth=None):
         depth = self.resolve_depth(depth)
         return self.start(depth) + self.node(depth).content.size
 
-    def before(self, depth):
+    def before(self, depth=None):
         depth = self.resolve_depth(depth)
         if not depth:
             raise ValueError("There is no position before the top level node")
         return self.pos if depth == self.depth + 1 else self.path[depth * 3 - 1]
 
-    def after(self, depth):
+    def after(self, depth=None):
         depth = self.resolve_depth(depth)
         if not depth:
             raise ValueError("There is no position after the top level node")

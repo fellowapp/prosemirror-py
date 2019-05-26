@@ -190,10 +190,31 @@ def test_remove_mark(doc, mark, expect, test_transform):
         ),
         (
             doc(p("foo<a>bar")),
-            schema.nodes['list_item'].create_and_fill(),
+            schema.nodes["list_item"].create_and_fill(),
             doc(p("foo"), ol(li(p())), p("bar")),
         ),
     ],
 )
 def test_insert(doc, nodes, expect, test_transform):
     test_transform(Transform(doc).insert(doc.tag.get("a", 0), nodes), expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect",
+    [
+        (
+            doc(p("<1>one"), "<a>", p("tw<2>o"), "<b>", p("<3>three")),
+            doc(p("<1>one"), "<a><2>", p("<3>three")),
+        ),
+        (doc(blockquote("<a>", p("hi"), "<b>"), p("x")), doc(blockquote(p()), p("x"))),
+        (
+            doc(blockquote(p("a"), "<a>", p("b"), "<b>"), p("c<1>")),
+            doc(blockquote(p("a")), p("c<1>")),
+        ),
+        (doc(pre("fo<a>o"), p("b<b>ar", img)), doc(pre("fo"), p("ar", img))),
+        (doc(pre("fo<a>o"), p(em("b<b>ar"))), doc(pre("fo"), p(em("ar")))),
+    ],
+)
+def test_delete(doc, expect, test_transform):
+    tr = Transform(doc).delete(doc.tag.get("a"), doc.tag.get("b"))
+    test_transform(tr, expect)

@@ -112,7 +112,7 @@ def fit_right_join(content, parent, from__, to_, depth, open_start, open_end):
             ).type
         )
     to_index = to_.index(depth)
-    if to_index == to_node.child_count and not to_node.type.compitable_content(
+    if to_index == to_node.child_count and not to_node.type.compatible_content(
         parent.type
     ):
         return None
