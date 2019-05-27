@@ -393,7 +393,7 @@ class Transform:
         self.doc.nodes_between(from_, to, iteratee)
         return self
 
-    def set_node_markup(self, pos, type, attrs, marks):
+    def set_node_markup(self, pos, type, attrs, marks=None):
         node = self.doc.node_at(pos)
         if not node:
             raise ValueError("No node at given position")
