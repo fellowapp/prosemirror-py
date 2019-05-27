@@ -1,3 +1,4 @@
+from prosemirror_model import Node
 def can_cut(node, start, end):
     if start == 0 or node.can_replace(start, node.child_count):
         return (end == node.child_count) or node.can_replace(0, end)
@@ -77,23 +78,37 @@ def can_change_type(doc, pos, type):
     return pos_.parent.can_replace_with(index, index + 1, type)
 
 
-def can_split(doc, pos, depth=1, types_after=None):
+def can_split(doc, pos, depth=None, types_after=None):
+    if depth is None:
+        depth = 1
     pos_ = doc.resolve(pos)
-    base = pos.depth - depth
+    base = pos_.depth - depth
+    inner_type = None
     if types_after:
         inner_type = types_after[-1]
-    else:
+    if not inner_type:
         inner_type = pos_.parent
-    if (
-        base < 0
-        or pos_.parent.type.spec.get("isolating")
-        or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
-        or not inner_type.type.valid_content(
-            pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
-        )
-    ):
-        return False
-    d = pos_.depth
+    if isinstance(inner_type, Node):
+        if (
+            base < 0
+            or pos_.parent.type.spec.get("isolating")
+            or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
+            or not inner_type.type.valid_content(
+                pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
+            )
+        ):
+            return False
+    elif isinstance(inner_type, dict):
+        if (
+            base < 0
+            or pos_.parent.type.spec.get("isolating")
+            or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
+            or not inner_type["type"].valid_content(
+                pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
+            )
+        ):
+            return False
+    d = pos_.depth - 1
     i = depth - 2
     while d > base:
         node = pos_.node(d)
@@ -101,22 +116,31 @@ def can_split(doc, pos, depth=1, types_after=None):
         if node.type.spec.get("isolating"):
             return False
         rest = node.content.cut_by_index(index, node.child_count)
+        after = None
         if types_after and len(types_after) > i:
             after = types_after[i]
-        else:
+        if not after:
             after = node
-        if after != node:
-            rest = rest.replace_child(0, after.type.create(after.attrs))
-        if not node.can_replace(
-            index + 1, node.child_count
-        ) or not after.type.valid_content(rest):
-            return False
+        if isinstance(after, dict):
+            if after != node:
+                rest = rest.replace_child(0, after["type"].create(after.get("attrs")))
+            if not node.can_replace(
+                index + 1, node.child_count
+            ) or not after["type"].valid_content(rest):
+                return False
+        if isinstance(after, Node):
+            if after != node:
+                rest = rest.replace_child(0, after.type.create(after.attrs))
+            if not node.can_replace(
+                index + 1, node.child_count
+            ) or not after.type.valid_content(rest):
+                return False
         d -= 1
         i -= 1
     index = pos_.index_after(base)
     base_type = types_after[0] if types_after else None
     return pos_.node(base).can_replace_with(
-        index, index, base_type.type if base_type else pos_.node(base + 1).type
+        index, index, base_type["type"] if base_type else pos_.node(base + 1).type
     )
 
 

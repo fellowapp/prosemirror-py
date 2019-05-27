@@ -1,3 +1,4 @@
+from typing import Iterable
 from .diff import find_diff_end, find_diff_start
 
 
@@ -225,8 +226,8 @@ class Fragment:
             return cls.empty
         if isinstance(nodes, cls):
             return nodes
-        if isinstance(nodes, list):
-            return cls.from_array(nodes)
+        if isinstance(nodes, Iterable):
+            return cls.from_array(list(nodes))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
         raise ValueError(f"cannot convert {nodes} to a fragment")
