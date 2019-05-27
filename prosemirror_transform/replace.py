@@ -369,7 +369,7 @@ class Frontier:
             i > 0
             and i == fragment.child_count
             or parent
-            and self.open[-1].parent.type == parent.type
+            and self.open[-1]["parent"].type == parent.type
         ):
             self.close_node()
         return Slice(fragment.cut_by_index(i), open_start, open_end)

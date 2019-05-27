@@ -97,7 +97,7 @@ Step.json_id("replace", ReplaceStep)
 
 
 class ReplaceAroundStep(Step):
-    def __init__(self, from_, to, gap_from, gap_to, slice, insert, structure):
+    def __init__(self, from_, to, gap_from, gap_to, slice, insert, structure=None):
         super().__init__()
         self.from_ = from_
         self.to = to
