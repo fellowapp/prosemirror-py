@@ -433,3 +433,52 @@ def test_wrap(doc, expect, type, attrs, test_transform):
     )
     tr = Transform(doc).wrap(range, find_wrapping(range, schema.nodes[type], attrs))
     test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect,node_type,attrs",
+    [
+        (doc(p("am<a> i")), doc(h2("am i")), "heading", {"level": 2}),
+        (
+            doc(h1("<a>hello"), p("there"), p("<b>you"), p("end")),
+            doc(pre("hello"), pre("there"), pre("you"), p("end")),
+            "code_block",
+            {},
+        ),
+        (
+            doc(blockquote(p("one<a>"), p("two<b>"))),
+            doc(blockquote(h1("one<a>"), h1("two<b>"))),
+            "heading",
+            {"level": 1},
+        ),
+        (doc(p("hello<a> ", em("world"))), doc(pre("hello world")), "code_block", {}),
+        (
+            doc(p("hello<a> ", em("world"))),
+            doc(h1("hello<a> ", em("world"))),
+            "heading",
+            {"level": 1},
+        ),
+        (
+            doc(p("<a>hello", img), p("okay"), ul(li(p("foo<b>")))),
+            doc(pre("<a>hello"), pre("okay"), ul(li(p("foo<b>")))),
+            "code_block",
+            None,
+        ),
+    ],
+)
+def test_set_block_type(doc, expect, node_type, attrs, test_transform):
+    tr = Transform(doc).set_block_type(
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        schema.nodes[node_type],
+        attrs,
+    )
+    test_transform(tr, expect)
+
+
+def test_set_block_type_works_after_another_step(test_transform):
+    d = doc(p("f<x>oob<y>ar"), p("baz<a>"))
+    tr = Transform(d).delete(d.tag.get("x"), d.tag.get("y"))
+    pos = tr.mapping.map(d.tag.get("a"))
+    tr.set_block_type(pos, pos, schema.nodes["heading"], {"level": 1})
+    test_transform(tr, doc(p("f<x><y>ar"), h1("baz<a>")))

@@ -1,4 +1,4 @@
-from prosemirror_model import MarkType, Slice, Fragment
+from prosemirror_model import MarkType, Slice, Fragment, Node
 
 from .map import Mapping
 from .mark_step import AddMarkStep, RemoveMarkStep
@@ -363,7 +363,7 @@ class Transform:
             raise ValueError("Type given to set_block_type should be a textblock")
         map_from = len(self.steps)
 
-        def iteratee(node, pos, *args):
+        def iteratee(node: "Node", pos, *args):
             if (
                 node.is_text_block
                 and not node.has_markup(type, attrs)

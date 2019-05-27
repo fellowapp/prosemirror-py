@@ -22,7 +22,7 @@ class ContentMatch:
         check_for_dead_ends(match, stream)
         return match
 
-    def match_type(self, type):
+    def match_type(self, type, *args):
         for i in range(0, len(self.next), 2):
             if self.next[i].name == type.name:
                 return self.next[i + 1]

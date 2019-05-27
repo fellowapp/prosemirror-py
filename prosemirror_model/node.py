@@ -60,7 +60,7 @@ class Node:
     def same_markup(self, other: "Node"):
         return self.has_markup(other.type, other.attrs, other.marks)
 
-    def has_markup(self, type, attrs, marks):
+    def has_markup(self, type, attrs, marks=None):
         return (
             self.type.name == type.name
             and (compare_deep(self.attrs, attrs or type.default_attrs or empty_attrs))
