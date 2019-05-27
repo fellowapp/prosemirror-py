@@ -416,7 +416,7 @@ class Transform:
             )
         )
 
-    def split(self, pos, depth, types_after):
+    def split(self, pos, depth=None, types_after=None):
         if depth is None:
             depth = 1
         pos_ = self.doc.resolve(pos)
@@ -431,7 +431,7 @@ class Transform:
             if types_after and len(types_after) > i:
                 type_after = types_after[i]
             after = Fragment.from_(
-                type_after.type.create(type_after.attrs, after) if type_after else pos_.node(d).copy(after)
+                type_after["type"].create(type_after.get("attrs"), after) if type_after else pos_.node(d).copy(after)
             )
             d -= 1
             i -= 1

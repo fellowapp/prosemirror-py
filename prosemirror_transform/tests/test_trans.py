@@ -1,6 +1,6 @@
 import pytest
 from prosemirror_test_builder import schema, out, builders
-from prosemirror_transform import Transform
+from prosemirror_transform import Transform, TransformError
 from prosemirror_model import Schema
 
 
@@ -258,3 +258,57 @@ def test_delete(doc, expect, test_transform):
 def test_join(doc, expect, test_transform):
     tr = Transform(doc).join(doc.tag.get("a"))
     test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect,args",
+    [
+        (
+            doc(p("<1>a"), p("<2>foo<a>bar<3>"), p("<4>b")),
+            doc(p("<1>a"), p("<2>foo"), p("<a>bar<3>"), p("<4>b")),
+            [],
+        ),
+        (
+            doc(blockquote(blockquote(p("foo<a>bar"))), p("after<1>")),
+            doc(
+                blockquote(blockquote(p("foo")), blockquote(p("<a>bar"))), p("after<1>")
+            ),
+            [2],
+        ),
+        (
+            doc(blockquote(blockquote(p("foo<a>bar"))), p("after<1>")),
+            doc(
+                blockquote(blockquote(p("foo"))),
+                blockquote(blockquote(p("<a>bar"))),
+                p("after<1>"),
+            ),
+            [3],
+        ),
+        (doc(blockquote(p("hi<a>"))), doc(blockquote(p("hi"), p("<a>"))), []),
+        (doc(blockquote(p("<a>hi"))), doc(blockquote(p(), p("<a>hi"))), []),
+        (
+            doc(ol(li(p("one<1>")), li(p("two<a>three")), li(p("four<2>")))),
+            doc(ol(li(p("one<1>")), li(p("two"), p("<a>three")), li(p("four<2>")))),
+            [],
+        ),
+        (
+            doc(ol(li(p("one<1>")), li(p("two<a>three")), li(p("four<2>")))),
+            doc(ol(li(p("one<1>")), li(p("two")), li(p("<a>three")), li(p("four<2>")))),
+            [2],
+        ),
+        (
+            doc(h1("hell<a>o!")),
+            doc(h1("hell"), p("<a>o!")),
+            [None, [{"type": schema.nodes["paragraph"]}]],
+        ),
+        (doc(blockquote("<a>", p("x"))), "fail", []),
+        (doc(blockquote(p("x"), "<a>")), "fail", []),
+    ],
+)
+def test_split(doc, expect, args, test_transform):
+    if expect == "fail":
+        with pytest.raises(TransformError):
+            Transform(doc).split(doc.tag.get("a"), *args)
+    else:
+        tr = Transform(doc).split(doc.tag.get("a"), *args)
+        test_transform(tr, expect)

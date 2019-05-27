@@ -197,7 +197,7 @@ def close(node, content):
 
 def replace_three_way(from_, start, end, to, depth):
     open_start = joinable(from_, start, depth + 1) if from_.depth > depth else False
-    open_end = joinable(end, to, depth + 1) if to.depth > depth else None
+    open_end = joinable(end, to, depth + 1) if to.depth > depth else False
     content = []
     add_range(None, from_, depth, content)
     if open_start and open_end and start.index(depth) == end.index(depth):

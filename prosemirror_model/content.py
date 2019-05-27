@@ -55,7 +55,7 @@ class ContentMatch:
     def compatible(self, other):
         for i in range(0, len(self.next), 2):
             for j in range(0, len(other.next), 2):
-                if self.next[i] == other.next[j]:
+                if self.next[i].name == other.next[j].name:
                     return True
         return False
 
