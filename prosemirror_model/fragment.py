@@ -164,7 +164,9 @@ class Fragment:
     def find_diff_start(self, other, pos=0):
         return find_diff_start(self, other, pos)
 
-    def find_diff_end(self, other, pos=0, other_pos=None):
+    def find_diff_end(self, other, pos=None, other_pos=None):
+        if pos is None:
+            pos = self.size
         if other_pos is None:
             other_pos = other.size
         return find_diff_end(self, other, pos, other_pos)

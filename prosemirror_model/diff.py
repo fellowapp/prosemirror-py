@@ -10,18 +10,28 @@ def find_diff_start(a, b, pos):
         if not child_a.same_markup(child_b):
             return pos
         if child_a.is_text and child_a.text != child_b.text:
-            return pos + next(
-                index_a
-                for ((index_a, char_a), (_, char_b)) in zip(
-                    enumerate(child_a.text), enumerate(child_b.text)
-                )
-                if char_a != char_b
+            if child_b.text.startswith(child_a.text):
+                return pos + len(child_a.text)
+            if child_a.text.startswith(child_b.text):
+                return pos + len(child_b.text)
+            next_index = next(
+                (
+                    index_a
+                    for ((index_a, char_a), (_, char_b)) in zip(
+                        enumerate(child_a.text), enumerate(child_b.text)
+                    )
+                    if char_a != char_b
+                ),
+                None,
             )
+            if next_index is not None:
+                return pos + next_index
         if child_a.content.size or child_b.content.size:
             inner = find_diff_start(child_a.content, child_b.content, pos + 1)
             if inner:
                 return inner
         pos += child_a.node_size
+        i += 1
 
 
 def find_diff_end(a, b, pos_a, pos_b):
@@ -44,7 +54,7 @@ def find_diff_end(a, b, pos_a, pos_b):
         if not child_a.same_markup(child_b):
             return {"a": pos_a, "b": pos_b}
 
-        if child_a.text and child_a.text != child_b.text:
+        if child_a.is_text and child_a.text != child_b.text:
             same, min_size = 0, min(len(child_a.text), len(child_b.text))
             while (
                 same < min_size
