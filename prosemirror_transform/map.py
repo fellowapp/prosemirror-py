@@ -29,10 +29,10 @@ class StepMap:
     def recover(self, value):
         diff = 0
         index = recover_index(value)
-        if self.inverted:
+        if not self.inverted:
             for i in range(index):
                 diff += self.ranges[i * 3 + 2] - self.ranges[i * 3 + 1]
-        return self.ranges[index * 3] + recover_offset(value)
+        return self.ranges[index * 3] + diff + recover_offset(value)
 
     def map_result(self, pos, assoc=1):
         return self._map(pos, assoc, False)
@@ -204,7 +204,7 @@ class Mapping:
                         i += 1
                         continue
                     else:
-                        if not recoverables:
+                        if recoverables is None:
                             recoverables = {}
                         recoverables[corr] = result.recover
             if result.deleted:

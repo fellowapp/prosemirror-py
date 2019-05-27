@@ -134,7 +134,7 @@ class ResolvedPos:
             self.parent.inline_content or (1 if self.pos == other.pos else 0)
         )
         while d >= 0:
-            if other.ops <= self.end(d) and (not pred or pred(self.node(d))):
+            if other.pos <= self.end(d) and (not pred or pred(self.node(d))):
                 return NodeRange(self, other, d)
             d -= 1
 

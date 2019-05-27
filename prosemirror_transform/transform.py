@@ -297,7 +297,7 @@ class Transform:
     def lift(self, range_, target):
         from__ = range_.from_
         to_ = range_.to
-        depth = range.depth
+        depth = range_.depth
 
         gap_start = from__.before(depth + 1)
         gap_end = to_.after(depth + 1)

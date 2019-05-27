@@ -1,6 +1,6 @@
 import pytest
 from prosemirror_test_builder import schema, out, builders
-from prosemirror_transform import Transform, TransformError
+from prosemirror_transform import Transform, TransformError, lift_target
 from prosemirror_model import Schema
 
 
@@ -312,3 +312,69 @@ def test_split(doc, expect, args, test_transform):
     else:
         tr = Transform(doc).split(doc.tag.get("a"), *args)
         test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect",
+    [
+        (
+            doc(blockquote(p("<before>one"), p("<a>two"), p("<after>three"))),
+            doc(
+                blockquote(p("<before>one")), p("<a>two"), blockquote(p("<after>three"))
+            ),
+        ),
+        (
+            doc(blockquote(p("<a>two"), p("<after>three"))),
+            doc(p("<a>two"), blockquote(p("<after>three"))),
+        ),
+        (
+            doc(blockquote(p("<before>one"), p("<a>two"))),
+            doc(blockquote(p("<before>one")), p("<a>two")),
+        ),
+        (doc(blockquote(p("<a>t<in>wo"))), doc(p("<a>t<in>wo"))),
+        (
+            doc(blockquote(blockquote(p("on<a>e"), p("tw<b>o")), p("three"))),
+            doc(blockquote(p("on<a>e"), p("tw<b>o"), p("three"))),
+        ),
+        (
+            doc(p("start"), blockquote(blockquote(p("a"), p("<a>b")), p("<b>c"))),
+            doc(p("start"), blockquote(p("a"), p("<a>b")), p("<b>c")),
+        ),
+        (
+            doc(
+                blockquote(
+                    blockquote(
+                        p("<1>one"),
+                        p("<a>two"),
+                        p("<3>three"),
+                        p("<b>four"),
+                        p("<5>five"),
+                    )
+                )
+            ),
+            doc(
+                blockquote(
+                    blockquote(p("<1>one")),
+                    p("<a>two"),
+                    p("<3>three"),
+                    p("<b>four"),
+                    blockquote(p("<5>five")),
+                )
+            ),
+        ),
+        (
+            doc(ul(li(p("one")), li(p("two<a>")), li(p("three")))),
+            doc(ul(li(p("one"))), p("two<a>"), ul(li(p("three")))),
+        ),
+        (
+            doc(ul(li(p("a")), li(p("b<a>")), "<1>")),
+            doc(ul(li(p("a"))), p("b<a>"), "<1>"),
+        ),
+    ],
+)
+def test_lift(doc, expect, test_transform):
+    range = doc.resolve(doc.tag.get("a")).block_range(
+        doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
+    )
+    tr = Transform(doc).lift(range, lift_target(range))
+    test_transform(tr, expect)

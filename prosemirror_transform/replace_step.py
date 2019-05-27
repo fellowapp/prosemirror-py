@@ -141,7 +141,7 @@ class ReplaceAroundStep(Step):
             self.from_ + self.insert,
             self.from_ + self.insert + gap,
             doc.slice(self.from_, self.to).remove_between(
-                self.gap_from, self.from_, self.gap_to, self.from_
+                self.gap_from - self.from_, self.gap_to - self.from_
             ),
             self.gap_from - self.from_,
             self.structure,
@@ -192,7 +192,7 @@ class ReplaceAroundStep(Step):
             json_data["to"],
             json_data["gapFrom"],
             json_data["gapTo"],
-            Slice.from_json(schema, json.get(slice)),
+            Slice.from_json(schema, json_data.get("slice")),
             json_data["insert"],
             bool(json_data.get("structure")),
         )

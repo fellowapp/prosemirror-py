@@ -19,7 +19,7 @@ def remove_range(content, from_, to):
         raise ValueError("removing non-flat range")
     return content.replace_child(
         index,
-        child.copy(remove_range(child.content), from_ - offset - 1, to - offset - 1),
+        child.copy(remove_range(child.content, from_ - offset - 1, to - offset - 1)),
     )
 
 
@@ -31,7 +31,7 @@ def insert_into(content, dist, insert, parent):
         if parent and not parent.can_replace(index, index, insert):
             return None
         return content.cut(0, dist).append(insert).append(content.cut(dist))
-    inner = insert_into(child.content, dist - offset - 1, insert)
+    inner = insert_into(child.content, dist - offset - 1, insert, None)
     if inner:
         return content.replace_child(index, child.copy(inner))
     return None
