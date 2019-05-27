@@ -1,4 +1,6 @@
 from prosemirror_model import Node
+
+
 def can_cut(node, start, end):
     if start == 0 or node.can_replace(start, node.child_count):
         return (end == node.child_count) or node.can_replace(0, end)
@@ -8,7 +10,8 @@ def can_cut(node, start, end):
 def lift_target(range_):
     parent = range_.parent
     content = parent.content.cut_by_index(range_.start_index, range_.end_index)
-    for depth in range(range_.depth, -1, -1):
+    depth = range_.depth
+    while True:
         node = range_.from_.node(depth)
         index = range_.from_.index(depth)
         end_index = range_.to.index_after(depth)
@@ -20,6 +23,7 @@ def lift_target(range_):
             or not can_cut(node, index, end_index)
         ):
             break
+        depth -= 1
 
 
 def find_wrapping(range_, node_type, attrs, inner_range=None):
@@ -124,9 +128,9 @@ def can_split(doc, pos, depth=None, types_after=None):
         if isinstance(after, dict):
             if after != node:
                 rest = rest.replace_child(0, after["type"].create(after.get("attrs")))
-            if not node.can_replace(
-                index + 1, node.child_count
-            ) or not after["type"].valid_content(rest):
+            if not node.can_replace(index + 1, node.child_count) or not after[
+                "type"
+            ].valid_content(rest):
                 return False
         if isinstance(after, Node):
             if after != node:

@@ -145,3 +145,25 @@ class TestCanSplit:
             1,
             [{"type": s.nodes["scene"]}],
         )
+
+
+class TestLiftTarget:
+
+    @pytest.mark.parametrize(
+        "pass_,pos",
+        [
+            (False, 0),
+            (False, 3),
+            (False, 52),
+            (False, 70),
+            (True, 76),
+            (False, 86),
+        ]
+    )
+    def test_lift_target(self, pass_, pos):
+        r = range_(pos)
+        if pass_:
+            assert bool(r and lift_target(r))
+        else:
+            assert not bool(r and lift_target(r))
+
