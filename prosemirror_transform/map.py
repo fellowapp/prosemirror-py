@@ -67,7 +67,7 @@ class StepMap:
                 return MapResult(
                     result, pos != start if assoc < 0 else pos != end, recover
                 )
-            diff += (new_size - old_size)
+            diff += new_size - old_size
         return pos + diff if simple else MapResult(pos + diff)
 
     def touches(self, pos, recover):

@@ -12,20 +12,12 @@ def flatten(schema, children, f):
             if tag == NO_TAG:
                 tag = {}
             for id in child.tag:
-                tag[id] = (
-                    child.tag[id]
-                    + (0 if child.is_text else 1)
-                    + pos
-                )
+                tag[id] = child.tag[id] + (0 if child.is_text else 1) + pos
         if isinstance(child, dict) and "tag" in child and child["tag"] != Node.tag:
             if tag == NO_TAG:
                 tag = {}
             for id in child["tag"]:
-                tag[id] = (
-                    child["tag"][id]
-                    + (0 if "flat" in child else 1)
-                    + pos
-                )
+                tag[id] = child["tag"][id] + (0 if "flat" in child else 1) + pos
         if isinstance(child, str):
             at = 0
             out = ""
@@ -92,7 +84,7 @@ def block(type, attrs):
 
 def mark(type, attrs):
     def result(*args):
-        my_attrs = attrs
+        my_attrs = attrs.copy()
         if (
             args
             and args[0]

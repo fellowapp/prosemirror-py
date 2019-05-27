@@ -76,9 +76,7 @@ class NodeType:
         return False
 
     def compatible_content(self, other):
-        return self == other or (
-            self.content_match.compatible(other.content_match)
-        )
+        return self == other or (self.content_match.compatible(other.content_match))
 
     def compute_attrs(self, attrs):
         if not attrs and self.default_attrs:
@@ -167,17 +165,16 @@ class NodeType:
         return result
 
     def __str__(self):
-        return f'<NodeType {self.name}>'
+        return f"<NodeType {self.name}>"
 
     def __repr__(self):
         return self.__str__()
 
 
 class Attribute:
-
     def __init__(self, options):
         self.has_default = "default" in options
-        self.default = options['default'] if self.has_default else None
+        self.default = options["default"] if self.has_default else None
 
     @property
     def is_required(self):
@@ -212,36 +209,34 @@ class MarkType:
         return result
 
     def remove_from_set(self, set):
-        return [
-            item
-            for item in set
-            if item.type != self
-        ]
+        return [item for item in set if item.type != self]
 
     def is_in_set(self, set):
         return next((item for item in set if item.type == self), None)
 
     def excludes(self, other):
-        return other in self.excluded
+        return any(other.name == e.name for e in self.excluded)
 
 
 class Schema:
     def __init__(self, spec):
         self.spec = {**spec}
-        self.spec['nodes'] = OrderedDict(self.spec['nodes'])
-        self.spec['marks'] = OrderedDict(self.spec.get('marks', {}))
+        self.spec["nodes"] = OrderedDict(self.spec["nodes"])
+        self.spec["marks"] = OrderedDict(self.spec.get("marks", {}))
 
-        self.nodes = NodeType.compile(self.spec['nodes'], self)
-        self.marks = MarkType.compile(self.spec['marks'], self)
+        self.nodes = NodeType.compile(self.spec["nodes"], self)
+        self.marks = MarkType.compile(self.spec["marks"], self)
         content_expr_cache = {}
         for prop in self.nodes:
             if prop in self.marks:
-                raise ValueError(f'{prop} can not be both a node and a mark')
+                raise ValueError(f"{prop} can not be both a node and a mark")
             type = self.nodes[prop]
-            content_expr = type.spec.get('content', "")
-            mark_expr = type.spec.get('marks')
+            content_expr = type.spec.get("content", "")
+            mark_expr = type.spec.get("marks")
             if content_expr not in content_expr_cache:
-                content_expr_cache[content_expr] = ContentMatch.parse(content_expr, self.nodes)
+                content_expr_cache[content_expr] = ContentMatch.parse(
+                    content_expr, self.nodes
+                )
             type.content_match = content_expr_cache[content_expr]
             type.inline_content = type.content_match.inline_content
             if mark_expr == "_":
@@ -259,11 +254,11 @@ class Schema:
             # }
         for prop in self.marks:
             type = self.marks.get(prop)
-            excl = type.spec.get('excludes')
-            type.excluded = [type] if excl is None else (
-                [] if excl == "" else (
-                    gather_marks(self, excl.split(' '))
-                )
+            excl = type.spec.get("excludes")
+            type.excluded = (
+                [type]
+                if excl is None
+                else ([] if excl == "" else (gather_marks(self, excl.split(" "))))
             )
 
         self.top_node_type = self.nodes.get((self.spec.get("topNode") or "doc"))
@@ -311,7 +306,9 @@ def gather_marks(schema, marks):
         else:
             for prop in schema.marks:
                 mark = schema.marks.get(prop)
-                if name == "_" or (mark.spec.get("group") and name in mark.spec["group"].split(" ")):
+                if name == "_" or (
+                    mark.spec.get("group") and name in mark.spec["group"].split(" ")
+                ):
                     ok = mark
                     found.append(mark)
         if not ok:

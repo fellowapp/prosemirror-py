@@ -235,6 +235,6 @@ def prepare_slice_for_replace(slice: Slice, along):
     for i in range(extra - 1, -1, -1):
         node = along.node(i).copy(Fragment.from_(node))
     return {
-        'start': node.resolve_no_cache(slice.open_start + extra),
-        'end': node.resolve_no_cache(node.content.size - slice.open_end - extra)
+        "start": node.resolve_no_cache(slice.open_start + extra),
+        "end": node.resolve_no_cache(node.content.size - slice.open_end - extra),
     }

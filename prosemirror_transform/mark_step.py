@@ -6,7 +6,7 @@ def map_fragment(fragment: Fragment, f, parent=None):
     mapped = []
     for i in range(fragment.child_count):
         child = fragment.child(i)
-        if getattr(child.content, 'size', None):
+        if getattr(child.content, "size", None):
             child = child.copy(map_fragment(child.content, f, child))
         if child.is_inline:
             child = f(child, parent, i)

@@ -66,7 +66,7 @@ def fill(params, length):
         diff = length - len(item)
         if diff > 0:
             item += [None] * diff
-            new_params.append(item)
+        new_params.append(item)
     return new_params
 
 
@@ -148,17 +148,9 @@ class TestCanSplit:
 
 
 class TestLiftTarget:
-
     @pytest.mark.parametrize(
         "pass_,pos",
-        [
-            (False, 0),
-            (False, 3),
-            (False, 52),
-            (False, 70),
-            (True, 76),
-            (False, 86),
-        ]
+        [(False, 0), (False, 3), (False, 52), (False, 70), (True, 76), (False, 86)],
     )
     def test_lift_target(self, pass_, pos):
         r = range_(pos)
@@ -167,3 +159,119 @@ class TestLiftTarget:
         else:
             assert not bool(r and lift_target(r))
 
+
+class TestFindWrapping:
+    @pytest.mark.parametrize(
+        "pass_,pos,end,type",
+        [
+            (True, 0, 92, "sect"),
+            (False, 4, 4, "sect"),
+            (True, 8, 8, "quote"),
+            (False, 18, 18, "quote"),
+            (True, 55, 74, "quote"),
+            (False, 90, 90, "figure"),
+        ],
+    )
+    def test_find_wrapping(self, pass_, pos, end, type):
+        r = range_(pos, end)
+        if pass_:
+            assert find_wrapping(r, schema.nodes[type])
+        else:
+            assert not bool(find_wrapping(r, schema.nodes[type]))
+
+
+@pytest.mark.parametrize(
+    "doc,from_,to,content,open_start,open_end,result",
+    [
+        (
+            n("doc", n("sect", n("head", t("foo")), n("para", t("bar")))),
+            6,
+            6,
+            n("doc", n("sect"), n("sect")),
+            1,
+            1,
+            n(
+                "doc",
+                n("sect", n("head", t("foo"))),
+                n("sect", n("head"), n("para", t("bar"))),
+            ),
+        ),
+        (
+            n("doc", n("para", t("a")), n("para", t("b"))),
+            3,
+            3,
+            n("doc", n("closing", t("."))),
+            0,
+            0,
+            n("doc", n("para", t("a")), n("para", t("b"))),
+        ),
+        (
+            n("doc", n("sect", n("head", t("foo")), n("para", t("bar")))),
+            1,
+            3,
+            n("doc", n("sect"), n("sect", n("head", t("hi")))),
+            1,
+            2,
+            n(
+                "doc",
+                n("sect", n("head")),
+                n("sect", n("head", t("hioo")), n("para", t("bar"))),
+            ),
+        ),
+        (
+            n("doc"),
+            0,
+            0,
+            n("doc", n("figure", n("figureimage"))),
+            1,
+            0,
+            n("doc", n("figure", n("caption"), n("figureimage"))),
+        ),
+        (
+            n("doc"),
+            0,
+            0,
+            n("doc", n("figure", n("caption"))),
+            0,
+            1,
+            n("doc", n("figure", n("caption"), n("figureimage"))),
+        ),
+        (
+            n(
+                "doc",
+                n("figure", n("caption"), n("figureimage")),
+                n("figure", n("caption"), n("figureimage")),
+            ),
+            3,
+            8,
+            None,
+            0,
+            0,
+            n("doc", n("figure", n("caption"), n("figureimage"))),
+        ),
+        (
+            n("doc", n("sect", n("head"), n("figure", n("caption"), n("figureimage")))),
+            7,
+            9,
+            n("doc", n("para", t("hi"))),
+            0,
+            0,
+            n(
+                "doc",
+                n(
+                    "sect",
+                    n("head"),
+                    n("figure", n("caption"), n("figureimage")),
+                    n("para", t("hi")),
+                ),
+            ),
+        ),
+    ],
+)
+def test_replace(doc, from_, to, content, open_start, open_end, result):
+    if content:
+        slice = Slice(content.content, open_start, open_end)
+    else:
+        slice = Slice.empty
+    tr = Transform(doc).replace(from_, to, slice)
+    assert tr.doc.eq(result)

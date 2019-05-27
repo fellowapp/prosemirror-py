@@ -41,6 +41,11 @@ hr = out["hr"]
             doc(p("one ", strong("two ", em("three")), em(" four"))),
         ),
         (
+            doc(p("this is a ", a("<a>link<b>"))),
+            schema.mark("link", {"href": "bar"}),
+            doc(p("this is a ", a({"href": "bar"}, "link"))),
+        ),
+        (
             doc(
                 p("before"), blockquote(p("the variable is called <a>i<b>")), p("after")
             ),
@@ -114,6 +119,11 @@ def test_can_remote_multiple_excluded_marks():
             doc(p(em("hello"), " <a>world<b>!")),
             schema.mark("em"),
             doc(p(em("hello"), " <a>world<b>!")),
+        ),
+        (
+            doc(p(em("one ", strong("<a>two<b>"), " three"))),
+            schema.mark("strong"),
+            doc(p(em("one two three"))),
         ),
         (
             doc(p("<a>hello ", a("link<b>"))),

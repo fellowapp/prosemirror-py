@@ -2,26 +2,16 @@
 # from prosemirror_model import Slice, Fragment, NodeRange
 
 
-OL_DOM = ['ol', 0]
-UL_DOM = ['ul', 0]
-LI_DOM = ['li', 0]
+OL_DOM = ["ol", 0]
+UL_DOM = ["ul", 0]
+LI_DOM = ["li", 0]
 
 
-orderd_list = {
-    'attrs': {
-        'order': {'default': 1},
-    },
-    'parseDOM': [{'tag': 'ol'}],
-}
+orderd_list = {"attrs": {"order": {"default": 1}}, "parseDOM": [{"tag": "ol"}]}
 
-bullet_list = {
-    'parseDOM': [{"tag": "ul"}]
-}
+bullet_list = {"parseDOM": [{"tag": "ul"}]}
 
-list_item = {
-    "parseDOM": [{"tag": "li"}],
-    "defining": True,
-}
+list_item = {"parseDOM": [{"tag": "li"}], "defining": True}
 
 
 def add(obj, props):
@@ -30,9 +20,15 @@ def add(obj, props):
 
 def add_list_nodes(nodes, item_content, list_group):
     copy = nodes.copy()
-    copy.update({
-        "ordered_list": add(orderd_list, {"content": "list_item+", "group": list_group}),
-        "bullet_list": add(bullet_list, {"content": "list_item+", "group": list_group}),
-        "list_item": add(list_item, {"content": item_content}),
-    })
+    copy.update(
+        {
+            "ordered_list": add(
+                orderd_list, {"content": "list_item+", "group": list_group}
+            ),
+            "bullet_list": add(
+                bullet_list, {"content": "list_item+", "group": list_group}
+            ),
+            "list_item": add(list_item, {"content": item_content}),
+        }
+    )
     return copy

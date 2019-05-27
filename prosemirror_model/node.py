@@ -177,7 +177,11 @@ class Node:
         return self.type.is_atom
 
     def __str__(self):
-        to_debug_string = self.type.spec['toDebugString'] if "toDebugString" in self.type.spec else None
+        to_debug_string = (
+            self.type.spec["toDebugString"]
+            if "toDebugString" in self.type.spec
+            else None
+        )
         if to_debug_string:
             return to_debug_string(self)
         name = self.type.name
@@ -186,7 +190,7 @@ class Node:
         return wrap_marks(self.marks, name)
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} {self.__str__()}>'
+        return f"<{self.__class__.__name__} {self.__str__()}>"
 
     def content_match_at(self, index):
         match = self.type.content_match.match_fragment(self.content, 0, index)
@@ -238,7 +242,7 @@ class Node:
         for _ in self.attrs:
             obj["attrs"] = self.attrs
             break
-        if getattr(self.content, 'size', None):
+        if getattr(self.content, "size", None):
             obj["content"] = self.content.to_json()
         if len(self.marks):
             obj["marks"] = [n.to_json() for n in self.marks]
@@ -275,7 +279,11 @@ class TextNode(Node):
     def __str__(self):
         import json
 
-        to_debug_string = self.type.spec['toDebugString'] if "toDebugString" in self.type.spec else None
+        to_debug_string = (
+            self.type.spec["toDebugString"]
+            if "toDebugString" in self.type.spec
+            else None
+        )
         if to_debug_string:
             return to_debug_string(self)
         return wrap_marks(self.marks, json.dumps(self.text))

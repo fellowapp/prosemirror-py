@@ -41,25 +41,23 @@ class Mark:
     def eq(self, other):
         if self == other:
             return True
-        return self.type.name == other.type.name and compare_deep(self.attrs, other.attrs)
+        return self.type.name == other.type.name and self.attrs == other.attrs
 
     def to_json(self):
-        return {
-            'type': self.type.name,
-            'attrs': self.attrs,
-        }
+        return {"type": self.type.name, "attrs": self.attrs}
 
     @classmethod
     def from_json(cls, schema, json_data):
         if isinstance(json_data, str):
             import json
+
             json_data = json.loads(json_data)
         if not json_data:
             raise ValueError("Invalid input for Mark.fromJSON")
-        type = schema.marks.get(json_data['type'])
+        type = schema.marks.get(json_data["type"])
         if not type:
             raise ValueError(f"There is not mark type {type} in this schema")
-        return type.create(json_data.get('attrs'))
+        return type.create(json_data.get("attrs"))
 
     @classmethod
     def same_set(cls, a, b):

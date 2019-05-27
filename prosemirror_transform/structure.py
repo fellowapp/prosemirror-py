@@ -26,13 +26,15 @@ def lift_target(range_):
         depth -= 1
 
 
-def find_wrapping(range_, node_type, attrs, inner_range=None):
+def find_wrapping(range_, node_type, attrs=None, inner_range=None):
     if inner_range is None:
         inner_range = range_
     around = find_wrapping_outside(range_, node_type)
     inner = False
     if around is not None:
         inner = find_wrapping_inside(inner_range, node_type)
+    else:
+        return None
     if inner is None:
         return None
     return (
@@ -53,7 +55,7 @@ def find_wrapping_outside(range_, type):
     around = parent.content_match_at(start_index).find_wrapping(type)
     if around is None:
         return None
-    outer = around[0] if len(around) else type
+    outer = around[0] if len(around) and around[0] else type
     return around if parent.can_replace_with(start_index, end_index, outer) else None
 
 

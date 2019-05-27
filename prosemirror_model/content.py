@@ -107,7 +107,9 @@ class ContentMatch:
                     and type.name not in seen
                     and (not current["type"] or match.next[i + 1].valid_end)
                 ):
-                    active.append({"match": type.content_match, "via": current, "type": type})
+                    active.append(
+                        {"match": type.content_match, "via": current, "type": type}
+                    )
                     seen[type.name] = True
 
     @property
@@ -141,7 +143,7 @@ class ContentMatch:
         return "\n".join((iteratee(m, i)) for m, i in enumerate(seen))
 
     def __repr__(self):
-        return f'ContentMatch<{dict(valid_end=self.valid_end, next=self.next, cache=self.wrap_cache)}>'
+        return f"ContentMatch<{dict(valid_end=self.valid_end, next=self.next, cache=self.wrap_cache)}>"
 
 
 ContentMatch.empty = ContentMatch(True)
@@ -298,9 +300,9 @@ def nfa(expr):
 
     def compile(expr, from_):
         if expr["type"] == "choice":
-            return list(reduce(
-                lambda out, expr: out + compile(expr, from_), expr["exprs"], []
-            ))
+            return list(
+                reduce(lambda out, expr: out + compile(expr, from_), expr["exprs"], [])
+            )
         elif expr["type"] == "seq":
             i = 0
             while True:
@@ -393,10 +395,7 @@ def dfa(nfa):
         for i in range(0, len(out), 2):
             states = sorted(out[i + 1])
             find_by_key = ",".join(str(s) for s in states)
-            items_to_extend = [
-                out[i],
-                labeled.get(find_by_key) or explore(states),
-            ]
+            items_to_extend = [out[i], labeled.get(find_by_key) or explore(states)]
             state.next.extend(items_to_extend)
         return state
 

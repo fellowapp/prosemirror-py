@@ -22,7 +22,7 @@ class Fragment:
             if (
                 end > from_
                 and f(child, node_start + pos, parent, i) is not False
-                and getattr(child.content, 'size', None)
+                and getattr(child.content, "size", None)
             ):
                 start = pos + 1
                 child.nodes_between(
@@ -44,7 +44,7 @@ class Fragment:
             nonlocal text
             nonlocal separated
             if node.is_text:
-                text += node.text[max(from_, pos) - pos:to - pos]
+                text += node.text[max(from_, pos) - pos : to - pos]
                 separated = not block_separator
             elif node.is_leaf and leaf_text:
                 text += leaf_text
@@ -236,10 +236,10 @@ class Fragment:
         return ", ".join([str(i) for i in self.content])
 
     def __str__(self):
-        return f'<{self.to_string_inner()}>'
+        return f"<{self.to_string_inner()}>"
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} {self.__str__()}>'
+        return f"<{self.__class__.__name__} {self.__str__()}>"
 
 
 Fragment.empty = Fragment([], 0)

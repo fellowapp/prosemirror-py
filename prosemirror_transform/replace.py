@@ -386,7 +386,9 @@ class Frontier:
             pass
         elif open["wrapper"]:
             self.add_node(
-                self.open[-1], open['parent'].copy(open["content"]), open["open_end"] + 1
+                self.open[-1],
+                open["parent"].copy(open["content"]),
+                open["open_end"] + 1,
             )
         else:
             self.placed[open["depth"]] = {
