@@ -217,7 +217,7 @@ def parse_expr_subscript(stream):
     return expr
 
 
-NUMBER_REGEX = re.compile(r"\d")
+NUMBER_REGEX = re.compile(r"\D")
 
 
 def parse_num(stream: TokenStream):
@@ -247,7 +247,7 @@ def resolve_name(stream: TokenStream, name):
     if type:
         return [type]
     result = []
-    for typeName, type in types.items():
+    for _, type in types.items():
         if name in type.groups:
             result.append(type)
     if not result:
