@@ -786,3 +786,51 @@ class TestEnforcingHeadingAndBody:
         tr = Transform(doc(h("Head"), b(p("One"))))
         tr.replace(0, tr.doc.content.size, tr.doc.slice(6, tr.doc.content.size))
         assert tr.doc.eq(doc(h(), b(p("One"))))
+
+
+@pytest.mark.parametrize(
+    "doc,source,expect",
+    [
+        (doc(p("foo<a>b<b>ar")), p("<a>xx<b>"), doc(p("foo<a>xx<b>ar"))),
+        (doc(p("<a>")), doc(h1("<a>text<b>")), doc(h1("text"))),
+        (doc(p("<a>abc<b>")), doc(h1("<a>text<b>")), doc(h1("text"))),
+        (doc(p("<a>")), doc(ul(li(p("<a>foobar<b>")))), doc(ul(li(p("foobar"))))),
+        (
+            doc(ul(li(p("<a>")), li(p("b")))),
+            doc(h1("<a>h<b>")),
+            doc(ul(li(p("h<a>")), li(p("b")))),
+        ),
+        (
+            doc(p("a"), ul(li(p("<a>b")), li(p("c"), blockquote(p("d<b>")))), p("e")),
+            doc(h1("<a>x<b>")),
+            doc(p("a"), h1("x"), p("e")),
+        ),
+        (
+            doc(p("<a>foo")),
+            doc(ul(li(p("<a>one")), li(p("two<b>")))),
+            doc(ul(li(p("one")), li(p("twofoo")))),
+        ),
+        (
+            doc(blockquote(p("<a>"))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(blockquote(p("one"))),
+        ),
+        (
+            doc("<a>", p("abc"), "<b>"),
+            doc(ul(li("<a>")), p("def"), "<b>"),
+            doc(ul(li(p())), p("def")),
+        ),
+    ],
+)
+def test_replace_range(doc, source, expect, test_transform):
+    slice = None
+    if source is None:
+        slice = Slice.empty
+    elif isinstance(source, Slice):
+        slice = source
+    else:
+        slice = source.slice(source.tag.get("a"), source.tag.get("b"), True)
+    tr = Transform(doc).replace_range(
+        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
+    )
+    test_transform(tr, expect)

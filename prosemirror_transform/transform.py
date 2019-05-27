@@ -4,12 +4,7 @@ from .map import Mapping
 from .mark_step import AddMarkStep, RemoveMarkStep
 from .replace_step import ReplaceStep, ReplaceAroundStep
 
-from .replace import (
-    replace_step,
-    fits_trivially,
-    covered_depths,
-    close_fragment,
-)
+from .replace import replace_step, fits_trivially, covered_depths, close_fragment
 from .structure import can_change_type, insert_point
 
 
@@ -114,7 +109,7 @@ class Transform:
                 for style in to_remove:
                     found = None
                     for m in matched:
-                        if m['step'] == step - 1 and style.eq(m['style']):
+                        if m["step"] == step - 1 and style.eq(m["style"]):
                             found = m
                     if found:
                         found["to"] = end
@@ -218,16 +213,16 @@ class Transform:
         if (
             preferred_depth > 0
             and left_nodes[preferred_depth - 1].type.spec.get("defining")
-            and from__.node(preferred_target_index).type
-            != left_nodes[preferred_depth - 1].type
+            and from__.node(preferred_target_index).type.name
+            != left_nodes[preferred_depth - 1].type.name
         ):
             preferred_depth -= 1
         elif (
             preferred_depth >= 2
             and left_nodes[preferred_depth - 1].is_text_block
             and left_nodes[preferred_depth - 2].type.spec.get("defining")
-            and from__.node(preferred_target_index).type
-            != left_nodes[preferred_depth - 2].type
+            and from__.node(preferred_target_index).type.name
+            != left_nodes[preferred_depth - 2].type.name
         ):
             preferred_depth -= 2
 
@@ -238,9 +233,9 @@ class Transform:
             else:
                 continue
             for i in range(len(target_depths)):
-                target_depth = target_depths((i + preferred_target_index)) % len(
-                    target_depths
-                )
+                target_depth = target_depths[
+                    (i + preferred_target_index) % len(target_depths)
+                ]
                 expand = True
                 if target_depth < 0:
                     expand = False
@@ -431,16 +426,15 @@ class Transform:
             if types_after and len(types_after) > i:
                 type_after = types_after[i]
             after = Fragment.from_(
-                type_after["type"].create(type_after.get("attrs"), after) if type_after else pos_.node(d).copy(after)
+                type_after["type"].create(type_after.get("attrs"), after)
+                if type_after
+                else pos_.node(d).copy(after)
             )
             d -= 1
             i -= 1
-        return self.step(ReplaceStep(
-            pos,
-            pos,
-            Slice(before.append(after), depth, depth),
-            True
-        ))
+        return self.step(
+            ReplaceStep(pos, pos, Slice(before.append(after), depth, depth), True)
+        )
 
     def join(self, pos, depth=1):
         step = ReplaceStep(pos - depth, pos + depth, Slice.empty, True)

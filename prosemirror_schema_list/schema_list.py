@@ -19,7 +19,8 @@ bullet_list = {
 }
 
 list_item = {
-    "parseDOM": [{"tag": "li"}]
+    "parseDOM": [{"tag": "li"}],
+    "defining": True,
 }
 
 
