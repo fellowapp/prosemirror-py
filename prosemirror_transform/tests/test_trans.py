@@ -834,3 +834,23 @@ def test_replace_range(doc, source, expect, test_transform):
         doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
     )
     test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,node,expect",
+    [
+        (doc(p("fo<a>o")), img(), doc(p("fo", img(), "<a>o"))),
+        (doc(p("<a>fo<b>o")), img(), doc(p("<a>", img(), "o"))),
+        (doc("<a>", blockquote(p("a")), "<b>"), img(), doc(p(img()))),
+        (doc("<a>", blockquote(p("a")), "<b>"), hr(), doc(hr())),
+        (doc(p("foo<a>bar")), hr(), doc(p("foo"), hr(), p("bar"))),
+        (doc(blockquote(p("<a>"))), hr(), doc(blockquote(hr()))),
+        (doc(h1("foo<a>")), hr(), doc(h1("foo"), hr())),
+        (doc(p("a"), blockquote(p("<a>b"))), hr(), doc(p("a"), blockquote(hr(), p("b")))),
+    ],
+)
+def test_replace_range_with(doc, node, expect, test_transform):
+    tr = Transform(doc).replace_range_with(
+        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), node
+    )
+    test_transform(tr, expect)

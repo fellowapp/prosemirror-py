@@ -162,14 +162,14 @@ def insert_point(doc, pos, node_type):
     if pos_.parent.can_replace_with(pos_.index(), pos_.index(), node_type):
         return pos
     if pos_.parent_offset == 0:
-        for d in range(pos_.depth - 1, 0, -1):
+        for d in range(pos_.depth - 1, -1, -1):
             index = pos_.index(d)
             if pos_.node(d).can_replace_with(index, index, node_type):
                 return pos_.before(d + 1)
             if index > 0:
                 return None
     if pos_.parent_offset == pos_.parent.content.size:
-        for d in range(pos_.depth - 1, 0, -1):
+        for d in range(pos_.depth - 1, -1, -1):
             index = pos_.index_after(d)
             if pos_.node(d).can_replace_with(index, index, node_type):
                 return pos_.after(d + 1)
