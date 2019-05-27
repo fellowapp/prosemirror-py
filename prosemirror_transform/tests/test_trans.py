@@ -218,3 +218,43 @@ def test_insert(doc, nodes, expect, test_transform):
 def test_delete(doc, expect, test_transform):
     tr = Transform(doc).delete(doc.tag.get("a"), doc.tag.get("b"))
     test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect",
+    [
+        (
+            doc(
+                blockquote(p("<before>a")), "<a>", blockquote(p("b")), p("after<after>")
+            ),
+            doc(blockquote(p("<before>a"), "<a>", p("b")), p("after<after>")),
+        ),
+        (doc(h1("foo"), "<a>", p("bar")), doc(h1("foobar"))),
+        (
+            doc(
+                blockquote(
+                    blockquote(p("a"), p("b<before>")),
+                    "<a>",
+                    blockquote(p("c"), p("d<after>")),
+                )
+            ),
+            doc(
+                blockquote(
+                    blockquote(p("a"), p("b<before>"), "<a>", p("c"), p("d<after>"))
+                )
+            ),
+        ),
+        (
+            doc(ol(li(p("one")), li(p("two"))), "<a>", ol(li(p("three")))),
+            doc(ol(li(p("one")), li(p("two")), "<a>", li(p("three")))),
+        ),
+        (
+            doc(ol(li(p("one")), li(p("two")), "<a>", li(p("three")))),
+            doc(ol(li(p("one")), li(p("two"), "<a>", p("three")))),
+        ),
+        (doc(p("foo"), "<a>", p("bar")), doc(p("foo<a>bar"))),
+    ],
+)
+def test_join(doc, expect, test_transform):
+    tr = Transform(doc).join(doc.tag.get("a"))
+    test_transform(tr, expect)

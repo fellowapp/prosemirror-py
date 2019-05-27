@@ -156,11 +156,7 @@ class TokenStream:
         self.node_types = node_types
         self.inline = None
         self.pos = 0
-        self.tokens = TOKEN_REGEX.split(string)
-        if self.tokens[-1] == "":
-            self.tokens.pop()
-        if self.tokens[0] == "":
-            self.tokens.pop(0)
+        self.tokens = [i for i in TOKEN_REGEX.split(string) if i]
 
     @property
     def next(self):
@@ -309,10 +305,11 @@ def nfa(expr):
             i = 0
             while True:
                 next = compile(expr["exprs"][i], from_)
-                if i == len(expr["exprs"] - 1):
+                if i == len(expr["exprs"]) - 1:
                     return next
                 from_ = node()
                 connect(next, from_)
+                i += 1
         elif expr["type"] == "star":
             loop = node()
             edge(from_, loop)
