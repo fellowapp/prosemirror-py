@@ -846,11 +846,42 @@ def test_replace_range(doc, source, expect, test_transform):
         (doc(p("foo<a>bar")), hr(), doc(p("foo"), hr(), p("bar"))),
         (doc(blockquote(p("<a>"))), hr(), doc(blockquote(hr()))),
         (doc(h1("foo<a>")), hr(), doc(h1("foo"), hr())),
-        (doc(p("a"), blockquote(p("<a>b"))), hr(), doc(p("a"), blockquote(hr(), p("b")))),
+        (
+            doc(p("a"), blockquote(p("<a>b"))),
+            hr(),
+            doc(p("a"), blockquote(hr(), p("b"))),
+        ),
     ],
 )
 def test_replace_range_with(doc, node, expect, test_transform):
     tr = Transform(doc).replace_range_with(
         doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), node
+    )
+    test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect",
+    [
+        (doc(p("fo<a>o"), p("b<b>ar")), doc(p("fo<a><b>ar"))),
+        (
+            doc(blockquote(ul(li("<a>", p("foo"), "<b>")), p("x"))),
+            doc(blockquote("<a><b>", p("x"))),
+        ),
+        (doc(p("<a>foo<b>")), doc(p("<a><b>"))),
+        (doc(p("<a><b>")), doc(p("<a><b>"))),
+        (doc(ul(li(p("<a>foo")), li(p("bar<b>"))), p("hi")), doc(p("hi"))),
+        (doc(p("a"), p("<a>b<b>")), doc(p("a"), p())),
+        (
+            doc(p("a"), blockquote(blockquote(p("<a>foo")), p("bar<b>")), p("b")),
+            doc(p("a"), p("b")),
+        ),
+        (doc(h1("<a>foo"), p("bar"), p("baz<b>")), doc(p())),
+        (doc(h1("<a>foo"), p("b<b>ar")), doc(p("ar"))),
+    ],
+)
+def test_delete_range(doc, expect, test_transform):
+    tr = Transform(doc).delete_range(
+        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a")
     )
     test_transform(tr, expect)
