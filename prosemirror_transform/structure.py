@@ -26,9 +26,9 @@ def find_wrapping(range_, node_type, attrs, inner_range=None):
         inner_range = range_
     around = find_wrapping_outside(range_, node_type)
     inner = False
-    if around:
+    if around is not None:
         inner = find_wrapping_inside(inner_range, node_type)
-    if not inner:
+    if inner is None:
         return None
     return (
         [with_attrs(item) for item in around]

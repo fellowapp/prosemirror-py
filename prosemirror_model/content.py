@@ -80,7 +80,7 @@ class ContentMatch:
 
     def find_wrapping(self, target):
         for i in range(0, len(self.wrap_cache), 2):
-            if self.wrap_cache[i] == target:
+            if self.wrap_cache[i].name == target.name:
                 return self.wrap_cache[i + 1]
         computed = self.compute_wrapping(target)
         self.wrap_cache.extend([target, computed])

@@ -208,7 +208,7 @@ class Node:
                 return False
         return True
 
-    def can_replace_with(self, from_, to, type, marks):
+    def can_replace_with(self, from_, to, type, marks=None):
         if marks and not self.type.allows_marks(marks):
             return False
         start = self.content_match_at(from_).match_type(type)

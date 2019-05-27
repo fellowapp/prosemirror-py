@@ -1,6 +1,6 @@
 import pytest
 from prosemirror_test_builder import schema, out, builders
-from prosemirror_transform import Transform, TransformError, lift_target
+from prosemirror_transform import Transform, TransformError, lift_target, find_wrapping
 from prosemirror_model import Schema
 
 
@@ -377,4 +377,59 @@ def test_lift(doc, expect, test_transform):
         doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
     )
     tr = Transform(doc).lift(range, lift_target(range))
+    test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect,type,attrs",
+    [
+        (
+            doc(p("one"), p("<a>two"), p("three")),
+            doc(p("one"), blockquote(p("<a>two")), p("three")),
+            "blockquote",
+            None,
+        ),
+        (
+            doc(p("one<1>"), p("<a>two"), p("<b>three"), p("four<4>")),
+            doc(p("one<1>"), blockquote(p("<a>two"), p("three")), p("four<4>")),
+            "blockquote",
+            None,
+        ),
+        (
+            doc(p("<a>one"), p("<b>two")),
+            doc(ol(li(p("<a>one"), p("<b>two")))),
+            "ordered_list",
+            None,
+        ),
+        (
+            doc(
+                ol(
+                    li(p("<1>one")),
+                    li(p("..."), p("<a>two"), p("<b>three")),
+                    li(p("<4>four")),
+                )
+            ),
+            doc(
+                ol(
+                    li(p("<1>one")),
+                    li(p("..."), ol(li(p("<a>two"), p("<b>three")))),
+                    li(p("<4>four")),
+                )
+            ),
+            "ordered_list",
+            None,
+        ),
+        (
+            doc(blockquote(p("<1>one"), p("two<a>")), p("three<b>")),
+            doc(blockquote(blockquote(p("<1>one"), p("two<a>")), p("three<b>"))),
+            "blockquote",
+            None,
+        ),
+    ],
+)
+def test_wrap(doc, expect, type, attrs, test_transform):
+    range = doc.resolve(doc.tag.get("a")).block_range(
+        doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
+    )
+    tr = Transform(doc).wrap(range, find_wrapping(range, schema.nodes[type], attrs))
     test_transform(tr, expect)

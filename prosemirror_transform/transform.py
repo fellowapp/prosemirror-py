@@ -345,7 +345,7 @@ class Transform:
         i = len(wrappers) - 1
         while i >= 0:
             content = Fragment.from_(
-                wrappers[i].type.create(wrappers[i].attrs, content)
+                wrappers[i]["type"].create(wrappers[i].get("attrs"), content)
             )
             i -= 1
         start = range_.start
