@@ -1,5 +1,5 @@
 import pytest
-from prosemirror_model import ContentMatch
+from prosemirror_model import ContentMatch, Node
 from prosemirror_test_builder import out, schema
 
 
@@ -91,9 +91,201 @@ def match(expr, types):
         ("hard_break{2,}", "hard_break", False),
     ],
 )
-def test_match_type_valid(expr, types, valid):
+def test_match_type(expr, types, valid):
     if valid:
         assert match(expr, types)
     else:
         assert not match(expr, types)
 
+
+@pytest.mark.parametrize(
+    "expr,before,after,result",
+    [
+        (
+            "paragraph horizontal_rule paragraph",
+            '{"type":"doc","content":[{"type":"paragraph"},{"type":"horizontal_rule"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc"}',
+        ),
+        (
+            "paragraph horizontal_rule paragraph",
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"horizontal_rule"}]}',
+        ),
+        (
+            "hard_break*",
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph"}',
+        ),
+        (
+            "hard_break*",
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph"}',
+            '{"type":"paragraph"}',
+        ),
+        (
+            "hard_break*",
+            '{"type":"paragraph"}',
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph"}',
+        ),
+        (
+            "hard_break*",
+            '{"type":"paragraph"}',
+            '{"type":"paragraph"}',
+            '{"type":"paragraph"}',
+        ),
+        (
+            "hard_break+",
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph"}',
+        ),
+        (
+            "hard_break+",
+            '{"type":"paragraph"}',
+            '{"type":"paragraph"}',
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+        ),
+        (
+            "hard_break+",
+            '{"type":"paragraph"}',
+            '{"type":"paragraph","content":[{"type":"image","attrs":{"src":"img.png","alt":null,"title":null}}]}',
+            None,
+        ),
+        (
+            "heading* paragraph*",
+            '{"type":"doc","content":[{"type":"heading","attrs":{"level":1}}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc"}',
+        ),
+        (
+            "heading* paragraph*",
+            '{"type":"doc","content":[{"type":"heading","attrs":{"level":1}}]}',
+            '{"type":"doc"}',
+            '{"type":"doc"}',
+        ),
+        (
+            "heading+ paragraph+",
+            '{"type":"doc","content":[{"type":"heading","attrs":{"level":1}}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc"}',
+        ),
+        (
+            "heading+ paragraph+",
+            '{"type":"doc","content":[{"type":"heading","attrs":{"level":1}}]}',
+            '{"type":"doc"}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+        ),
+        (
+            "hard_break{3}",
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+            '{"type":"paragraph","content":[{"type":"hard_break"}]}',
+        ),
+        (
+            "hard_break{3}",
+            '{"type":"paragraph","content":[{"type":"hard_break"},{"type":"hard_break"}]}',
+            '{"type":"paragraph","content":[{"type":"hard_break"},{"type":"hard_break"}]}',
+            None,
+        ),
+        (
+            "code_block{2} paragraph{2}",
+            '{"type":"doc","content":[{"type":"code_block"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"code_block"},{"type":"paragraph"}]}',
+        ),
+    ],
+)
+def test_fill_before(expr, before, after, result):
+    before = Node.from_json(schema, before)
+    after = Node.from_json(schema, after)
+    filled = get(expr).match_fragment(before.content).fill_before(after.content, True)
+    if result:
+        result = Node.from_json(schema, result)
+        assert filled.eq(result.content)
+    else:
+        assert not filled
+
+
+@pytest.mark.parametrize(
+    "expr,before,mid,after,left,right",
+    [
+        (
+            "paragraph horizontal_rule paragraph horizontal_rule paragraph",
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"horizontal_rule"}]}',
+            '{"type":"doc","content":[{"type":"horizontal_rule"}]}',
+        ),
+        (
+            "code_block+ paragraph+",
+            '{"type":"doc","content":[{"type":"code_block"}]}',
+            '{"type":"doc","content":[{"type":"code_block"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc"}',
+            '{"type":"doc"}',
+        ),
+        (
+            "code_block+ paragraph+",
+            '{"type":"doc"}',
+            '{"type":"doc"}',
+            '{"type":"doc"}',
+            '{"type":"doc"}',
+            '{"type":"doc","content":[{"type":"code_block"},{"type":"paragraph"}]}',
+        ),
+        (
+            "code_block{3} paragraph{3}",
+            '{"type":"doc","content":[{"type":"code_block"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc"}',
+            '{"type":"doc","content":[{"type":"code_block"},{"type":"code_block"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"},{"type":"paragraph"}]}',
+        ),
+        (
+            "paragraph*",
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"code_block"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            None,
+            None,
+        ),
+        (
+            "paragraph{4}",
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc"}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+        ),
+        (
+            "paragraph{2}",
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            '{"type":"doc","content":[{"type":"paragraph"}]}',
+            None,
+            None,
+        ),
+    ],
+)
+def test_fill3_before(expr, before, mid, after, left, right):
+    before = Node.from_json(schema, before)
+    mid = Node.from_json(schema, mid)
+    after = Node.from_json(schema, after)
+    content = get(expr)
+    a = content.match_fragment(before.content).fill_before(mid.content)
+    b = False
+    if a:
+        b = content.match_fragment(
+            before.content.append(a).append(mid.content)
+        ).fill_before(after.content, True)
+    if left:
+        left = Node.from_json(schema, left)
+        right = Node.from_json(schema, right)
+        assert a.eq(left.content)
+        assert b.eq(right.content)
+    else:
+        assert not b
