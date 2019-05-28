@@ -81,7 +81,7 @@ class ResolvedPos:
 
     def marks(self):
         parent = self.parent
-        index = self.index
+        index = self.index()
         if parent.content.size == 0:
             return Mark.none
         if self.text_offset:
@@ -92,7 +92,7 @@ class ResolvedPos:
             main, other = other, main
         marks = main.marks
         i = 0
-        while i < len(marks.length):
+        while i < len(marks):
             if marks[i].type.spec.get("inclusive") is False and (
                 not other or not marks[i].is_in_set(other.marks)
             ):
@@ -108,7 +108,7 @@ class ResolvedPos:
         marks = after.marks
         next = end.parent.maybe_child(end.index())
         i = 0
-        while i < len(marks.length):
+        while i < len(marks):
             if marks[i].type.spec.get("inclusive") is False and (
                 not next or not marks[i].is_in_set(next.marks)
             ):

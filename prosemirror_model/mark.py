@@ -1,6 +1,3 @@
-from .comparedeep import compare_deep
-
-
 class Mark:
     def __init__(self, type, attrs):
         self.type = type
@@ -74,7 +71,7 @@ class Mark:
         if isinstance(marks, cls):
             return [marks]
         copy = marks[:]
-        return sorted(copy, key=lambda item: item.type.rank, reverse=True)
+        return sorted(copy, key=lambda item: item.type.rank)
 
 
 Mark.none = []
