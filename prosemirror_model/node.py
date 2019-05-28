@@ -290,7 +290,7 @@ class TextNode(Node):
 
     @property
     def text_content(self):
-        return self.content
+        return self.text
 
     def text_between(self, from_, to):
         return self.text[from_:to]
