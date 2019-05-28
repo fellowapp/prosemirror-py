@@ -12,6 +12,8 @@ pytest = "*"
 pydash = "*"
 pytest-html = "*"
 pytest-cov = "*"
+isort = "*"
+pandoc = "*"
 
 [packages]
 

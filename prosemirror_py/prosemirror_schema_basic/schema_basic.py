@@ -1,8 +1,6 @@
-import json
+from prosemirror_py.prosemirror_model import Schema
 
-from prosemirror_py.prosemirror_model import Node, Schema
-
-basic_spec = {
+spec = {
     "nodes": {
         "doc": {"content": "block+"},
         "paragraph": {
@@ -87,8 +85,4 @@ basic_spec = {
 }
 
 
-basic_schema = Schema(basic_spec)
-basic_doc = json.loads(
-    '{"type":"doc","content":[{"type":"heading","attrs":{"level":1},"content":[{"type":"text","text":"Fellow"}]},{"type":"paragraph","content":[{"type":"text","text":"Test "},{"type":"text","marks":[{"type":"strong"}],"text":"this"},{"type":"text","text":" text"}]}]}'
-)
-doc_node = Node.from_json(basic_schema, basic_doc)
+schema = Schema(spec)
