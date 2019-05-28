@@ -14,4 +14,5 @@ def ist():
                 assert key(a, b)
             else:
                 assert key(a)
+
     return ist

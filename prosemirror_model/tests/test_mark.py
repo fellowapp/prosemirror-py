@@ -188,14 +188,14 @@ class TestResolvedPosMarks:
         assert mark.is_in_set(doc.resolve(doc.tag["a"]).marks()) is result
 
     @pytest.mark.parametrize(
-        'a,b',
+        "a,b",
         [
             (custom_doc.resolve(4).marks(), [custom_strong]),
             (custom_doc.resolve(3).marks(), [remark1, custom_strong]),
             (custom_doc.resolve(20).marks(), []),
             (custom_doc.resolve(15).marks(), [remark1]),
             (custom_doc.resolve(25).marks(), []),
-        ]
+        ],
     )
     def test_with_custom_doc(self, a, b):
         assert Mark.same_set(a, b)
