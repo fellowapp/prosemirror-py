@@ -70,20 +70,7 @@ def test_eq(a, b, res):
     assert a.eq(b) is res
 
 
-def ist(a, b=None, key=None):
-    if key is None:
-        if b is not None:
-            assert a == b
-        else:
-            assert a
-    else:
-        if b is not None:
-            assert key(a, b)
-        else:
-            assert key(a)
-
-
-def test_add_to_set():
+def test_add_to_set(ist):
 
     ist(em_.add_to_set([]), [em_], Mark.same_set)
     ist(em_.add_to_set([em_]), [em_], Mark.same_set)
@@ -122,7 +109,7 @@ def test_add_to_set():
     )
 
 
-def test_remove_form_set():
+def test_remove_form_set(ist):
     ist(Mark.same_set(em_.remove_from_set([]), []))
     ist(Mark.same_set(em_.remove_from_set([em_]), []))
     ist(Mark.same_set(strong.remove_from_set([em_]), [em_]))
