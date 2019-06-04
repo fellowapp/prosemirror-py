@@ -1,4 +1,7 @@
-import icu
+from icu import UnicodeString
+
+from prosemirror_py.utils import text_length
+
 from .comparedeep import compare_deep
 from .fragment import Fragment
 from .mark import Mark
@@ -298,7 +301,7 @@ class TextNode(Node):
 
     @property
     def node_size(self):
-        return icu.UnicodeString(self.text).length()
+        return text_length(self.text)
 
     def mark(self, marks):
         return (
@@ -314,10 +317,10 @@ class TextNode(Node):
 
     def cut(self, from_=0, to=None):
         if to is None:
-            to = len(self.text)
-        if from_ == 0 and to == len(self.text):
+            to = text_length(self.text)
+        if from_ == 0 and to == text_length(self.text):
             return self
-        return self.with_text(self.text[from_:to])
+        return self.with_text(str(UnicodeString(self.text)[from_:to]))
 
     def eq(self, other):
         return self.same_markup(other) and self.text == getattr(other, "text", None)

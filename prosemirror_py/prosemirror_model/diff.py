@@ -1,3 +1,6 @@
+from prosemirror_py.utils import text_length
+
+
 def find_diff_start(a, b, pos):
     i = 0
     while True:
@@ -11,9 +14,9 @@ def find_diff_start(a, b, pos):
             return pos
         if child_a.is_text and child_a.text != child_b.text:
             if child_b.text.startswith(child_a.text):
-                return pos + len(child_a.text)
+                return pos + text_length(child_a.text)
             if child_a.text.startswith(child_b.text):
-                return pos + len(child_b.text)
+                return pos + text_length(child_b.text)
             next_index = next(
                 (
                     index_a
@@ -55,11 +58,14 @@ def find_diff_end(a, b, pos_a, pos_b):
             return {"a": pos_a, "b": pos_b}
 
         if child_a.is_text and child_a.text != child_b.text:
-            same, min_size = 0, min(len(child_a.text), len(child_b.text))
+            same, min_size = (
+                0,
+                min(text_length(child_a.text), text_length(child_b.text)),
+            )
             while (
                 same < min_size
-                and child_a.text[len(child_a.text) - same - 1]
-                == child_b.text[len(child_b.text) - same - 1]
+                and child_a.text[text_length(child_a.text) - same - 1]
+                == child_b.text[text_length(child_b.text) - same - 1]
             ):
                 same += 1
                 pos_a -= 1

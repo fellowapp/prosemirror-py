@@ -1,5 +1,7 @@
 from typing import Iterable
 
+from prosemirror_py.utils import text_length
+
 from .diff import find_diff_end, find_diff_start
 
 
@@ -92,7 +94,7 @@ class Fragment:
                 if pos < from_ or end > to:
                     if child.is_text:
                         child = child.cut(
-                            max(0, from_ - pos), min(len(child.text), to - pos)
+                            max(0, from_ - pos), min(text_length(child.text), to - pos)
                         )
                     else:
                         child = child.cut(
