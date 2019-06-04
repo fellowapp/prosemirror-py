@@ -1,3 +1,4 @@
+import icu
 from .comparedeep import compare_deep
 from .fragment import Fragment
 from .mark import Mark
@@ -297,7 +298,7 @@ class TextNode(Node):
 
     @property
     def node_size(self):
-        return len(self.text)
+        return icu.UnicodeString(self.text).length()
 
     def mark(self, marks):
         return (

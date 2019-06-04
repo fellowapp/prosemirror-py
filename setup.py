@@ -9,7 +9,7 @@ except (IOError, ImportError):
 
 setup(
     name="prosemirror_py",
-    version="0.1.0",
+    version="0.1.1",
     packages=find_packages(exclude=["contrib", "docs", "tests", "example.py"]),
     include_package_data=True,
     license="MIT License",
@@ -18,7 +18,7 @@ setup(
     url="https://github.com/fellowinsights/prosemirror_py",
     author="Shen Li",
     author_email="shen@fellow.co",
-    install_requires=[],
+    install_requires=["PyICU>=2.0.0"],
     classifiers=[
         "Intended Audience :: Developers",
         "LICENSE :: OTHER/PROPRIETARY LICENSE",
