@@ -19,6 +19,8 @@ pydash = "^4.7"
 pytest-cov = "^2.7"
 pandoc = "^1.0"
 isort = "^4.3"
+codecov = "^2.0"
+coverage = "^4.5"
 
 [tool.black]
 max-line-length=88

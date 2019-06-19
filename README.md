@@ -18,4 +18,4 @@ ProseMirror provides a powerful toolkit for building rich-text editors, but it's
 
 ## Status
 
-The full ProseMirror test suite has been translated and passes.
+The full ProseMirror test suite has been translated and passes. This project only supports Python 3. There are no type annotations at the moment, although the original has annotations available in doc comments.

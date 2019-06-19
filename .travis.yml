@@ -10,3 +10,4 @@ matrix:
       script:
         - poetry run flake8
         - poetry run py.test
+        - poetry run codecov --cov=.
