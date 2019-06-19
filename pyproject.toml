@@ -7,7 +7,7 @@ license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-pyicu = { version = "^2.3", optional = true }
+pyicu = "^2.3"
 typing-extensions = "^3.7"
 
 [tool.poetry.dev-dependencies]
