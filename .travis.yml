@@ -9,5 +9,5 @@ matrix:
         - poetry install
       script:
         - poetry run flake8
-        - poetry run py.test --cov=.
+        - poetry run py.test --cov=./prosemirror_py/
         - poetry run codecov
