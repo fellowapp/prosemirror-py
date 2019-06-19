@@ -1,0 +1,29 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "poetry.lock" }}
+      - run:
+          name: Install Poetry
+          command: pip install poetry
+      - run:
+          name: Install dependencies
+          command: poetry install
+      - save_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "poetry.lock" }}
+          paths:
+            - /home/circleci/.cache/pypoetry/virtualenvs
+      - run:
+          name: Run Flake8
+          command: poetry run flake8
+      - run:
+          name: Run Python tests
+          command: poetry run py.test --cov=./prosemirror_py/
+      - run:
+          name: Upload coverage to codecov
+          command: poetry run codecov
