@@ -2,8 +2,10 @@
 name = "prosemirror-py"
 version = "0.1.1"
 description = "ProseMirror in Python"
+readme = "README.md"
 authors = ["Shen Li <shen@fellow.co>"]
 license = "BSD-3-Clause"
+packages = [{include = "prosemirror"}]
 
 [tool.poetry.dependencies]
 python = "^3.7"
