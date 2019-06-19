@@ -1,13 +1,8 @@
 import pytest
 
-from prosemirror_py.prosemirror_model import Fragment, Schema, Slice
-from prosemirror_py.prosemirror_test_builder import builders, out, schema
-from prosemirror_py.prosemirror_transform import (
-    Transform,
-    TransformError,
-    find_wrapping,
-    lift_target,
-)
+from prosemirror.model import Fragment, Schema, Slice
+from prosemirror.test_builder import builders, out, schema
+from prosemirror.transform import Transform, TransformError, find_wrapping, lift_target
 
 doc = out["doc"]
 blockquote = out["blockquote"]

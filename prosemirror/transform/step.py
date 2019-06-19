@@ -1,6 +1,6 @@
 import abc
 
-from prosemirror_py.prosemirror_model import ReplaceError
+from prosemirror.model import ReplaceError
 
 from .map import StepMap
 

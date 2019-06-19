@@ -1,4 +1,4 @@
-from prosemirror_py.prosemirror_model import Node
+from prosemirror.model import Node
 
 
 def can_cut(node, start, end):

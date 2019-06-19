@@ -1,6 +1,6 @@
 from icu import UnicodeString
 
-from prosemirror_py.utils import text_length
+from prosemirror.utils import text_length
 
 from .comparedeep import compare_deep
 from .fragment import Fragment

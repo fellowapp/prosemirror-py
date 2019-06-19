@@ -1,6 +1,6 @@
-from prosemirror_py.prosemirror_model import Schema
-from prosemirror_py.prosemirror_schema_basic import schema
-from prosemirror_py.prosemirror_schema_list import add_list_nodes
+from prosemirror.model import Schema
+from prosemirror.schema.basic import schema
+from prosemirror.schema.list import add_list_nodes
 
 from .build import builders
 

@@ -1,7 +1,7 @@
 import pytest
 
-from prosemirror_py.prosemirror_model import Mark, Node, Schema
-from prosemirror_py.prosemirror_test_builder import out, schema
+from prosemirror.model import Mark, Node, Schema
+from prosemirror.test_builder import out, schema
 
 doc = out["doc"]
 p = out["p"]

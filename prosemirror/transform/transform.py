@@ -1,4 +1,4 @@
-from prosemirror_py.prosemirror_model import Fragment, MarkType, Node, Slice
+from prosemirror.model import Fragment, MarkType, Node, Slice
 
 from .map import Mapping
 from .mark_step import AddMarkStep, RemoveMarkStep

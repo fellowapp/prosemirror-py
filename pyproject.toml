@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "prosemirror_py"
+name = "prosemirror-py"
 version = "0.1.1"
 description = "ProseMirror in Python"
 authors = ["Shen Li <shen@fellow.co>"]

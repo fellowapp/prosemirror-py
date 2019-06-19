@@ -23,7 +23,7 @@ jobs:
           command: poetry run flake8
       - run:
           name: Run Python tests
-          command: poetry run py.test --cov=./prosemirror_py/
+          command: poetry run py.test --cov=./prosemirror/
       - run:
           name: Upload coverage to codecov
           command: poetry run codecov

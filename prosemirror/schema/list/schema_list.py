@@ -1,5 +1,5 @@
-# from prosemirror_py.prosemirror_transform import find_wrapping, lift_target, can_split, ReplaceAroundStep
-# from prosemirror_py.prosemirror_model import Slice, Fragment, NodeRange
+# from prosemirror.transform import find_wrapping, lift_target, can_split, ReplaceAroundStep
+# from prosemirror.model import Slice, Fragment, NodeRange
 
 
 OL_DOM = ["ol", 0]
