@@ -1,6 +1,6 @@
 # prosemirror-py
 
-[![Build Status](https://travis-ci.org/fellowinsights/prosemirror-py.svg?branch=master)](https://travis-ci.org/fellowinsights/prosemirror-py)
+[![Build Status](https://travis-ci.org/fellowinsights/prosemirror-py.svg?branch=master)](https://travis-ci.org/fellowinsights/prosemirror-py) [![Code Coverage](https://img.shields.io/codecov/c/gh/fellowinsights/prosemirror-py.svg)](https://codecov.io/gh/fellowinsights/prosemirror-py)
 
 This package provides Python implementations of the following [ProseMirror](https://prosemirror.net/) packages:
 
