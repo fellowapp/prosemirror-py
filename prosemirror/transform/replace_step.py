@@ -1,4 +1,4 @@
-from prosemirror_py.prosemirror_model import Slice
+from prosemirror.model import Slice
 
 from .map import StepMap
 from .step import Step, StepResult

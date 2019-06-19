@@ -1,6 +1,6 @@
 import re
 
-from prosemirror_py.prosemirror_model import Node
+from prosemirror.model import Node
 
 NO_TAG = Node.tag = {}
 

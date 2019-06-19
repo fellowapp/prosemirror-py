@@ -1,6 +1,6 @@
 import pytest
 
-from prosemirror_py.prosemirror_test_builder import out
+from prosemirror.test_builder import out
 
 doc = out["doc"]
 blockquote = out["blockquote"]

@@ -1,9 +1,9 @@
 import pydash
 import pytest
 
-from prosemirror_py.prosemirror_model import Fragment, Slice
-from prosemirror_py.prosemirror_test_builder import out, schema
-from prosemirror_py.prosemirror_transform import (
+from prosemirror.model import Fragment, Slice
+from prosemirror.test_builder import out, schema
+from prosemirror.transform import (
     AddMarkStep,
     Mapping,
     RemoveMarkStep,

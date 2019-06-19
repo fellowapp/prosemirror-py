@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from prosemirror_py.utils import text_length
+from prosemirror.utils import text_length
 
 from .diff import find_diff_end, find_diff_start
 

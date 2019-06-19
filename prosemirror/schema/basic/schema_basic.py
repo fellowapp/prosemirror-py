@@ -1,4 +1,4 @@
-from prosemirror_py.prosemirror_model import Schema
+from prosemirror.model import Schema
 
 spec = {
     "nodes": {

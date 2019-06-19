@@ -1,4 +1,4 @@
-from prosemirror_py.prosemirror_model import Fragment, Slice
+from prosemirror.model import Fragment, Slice
 
 from .replace_step import ReplaceAroundStep, ReplaceStep
 

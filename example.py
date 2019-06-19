@@ -1,6 +1,6 @@
 import json
 
-from prosemirror_py.prosemirror_model import Node, Schema
+from prosemirror.model import Node, Schema
 
 basic_spec = {
     "nodes": {

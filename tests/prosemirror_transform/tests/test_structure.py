@@ -1,12 +1,7 @@
 import pytest
 
-from prosemirror_py.prosemirror_model import Schema, Slice
-from prosemirror_py.prosemirror_transform import (
-    Transform,
-    can_split,
-    find_wrapping,
-    lift_target,
-)
+from prosemirror.model import Schema, Slice
+from prosemirror.transform import Transform, can_split, find_wrapping, lift_target
 
 schema = Schema(
     {
@@ -48,10 +43,8 @@ doc = n(
             n("head", t("Subsection head")),  # 46
             n("para", t("Subtext")),  # 55
             n(
-                "figure",  # 56
-                n("caption", t("Figure caption")),  # 72
-                n("figureimage"),
-            ),  # 74
+                "figure", n("caption", t("Figure caption")), n("figureimage")
+            ),  # 56  # 72  # 74
             n("quote", n("para", t("!"))),
         ),
     ),  # 81

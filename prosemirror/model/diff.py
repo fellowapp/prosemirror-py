@@ -1,4 +1,4 @@
-from prosemirror_py.utils import text_length
+from prosemirror.utils import text_length
 
 
 def find_diff_start(a, b, pos):
