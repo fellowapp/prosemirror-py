@@ -149,7 +149,7 @@ class ContentMatch:
 ContentMatch.empty = ContentMatch(True)
 
 
-TOKEN_REGEX = re.compile(r"\s*(?=\b|\W|$)")
+TOKEN_REGEX = re.compile(r"\w+|\W")
 
 
 class TokenStream:
@@ -158,7 +158,7 @@ class TokenStream:
         self.node_types = node_types
         self.inline = None
         self.pos = 0
-        self.tokens = [i for i in TOKEN_REGEX.split(string) if i]
+        self.tokens = [i for i in TOKEN_REGEX.findall(string) if i.strip()]
 
     @property
     def next(self):
