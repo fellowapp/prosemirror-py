@@ -1,14 +1,17 @@
 [tool.poetry]
 name = "prosemirror-py"
-version = "0.1.1"
+version = "0.1.2"
 description = "ProseMirror in Python"
 readme = "README.md"
 authors = ["Shen Li <shen@fellow.co>"]
 license = "BSD-3-Clause"
-packages = [{include = "prosemirror"}]
+packages = [{ include = "prosemirror" }]
+homepage = "https://github.com/fellowinsights/prosemirror-py"
+repository = "https://github.com/fellowinsights/prosemirror-py"
+keywords = ["prosemirror", "collaborative", "editing"]
 
 [tool.poetry.dependencies]
-python = ">=3.4,<4"
+python = ">=3.6,<4"
 pyicu = "^2.3"
 typing-extensions = "^3.7"
 
