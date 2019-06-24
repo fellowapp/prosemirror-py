@@ -1,6 +1,9 @@
 # prosemirror-py
 
-[![CircleCI](https://circleci.com/gh/fellowinsights/prosemirror-py.svg?style=shield)](https://circleci.com/gh/fellowinsights/prosemirror-py) [![Code Coverage](https://codecov.io/gh/fellowinsights/prosemirror-py/branch/master/graph/badge.svg)](https://codecov.io/gh/fellowinsights/prosemirror-py)
+[![CircleCI](https://circleci.com/gh/fellowinsights/prosemirror-py.svg?style=shield)](https://circleci.com/gh/fellowinsights/prosemirror-py)
+[![Code Coverage](https://codecov.io/gh/fellowinsights/prosemirror-py/branch/master/graph/badge.svg)](https://codecov.io/gh/fellowinsights/prosemirror-py)
+[![Python Version](https://img.shields.io/pypi/pyversions/prosemirror-py.svg)](https://pypi.org/project/prosemirror-py/)
+[![PyPI Package](https://img.shields.io/pypi/v/prosemirror-py.svg)](https://pypi.org/project/prosemirror-py/)
 
 This package provides Python implementations of the following [ProseMirror](https://prosemirror.net/) packages:
 
