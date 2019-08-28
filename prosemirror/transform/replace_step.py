@@ -152,7 +152,7 @@ class ReplaceAroundStep(Step):
         to = mapping.map_result(self.to, -1)
         gap_from = mapping.map(self.gap_from, -1)
         gap_to = mapping.map(self.gap_to, 1)
-        if (from_.deleted and to.delete) or gap_from < from_.pos or gap_to > to.pos:
+        if (from_.deleted and to.deleted) or gap_from < from_.pos or gap_to > to.pos:
             return None
         return ReplaceAroundStep(
             from_.pos, to.pos, gap_from, gap_to, self.slice, self.insert, self.structure
