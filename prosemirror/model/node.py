@@ -239,7 +239,7 @@ class Node:
             raise ValueError(
                 f"Invalid content for node {self.type.name}: {str(self.content)[:50]}"
             )
-        return self.content.for_each(lambda node: node.check())
+        return self.content.for_each(lambda node, *args: node.check())
 
     def to_json(self):
         obj = {"type": self.type.name}
