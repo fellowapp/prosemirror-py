@@ -5,6 +5,8 @@ from .mark_step import AddMarkStep, RemoveMarkStep
 from .replace import close_fragment, covered_depths, fits_trivially, replace_step
 from .replace_step import ReplaceAroundStep, ReplaceStep
 from .structure import can_change_type, insert_point
+from . import structure
+from . import replace
 
 
 class TransformError(ValueError):
@@ -12,6 +14,16 @@ class TransformError(ValueError):
 
 
 class Transform:
+    # functions from .structure exposed by Transform
+    join_point = structure.join_point
+    can_join = structure.can_join
+    can_split = structure.can_split
+    insert_point = structure.insert_point
+    drop_point = structure.drop_point
+    lift_target = structure.lift_target
+    find_wrapping = structure.find_wrapping
+    replace_step = replace.replace_step
+
     def __init__(self, doc):
         self.doc = doc
         self.steps = []
