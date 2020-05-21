@@ -24,7 +24,7 @@ pydash = "^4.7"
 pytest-cov = "^2.8"
 pandoc = "^1.0"
 isort = "^4.3"
-codecov = "^2.0"
+codecov = "^2.1"
 coverage = "^5.0"
 
 [tool.black]
