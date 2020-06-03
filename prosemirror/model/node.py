@@ -1,5 +1,3 @@
-from icu import UnicodeString
-
 from prosemirror.utils import text_length
 
 from .comparedeep import compare_deep
@@ -320,7 +318,8 @@ class TextNode(Node):
             to = text_length(self.text)
         if from_ == 0 and to == text_length(self.text):
             return self
-        return self.with_text(str(UnicodeString(self.text)[from_:to]))
+        substring = self.text.encode('utf-16-le')[2*from_:2*to].decode('utf-16-le')
+        return self.with_text(substring)
 
     def eq(self, other):
         return self.same_markup(other) and self.text == getattr(other, "text", None)

@@ -1,5 +1,3 @@
-from icu import UnicodeString
-
 
 def text_length(text):
-    return UnicodeString(text).length()
+    return len(text.encode('utf-16-le')) // 2

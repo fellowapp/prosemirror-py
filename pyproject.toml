@@ -12,7 +12,6 @@ keywords = ["prosemirror", "collaborative", "editing"]
 
 [tool.poetry.dependencies]
 python = ">=3.6,<4"
-pyicu = "^2.3"
 typing-extensions = "^3.7"
 
 [tool.poetry.dev-dependencies]
