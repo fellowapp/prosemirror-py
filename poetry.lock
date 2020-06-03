@@ -300,7 +300,7 @@ description = "Python extension wrapping the ICU C++ API"
 name = "pyicu"
 optional = false
 python-versions = "*"
-version = "2.4.2"
+version = "2.5"
 
 [[package]]
 category = "dev"
@@ -601,9 +601,7 @@ pyflakes = [
     {file = "pyflakes-2.1.1.tar.gz", hash = "sha256:d976835886f8c5b31d47970ed689944a0262b5f3afa00a5a7b4dc81e5449f8a2"},
 ]
 pyicu = [
-    {file = "PyICU-2.4.2-py2.7-macosx-10.14-x86_64.egg", hash = "sha256:3b9541293ee9de1ef3c32e10b4397dd0c4cb3c34d9d679d1ee94e7634c875560"},
-    {file = "PyICU-2.4.2-py3.8-macosx-10.14-x86_64.egg", hash = "sha256:cb151685e8ae16197fd01e584cf81df5b656c93c770ccef09851d9113ca57881"},
-    {file = "PyICU-2.4.2.tar.gz", hash = "sha256:48c43424b67090c4028d8743132d141d8477f390f93e26c2cb67c26485622c20"},
+    {file = "PyICU-2.5.tar.gz", hash = "sha256:a120b68c53f769f37bfb70b7e84ca12c3f4ab1e4df43e87a02dff05ae472cdbc"},
 ]
 pyparsing = [
     {file = "pyparsing-2.4.0-py2.py3-none-any.whl", hash = "sha256:9b6323ef4ab914af344ba97510e966d64ba91055d6b9afa6b30799340e89cc03"},
