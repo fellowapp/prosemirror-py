@@ -318,7 +318,9 @@ class TextNode(Node):
             to = text_length(self.text)
         if from_ == 0 and to == text_length(self.text):
             return self
-        substring = self.text.encode('utf-16-le')[2*from_:2*to].decode('utf-16-le')
+        substring = self.text.encode("utf-16-le")[2 * from_ : 2 * to].decode(
+            "utf-16-le"
+        )
         return self.with_text(substring)
 
     def eq(self, other):
