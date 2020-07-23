@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import cast, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from . import Fragment, Mark, Node, Schema
@@ -11,18 +10,19 @@ def escape_attr_value(s: str) -> str:
     return s.replace('"', '\\"')
 
 
-@dataclass
 class DocumentFragment:
-    children: List[HTMLNode]
+    def __init__(self, children: List[HTMLNode]):
+        self.children = children
 
     def __str__(self):
         return "".join([str(c) for c in self.children])
 
 
-@dataclass
 class Element(DocumentFragment):
-    name: str
-    attrs: Dict[str, str]
+    def __init__(self, name: str, attrs: Dict[str, str], children: List[HTMLNode]):
+        self.name = name
+        self.attrs = attrs
+        super().__init__(children)
 
     def __str__(self):
         attrs_str = " ".join(
@@ -36,10 +36,14 @@ class Element(DocumentFragment):
 HTMLOutputSpec = Union[str, tuple, Element]
 
 
-@dataclass
 class DOMSerializer:
-    nodes: Dict[str, Callable[[Node], HTMLOutputSpec]]
-    marks: Dict[str, Callable[[Mark, bool], HTMLOutputSpec]]
+    def __init__(
+        self,
+        nodes: Dict[str, Callable[[Node], HTMLOutputSpec]],
+        marks: Dict[str, Callable[[Mark, bool], HTMLOutputSpec]],
+    ):
+        self.nodes = nodes
+        self.marks = marks
 
     def serialize_fragment(
         self, fragment: Fragment, target: Optional[Element] = None
