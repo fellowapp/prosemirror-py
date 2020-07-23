@@ -39,7 +39,7 @@ spec = {
                 {"tag": "h5", "attrs": {"level": 5}},
                 {"tag": "h6", "attrs": {"level": 6}},
             ],
-            "toDOM": lambda node: [f"h{node.attrs.level}", 0],
+            "toDOM": lambda node: [f"h{node.attrs['level']}", 0],
         },
         "code_block": {
             "content": "text*",

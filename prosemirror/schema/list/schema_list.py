@@ -7,11 +7,17 @@ UL_DOM = ["ul", 0]
 LI_DOM = ["li", 0]
 
 
-orderd_list = {"attrs": {"order": {"default": 1}}, "parseDOM": [{"tag": "ol"}]}
+orderd_list = {
+    "attrs": {"order": {"default": 1}},
+    "parseDOM": [{"tag": "ol"}],
+    "toDOM": lambda node: (
+        OL_DOM if node.attrs.get("order") == 1 else ["ol", {"start": node.attrs["order"]}, 0]
+    ),
+}
 
-bullet_list = {"parseDOM": [{"tag": "ul"}]}
+bullet_list = {"parseDOM": [{"tag": "ul"}], "toDOM": lambda _: UL_DOM}
 
-list_item = {"parseDOM": [{"tag": "li"}], "defining": True}
+list_item = {"parseDOM": [{"tag": "li"}], "defining": True, "toDOM": lambda _: LI_DOM}
 
 
 def add(obj, props):
