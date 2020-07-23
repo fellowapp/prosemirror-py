@@ -1,4 +1,4 @@
-from typing import cast, Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import cast, Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from . import Fragment, Mark, Node, Schema
 
@@ -33,7 +33,7 @@ class Element(DocumentFragment):
         return f"<{open_tag_str}>{children_str}</{self.name}>"
 
 
-HTMLOutputSpec = Union[str, tuple, Element]
+HTMLOutputSpec = Union[str, Sequence[Any], Element]
 
 
 class DOMSerializer:
@@ -61,12 +61,15 @@ class DOMSerializer:
                     active = []
                 keep = 0
                 rendered = 0
-                while keep > len(active) and rendered < len(node.marks):
+                while keep < len(active) and rendered < len(node.marks):
                     next = node.marks[rendered]
-                    if next.type.name not in self.marks:
+                    if not self.marks.get(next.type.name):
                         rendered += 1
                         continue
-                    if not next.eq(active[keep]) or next.type.spec.spanning is False:
+                    if (
+                        not next.eq(active[keep])
+                        or next.type.spec.get("spanning") is False
+                    ):
                         break
                     keep += 2
                     rendered += 1
@@ -108,7 +111,7 @@ class DOMSerializer:
     def serialize_mark(
         self, mark: Mark, inline: bool
     ) -> Optional[Tuple[HTMLNode, Optional[Element]]]:
-        to_dom = self.marks[mark.type.name]
+        to_dom = self.marks.get(mark.type.name)
         if to_dom:
             return type(self).render_spec(to_dom(mark, inline))
         return None
@@ -171,7 +174,7 @@ class DOMSerializer:
 def gather_to_dom(obj: Dict[str, Any]):
     result = {}
     for name in obj:
-        to_dom = obj[name].get("spec", {}).get("toDOM")
+        to_dom = obj[name].spec.get("toDOM")
         if to_dom:
             result[name] = to_dom
     return result
