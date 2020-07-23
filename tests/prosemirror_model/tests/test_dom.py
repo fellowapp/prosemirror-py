@@ -34,12 +34,12 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
         (
             "it can represent a line break",
             doc(p("hi", br, "there")),
-            "<p>hi<br/>there</p>",
+            "<p>hi<br>there</p>",
         ),
         (
             "it can represent an image",
             doc(p("hi", img({"alt": "x"}), "there")),
-            '<p>hi<img src="img.png" alt="x"/>there</p>',
+            '<p>hi<img src="img.png" alt="x">there</p>',
         ),
         (
             "it joins styles",

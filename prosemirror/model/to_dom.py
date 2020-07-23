@@ -19,6 +19,26 @@ class DocumentFragment:
 
 
 class Element(DocumentFragment):
+    self_closing_elements = frozenset(
+        [
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "keygen",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "track",
+            "wbr",
+        ]
+    )
+
     def __init__(self, name: str, attrs: Dict[str, str], children: List[HTMLNode]):
         self.name = name
         self.attrs = attrs
@@ -28,8 +48,11 @@ class Element(DocumentFragment):
         attrs_str = " ".join(
             [f'{k}="{escape_attr_value(v)}"' for k, v in self.attrs.items()]
         )
-        children_str = "".join([str(c) for c in self.children])
         open_tag_str = " ".join([s for s in [self.name, attrs_str] if s])
+        if self.name in self.self_closing_elements:
+            assert not self.children, "self-closing elements should not have children"
+            return f"<{open_tag_str}>"
+        children_str = "".join([str(c) for c in self.children])
         return f"<{open_tag_str}>{children_str}</{self.name}>"
 
 
