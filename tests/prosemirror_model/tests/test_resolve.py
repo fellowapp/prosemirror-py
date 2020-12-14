@@ -59,3 +59,15 @@ def test_node_resolve(pos, exp):
             assert after.text_content == e_after
         else:
             assert after == e_after
+
+
+@pytest.mark.parametrize(
+    "pos,result",
+    [
+        (0, ":0"),
+        (1, "paragraph_0:0"),
+        (7, "blockquote_1/paragraph_0:1"),
+    ],
+)
+def test_resolvedpos_str(pos, result):
+    assert str(test_doc.resolve(pos)) == result
