@@ -15,7 +15,7 @@ python = ">=3.6,<4"
 typing-extensions = "^3.7"
 
 [tool.poetry.dev-dependencies]
-black = { version = "19.10b0", allow-prereleases = true, python = ">=3.6" }
+black = { version = "20.8b1", allow-prereleases = true, python = ">=3.6" }
 mypy = "^0.780"
 pytest = "^5.4"
 flake8 = "^3.8"
