@@ -18,7 +18,7 @@ typing-extensions = "^3.7"
 black = { version = "19.10b0", allow-prereleases = true, python = ">=3.6" }
 mypy = "^0.780"
 pytest = "^5.4"
-flake8 = "^3.8"
+flake8 = "^3.9"
 pydash = "^4.7"
 pytest-cov = "^2.10"
 pandoc = "^1.0"
