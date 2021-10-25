@@ -1,6 +1,7 @@
 from prosemirror.model import Fragment, Slice
+from typing import List, Optional
 
-from .replace_step import ReplaceAroundStep, ReplaceStep
+from .replace_step import ReplaceAroundStep, ReplaceStep, Step
 
 
 def replace_step(doc, from_, to=None, slice=None):
@@ -15,179 +16,7 @@ def replace_step(doc, from_, to=None, slice=None):
     to_ = doc.resolve(to)
     if fits_trivially(from__, to_, slice):
         return ReplaceStep(from_, to, slice)
-    placed = place_slice(from__, slice)
-    fitted_left = fit_left(from__, placed)
-    fitted = fit_right(from__, to_, fitted_left)
-    if not fitted:
-        return None
-    if fitted_left.size != fitted.size and can_move_text(from__, to_, fitted_left):
-        d = to_.depth
-        after = to_.after(d)
-        while d > 1 and after == to_.end(d - 1):
-            d -= 1
-            after += 1
-        fittedAfter = fit_right(from__, doc.resolve(after), fitted_left)
-        if fittedAfter:
-            return ReplaceAroundStep(
-                from_, after, to, to_.end(), fittedAfter, fitted_left.size
-            )
-    return ReplaceStep(from_, to, fitted, None) if (fitted or from_ != to) else None
-
-
-def fit_left_innter(from__, depth, placed, placed_below):
-    content = Fragment.empty
-    open_end = 0
-    placed_here = placed[depth] if len(placed) > depth else None
-    if from__.depth > depth:
-        inner = fit_left_innter(from__, depth + 1, placed, placed_below or placed_here)
-        open_end = inner["open_end"] + 1
-        content = Fragment.from_(from__.node(depth + 1).copy(inner["content"]))
-    if placed_here:
-        content = content.append(placed_here["content"])
-        open_end = placed_here["open_end"]
-    if placed_below:
-        content = content.append(
-            from__.node(depth)
-            .content_match_at(from__.index_after(depth))
-            .fill_before(Fragment.empty, True)
-        )
-
-    return {"content": content, "open_end": open_end}
-
-
-def fit_left(from__, placed):
-    inner_res = fit_left_innter(from__, 0, placed, False)
-    content = inner_res["content"]
-    open_end = inner_res["open_end"]
-    return Slice(content, from__.depth, open_end or 0)
-
-
-def fit_right_join(content, parent, from__, to_, depth, open_start, open_end):
-    match = None
-    count = content.child_count
-    match_count = count - (1 if open_end > 0 else 0)
-    parent_node = parent if open_start < 0 else from__.node(depth)
-    if open_start < 0:
-        match = parent_node.content_match_at(match_count)
-    elif count == 1 and open_end > 0:
-        match = parent_node.content_match_at(
-            from__.index(depth) if open_start else from__.index_after(depth)
-        )
-    else:
-        match = parent_node.content_match_at(from__.index_after(depth)).match_fragment(
-            content, (1 if count > 0 and open_start else 0), match_count
-        )
-    to_node = to_.node(depth)
-    if open_end > 0 and depth < to_.depth:
-        after = to_node.content.cut_by_index(to_.index_after(depth)).add_to_start(
-            content.last_child
-        )
-        joinable = match.fill_before(after, True)
-        if joinable and joinable.size and open_start > 0 and count == 1:
-            joinable = None
-        if joinable:
-            inner = fit_right_join(
-                content.last_child.content,
-                content.last_child,
-                from__,
-                to_,
-                depth + 1,
-                (open_start - 1 if count == 1 else -1),
-                open_end - 1,
-            )
-            if inner:
-                last = content.last_child.copy(inner)
-                if joinable.size:
-                    return (
-                        content.cut_by_index(0, count - 1)
-                        .append(joinable)
-                        .add_to_end(last)
-                    )
-                return content.replace_child(count - 1, last)
-    if open_end > 0:
-        match = match.match_type(
-            (
-                from__.node(depth + 1)
-                if count == 1 and open_start > 0
-                else content.last_child
-            ).type
-        )
-    to_index = to_.index(depth)
-    if to_index == to_node.child_count and not to_node.type.compatible_content(
-        parent.type
-    ):
-        return None
-    joinable = match.fill_before(to_node.content, True, to_index)
-    i = to_index
-    while i < to_node.content.child_count:
-        if not parent_node.type.allows_marks(to_node.content.child(i).marks):
-            joinable = None
-        i += 1
-    if not joinable:
-        return None
-
-    if open_end > 0:
-        closed = fit_right_closed(
-            content.last_child,
-            open_end - 1,
-            from__,
-            depth + 1,
-            (open_start - 1 if count == 1 else -1),
-        )
-        content = content.replace_child(count - 1, closed)
-    content = content.append(joinable)
-    if to_.depth > depth:
-        content = content.add_to_end(fit_right_separate(to_, depth + 1))
-    return content
-
-
-def fit_right_closed(node, open_end, from__, depth, open_start):
-    match = None
-    content = node.content
-    count = content.child_count
-    if open_start >= 0:
-        match = (
-            from__.node(depth)
-            .content_match_at(from__.index_after(depth))
-            .match_fragment(content, 1 if open_start > 0 else 0, count)
-        )
-    else:
-        match = node.content_match_at(count)
-    if open_end > 0:
-        closed = fit_right_closed(
-            content.last_child,
-            open_end - 1,
-            from__,
-            depth + 1,
-            open_start - 1 if count == 1 else -1,
-        )
-        content = content.replace_child(count - 1, closed)
-    return node.copy(content.append(match.fill_before(Fragment.empty, True)))
-
-
-def fit_right_separate(to_, depth):
-    node = to_.node(depth)
-    fill = node.content_match_at(0).fill_before(node.content, True, to_.index(depth))
-    if to_.depth > depth:
-        fill = fill.add_to_end(fit_right_separate(to_, depth + 1))
-    return node.copy(fill)
-
-
-def normalize_slice(content, open_start, open_end):
-    while open_start > 0 and open_end > 0 and content.child_count == 1:
-        content = content.first_child.content
-        open_start -= 1
-        open_end -= 1
-    return Slice(content, open_start, open_end)
-
-
-def fit_right(from__, to_, slice):
-    fitted = fit_right_join(
-        slice.content, from__.node(0), from__, to_, 0, slice.open_start, slice.open_end
-    )
-    if not fitted:
-        return None
-    return normalize_slice(fitted, slice.open_start, to_.depth)
+    return Fitter(from__, to_, slice).fit()
 
 
 def fits_trivially(from__, to_, slice):
@@ -196,238 +25,431 @@ def fits_trivially(from__, to_, slice):
     return False
 
 
-def can_move_text(from__, to_, slice):
-    if not to_.parent.is_text_block:
-        return False
-    parent = (
-        node_right(slice.content, slice.open_end)
-        if slice.open_end
-        else from__.node(from__.depth - (slice.open_start - slice.open_end))
-    )
-    if not parent.is_text_block:
-        return False
-    for i in range(to_.index(), to_.parent.child_count):
-        if not parent.type.allows_marks(to_.parent.child(i).marks):
-            return False
-    match = None
-    if slice.open_end:
-        match = parent.content_match_at(parent.child_count)
-    else:
-        match = parent.content_match_at(parent.child_count)
-        if slice.size:
-            match = match.match_fragment(slice.content, 1 if slice.open_start else 0)
+class _FrontierItem:
+    __slots__ = ("type", "match")
 
-    match = match.match_fragment(to_.parent.content, to_.index())
-    return match.valid_end if match else False
+    def __init__(self, type_, match):
+        self.type = type_
+        self.match = match
 
 
-def node_right(content, depth):
-    for i in range(1, depth):
-        content = content.last_child.content
-    return content.last_child
+class _Fittable:
+    __slots__ = ("slice_depth", "frontier_depth", "parent", "inject", "wrap")
+
+    def __init__(self, slice_depth, frontier_depth, parent, inject=None, wrap=None):
+        self.slice_depth = slice_depth
+        self.frontier_depth = frontier_depth
+        self.parent = parent
+        self.inject = inject
+        self.wrap = wrap
 
 
-def place_slice(from__, slice):
-    frontier = Frontier(from__)
-    pass_ = 1
-    while slice.size and pass_ <= 3:
-        slice = frontier.place_slice(
-            slice.content, slice.open_start, slice.open_end, pass_
+class _CloseLevel:
+    __slots__ = ("depth", "fit", "move")
+
+    def __init__(self, depth, fit, move):
+        self.depth = depth
+        self.fit = fit
+        self.move = move
+
+
+class Fitter:
+    __slots__ = ("to_", "from__", "unplaced", "frontier", "placed")
+
+    def __init__(self, from__, to_, slice):
+        self.to_ = to_
+        self.from__ = from__
+        self.unplaced = slice
+
+        self.frontier: List[_FrontierItem] = []
+        for i in range(from__.depth + 1):
+            node = from__.node(i)
+            self.frontier.append(
+                _FrontierItem(node.type, node.content_match_at(from__.index_after(i))),
+            )
+
+        self.placed: Fragment = Fragment.empty
+        for i in range(from__.depth, 0, -1):
+            self.placed = Fragment.from_(from__.node(i).copy(self.placed))
+
+    @property
+    def depth(self) -> int:
+        return len(self.frontier) - 1
+
+    def fit(self) -> Optional[Step]:
+        while self.unplaced.size:
+            fit = self.find_fittable()
+            if fit:
+                self.place_nodes(fit)
+            elif not self.open_more():
+                self.drop_node()
+
+        move_inline = self.must_move_inline()
+        placed_size = self.placed.size - self.depth - self.from__.depth
+        from__ = self.from__
+        to_ = self.close(
+            self.to_ if move_inline < 0 else from__.doc.resolve(move_inline)
         )
-        pass_ += 1
-    while len(frontier.open):
-        frontier.close_node()
-    return frontier.placed
-
-
-class SparseList(list):
-    def __setitem__(self, index, value):
-        missing = index - len(self) + 1
-        if missing > 0:
-            self.extend([None] * missing)
-        list.__setitem__(self, index, value)
-
-    def __getitem__(self, index):
-        try:
-            return list.__getitem__(self, index)
-        except IndexError:
+        if not to_:
             return None
 
+        content = self.placed
+        open_start = from__.depth
+        open_end = to_.depth
+        while open_start and open_end and content.child_count == 1:
+            content = content.first_child.content
+            open_start -= 1
+            open_end -= 1
 
-class Frontier:
-    def __init__(self, pos_):
-        self.open = []
-        for d in range(pos_.depth + 1):
-            parent = pos_.node(d)
-            match = parent.content_match_at(pos_.index_after(d))
-            self.open.append(
-                {
-                    "parent": parent,
-                    "match": match,
-                    "content": Fragment.empty,
-                    "wrapper": False,
-                    "open_end": 0,
-                    "depth": d,
-                }
+        slice = Slice(content, open_start, open_end)
+        if move_inline > -1:
+            return ReplaceAroundStep(
+                from__.pos,
+                move_inline,
+                self.to_.pos,
+                self.to_.end(),
+                slice,
+                placed_size,
             )
-        self.placed = SparseList()
+        if slice.size or from__.pos != self.to_.pos:
+            return ReplaceStep(from__.pos, to_.pos, slice)
+        return None
 
-    def place_slice(self, fragment, open_start, open_end, pass_, parent=None):
-        if open_start > 0:
-            first = fragment.first_child
-            inner = self.place_slice(
-                first.content,
-                max(0, open_start - 1),
-                (open_end - 1 if open_end and fragment.child_count == 1 else 0),
-                pass_,
-                first,
-            )
-            if inner.content != first.content:
-                if inner.content.size:
-                    fragment = fragment.replace_child(0, first.copy(inner.content))
-                    open_start = inner.open_start + 1
+    def find_fittable(self):
+        for pass_ in [1, 2]:
+            for slice_depth in range(self.unplaced.open_start, -1, -1):
+                if slice_depth:
+                    parent = content_at(
+                        self.unplaced.content, slice_depth - 1
+                    ).first_child
+                    fragment = parent.content
                 else:
-                    if fragment.child_count == 1:
-                        open_end = 0
-                    fragment = fragment.cut_by_index(1)
-                    open_start = 0
-        result = self.place_content(fragment, open_start, open_end, pass_, parent)
-        if pass_ > 2 and result.size and open_start == 0:
-            for i in range(result.content.child_count):
-                child = result.content.child(i)
-                self.place_content(
-                    child.content,
-                    0,
-                    (
-                        open_end - 1
-                        if open_end and i == result.content.child_count - 1
-                        else 0
-                    ),
-                    pass_,
-                    child,
-                )
-            result = Fragment.empty
-        return result
+                    parent = None
+                    fragment = self.unplaced.content
+                first = fragment.first_child
+                for frontier_depth in range(self.depth, -1, -1):
+                    frontier_item = self.frontier[frontier_depth]
+                    type_ = frontier_item.type
+                    match = frontier_item.match
 
-    def place_content(self, fragment, open_start, open_end, pass_, parent=None):
-        i = 0
-        while i < fragment.child_count:
-            child = fragment.child(i)
-            placed = False
-            last = i == (fragment.child_count - 1)
-            d = len(self.open) - 1
-            while d >= 0:
-                open = self.open[d]
-                wrap = None
-                if pass_ > 1:
-                    wrap = open["match"].find_wrapping(child.type)
-                    if wrap and not (parent and len(wrap) and wrap[-1] == parent.type):
-                        while len(self.open) - 1 > d:
-                            self.close_node()
-                        w = 0
-                        while w < len(wrap):
-                            open["match"] = open["match"].match_type(wrap[w])
-                            d += 1
-                            open = {
-                                "parent": wrap[w].create(),
-                                "match": wrap[w].content_match,
-                                "content": Fragment.empty,
-                                "wrapper": True,
-                                "open_end": 0,
-                                "depth": d + w,
-                            }
-                            self.open.append(open)
-                            w += 1
-                match = open["match"].match_type(child.type)
-                if not match:
-                    fill = open["match"].fill_before(Fragment.from_(child))
-                    if fill:
-                        for j in range(fill.child_count):
-                            ch = fill.child(j)
-                            self.add_node(open, ch, 0)
-                            match = open["match"].match_fragment(ch)
-                    elif parent and open["match"].match_type(parent.type):
+                    _nothing = object()
+                    inject = _nothing
+                    wrap = _nothing
+
+                    def _lazy_inject():
+                        nonlocal inject
+                        if inject is _nothing:
+                            inject = match.fill_before(Fragment.from_(first), False)
+                        return inject
+
+                    def _lazy_wrap():
+                        nonlocal wrap
+                        if wrap is _nothing:
+                            wrap = match.find_wrapping(first.type)
+                        return wrap
+
+                    if pass_ == 1 and (
+                        (match.match_type(first.type) or _lazy_inject())
+                        if first
+                        else type_.compatible_content(parent.type)
+                    ):
+                        return _Fittable(
+                            slice_depth,
+                            frontier_depth,
+                            parent,
+                            inject=_lazy_inject(),
+                        )
+                    elif pass_ == 2 and first and _lazy_wrap():
+                        return _Fittable(
+                            slice_depth,
+                            frontier_depth,
+                            parent,
+                            wrap=_lazy_wrap(),
+                        )
+                    if parent and match.match_type(parent.type):
                         break
-                    else:
-                        d -= 1
-                        continue
-                while len(self.open) - 1 > d:
-                    self.close_node()
-                child = child.mark(open["parent"].type.allowed_marks(child.marks))
-                if open_start:
-                    child = close_node_start(child, open_start, open_end if last else 0)
-                    open_start = 0
-                self.add_node(open, child, open_end if last else 0)
-                open["match"] = match
-                if last:
-                    open_end = 0
-                placed = True
-                break
-            if not placed:
-                break
-            i += 1
-        if len(self.open) > 1 and (
-            i > 0
-            and i == fragment.child_count
-            or parent
-            and self.open[-1]["parent"].type == parent.type
-        ):
-            self.close_node()
-        return Slice(fragment.cut_by_index(i), open_start, open_end)
 
-    def add_node(self, open, node, open_end):
-        open["content"] = close_fragment_end(
-            open["content"], open["open_end"]
-        ).add_to_end(node)
-        open["open_end"] = open_end
+    def open_more(self):
+        content = self.unplaced.content
+        open_start = self.unplaced.open_start
+        open_end = self.unplaced.open_end
+        inner = content_at(content, open_start)
+        if not inner.child_count or inner.first_child.is_leaf:
+            return False
+        self.unplaced = Slice(
+            content,
+            open_start + 1,
+            max(
+                open_end,
+                open_start + 1
+                if inner.size + open_start >= content.size - open_end
+                else 0,
+            ),
+        )
+        return True
 
-    def close_node(self):
-        open = self.open.pop()
-        if open["content"].size == 0:
-            pass
-        elif open["wrapper"]:
-            self.add_node(
-                self.open[-1],
-                open["parent"].copy(open["content"]),
-                open["open_end"] + 1,
+    def drop_node(self):
+        content = self.unplaced.content
+        open_start = self.unplaced.open_start
+        open_end = self.unplaced.open_end
+        inner = content_at(content, open_start)
+        if inner.child_count <= 1 and open_start > 0:
+            open_at_end = content.size - open_start <= open_start + inner.size
+            self.unplaced = Slice(
+                drop_from_fragment(content, open_start - 1, 1),
+                open_start - 1,
+                open_start - 1 if open_at_end else open_end,
             )
         else:
-            self.placed[open["depth"]] = {
-                "depth": open["depth"],
-                "content": open["content"],
-                "open_end": open["open_end"],
-            }
+            self.unplaced = Slice(
+                drop_from_fragment(content, open_start, 1),
+                open_start,
+                open_end,
+            )
+
+    def place_nodes(self, fittable: _Fittable):
+        slice_depth = fittable.slice_depth
+        frontier_depth = fittable.frontier_depth
+        parent = fittable.parent
+        inject = fittable.inject
+        wrap = fittable.wrap
+
+        while self.depth > frontier_depth:
+            self.close_frontier_node()
+
+        if wrap:
+            for w in wrap:
+                self.open_frontier_node(w)
+
+        slice = self.unplaced
+        fragment = parent.content if parent else slice.content
+        open_start = slice.open_start - slice_depth
+        taken = 0
+        add = []
+        frontier_item = self.frontier[frontier_depth]
+        match, type_ = frontier_item.match, frontier_item.type
+        if inject:
+            for i in range(inject.child_count):
+                add.append(inject.child(i))
+            match = match.match_fragment(inject)
+
+        open_end_count = (fragment.size + slice_depth) - (
+            slice.content.size - slice.open_end
+        )
+
+        while taken < fragment.child_count:
+            next_ = fragment.child(taken)
+            matches = match.match_type(next_.type)
+            if not matches:
+                break
+            taken += 1
+            if taken > 1 or open_start == 0 or next_.content.size:
+                match = matches
+                add.append(
+                    close_node_start(
+                        next_.mark(type_.allowed_marks(next_.marks)),
+                        open_start if taken == 1 else 0,
+                        open_end_count if taken == fragment.child_count else -1,
+                    )
+                )
+
+        to_end = taken == fragment.child_count
+        if not to_end:
+            open_end_count = -1
+
+        self.placed = add_to_fragment(
+            self.placed,
+            frontier_depth,
+            Fragment.from_(add),
+        )
+        self.frontier[frontier_depth].match = match
+
+        if (
+            to_end
+            and open_end_count < 0
+            and parent
+            and parent.type == self.frontier[self.depth].type
+            and len(self.frontier) > 1
+        ):
+            self.close_frontier_node()
+
+        cur = fragment
+        for i in range(open_end_count):
+            node = cur.last_child
+            self.frontier.append(
+                _FrontierItem(node.type, node.content_match_at(node.child_count))
+            )
+            cur = node.content
+
+        if not to_end:
+            self.unplaced = Slice(
+                drop_from_fragment(slice.content, slice_depth, taken),
+                slice.open_start,
+                slice.open_end,
+            )
+        elif slice_depth == 0:
+            self.unplaced = Slice.empty  # type: ignore
+        else:
+            self.unplaced = Slice(
+                drop_from_fragment(slice.content, slice_depth - 1, 1),
+                slice_depth - 1,
+                slice.open_end if open_end_count < 0 else slice_depth - 1,
+            )
+
+    def must_move_inline(self):
+        if not self.to_.parent.is_text_block or self.to_.end() == self.to_.pos:
+            return -1
+        top = self.frontier[self.depth]
+
+        _nothing = object()
+        level = _nothing
+
+        def _lazy_level():
+            nonlocal level
+            if level is _nothing:
+                level = self.find_close_level(self.to_)
+            return level
+
+        if (
+            not top.type.is_text_block
+            or not content_after_fits(
+                self.to_, self.to_.depth, top.type, top.match, False
+            )
+            or (
+                self.to_.depth == self.depth
+                and _lazy_level()
+                and _lazy_level().depth == self.depth
+            )
+        ):
+            return -1
+
+        depth = self.to_.depth
+        after = self.to_.after(depth)
+        while depth > 1 and after == self.to_.end(depth):
+            depth -= 1
+            after += 1
+        return after
+
+    def find_close_level(self, to_):
+        for i in range(min(self.depth, to_.depth), -1, -1):
+            match = self.frontier[i].match
+            type_ = self.frontier[i].type
+            drop_inner = i < to_.depth and to_.end(i + 1) == to_.pos + (
+                to_.depth - (i + 1)
+            )
+            fit = content_after_fits(to_, i, type_, match, drop_inner)
+            if not fit:
+                continue
+            for d in range(i - 1, -1, -1):
+                match2, type2 = self.frontier[d].match, self.frontier[d].type
+                matches = content_after_fits(to_, d, type2, match2, True)
+                if not matches or matches.child_count:
+                    break
+            else:
+                return _CloseLevel(
+                    depth=i,
+                    fit=fit,
+                    move=to_.doc.resolve(to_.after(i + 1)) if drop_inner else to_,
+                )
+        return None
+
+    def close(self, to_):
+        close = self.find_close_level(to_)
+        if not close:
+            return None
+
+        while self.depth > close.depth:
+            self.close_frontier_node()
+        if close.fit.child_count:
+            self.placed = add_to_fragment(self.placed, close.depth, close.fit)
+        to_ = close.move
+        for d in range(close.depth + 1, to_.depth + 1):
+            node = to_.node(d)
+            add = node.type.content_match.fill_before(node.content, True, to_.index(d))
+            self.open_frontier_node(node.type, node.attrs, add)
+        return to_
+
+    def open_frontier_node(self, type_, attrs=None, content=None):
+        top = self.frontier[self.depth]
+        top.match = top.match.match_type(type_)
+        self.placed = add_to_fragment(
+            self.placed, self.depth, Fragment.from_(type_.create(attrs, content))
+        )
+        self.frontier.append(_FrontierItem(type_, type_.content_match))
+
+    def close_frontier_node(self):
+        open_ = self.frontier.pop()
+        add = open_.match.fill_before(Fragment.empty, True)
+        if add.child_count:
+            self.placed = add_to_fragment(self.placed, len(self.frontier), add)
+
+
+def drop_from_fragment(fragment: Fragment, depth: int, count: int) -> Fragment:
+    if depth == 0:
+        return fragment.cut_by_index(count)
+    return fragment.replace_child(
+        0,
+        fragment.first_child.copy(
+            drop_from_fragment(fragment.first_child.content, depth - 1, count)
+        ),
+    )
+
+
+def add_to_fragment(fragment: Fragment, depth: int, content: Fragment) -> Fragment:
+    if depth == 0:
+        return fragment.append(content)
+    return fragment.replace_child(
+        fragment.child_count - 1,
+        fragment.last_child.copy(
+            add_to_fragment(fragment.last_child.content, depth - 1, content)
+        ),
+    )
+
+
+def content_at(fragment: Fragment, depth: int) -> Fragment:
+    for _ in range(depth):
+        fragment = fragment.first_child.content
+    return fragment
 
 
 def close_node_start(node, open_start, open_end):
-    content = node.content
+    if open_start <= 0:
+        return node
+    frag = node.content
     if open_start > 1:
-        first = close_node_start(
-            node.first_child,
-            open_start - 1,
-            open_end - 1 if node.child_count == 1 else 0,
+        frag = frag.replace_child(
+            0,
+            close_node_start(
+                frag.first_child,
+                open_start - 1,
+                open_end - 1 if frag.child_count == 1 else 0,
+            ),
         )
-        content = node.content.replace_child(0, first)
-    fill = node.type.content_match.fill_before(content, open_end == 0)
-    return node.copy(fill.append(content))
+    if open_start > 0:
+        frag = node.type.content_match.fill_before(frag).append(frag)
+        if open_end <= 0:
+            frag = frag.append(
+                node.type.content_match.match_fragment(frag).fill_before(
+                    Fragment.empty, True
+                )
+            )
+    return node.copy(frag)
 
 
-def close_node_end(node, depth):
-    content = node.content
-    if depth > 1:
-        last = close_node_end(node.last_child, depth - 1)
-        content = node.content.replace_child(node.child_count - 1, last)
-    fill = node.content_match_at(node.child_count).fill_before(Fragment.empty, True)
-    return node.copy(content.append(fill))
+def content_after_fits(to_, depth, type_, match, open_):
+    node = to_.node(depth)
+    index = to_.index_after(depth) if open_ else to_.index(depth)
+    if index == node.child_count and not type_.compatible_content(node.type):
+        return None
+    fit = match.fill_before(node.content, True, index)
+    return fit if fit and not invalid_marks(type_, node.content, index) else None
 
 
-def close_fragment_end(fragment, depth):
-    if depth:
-        return fragment.replace_child(
-            fragment.child_count - 1, close_node_end(fragment.last_child, depth)
-        )
-    else:
-        return fragment
+def invalid_marks(type_, fragment, start):
+    for i in range(start, fragment.child_count):
+        if not type_.allows_marks(fragment.child(i).marks):
+            return True
+    return False
 
 
 def close_fragment(fragment, depth, old_open, new_open, parent):
@@ -440,8 +462,10 @@ def close_fragment(fragment, depth, old_open, new_open, parent):
             ),
         )
     if depth > new_open:
-        fragment = (
-            parent.content_match_at(0).fill_before(fragment, True).append(fragment)
+        match = parent.content_match_at(0)
+        start = match.fill_before(fragment).append(fragment)
+        fragment = start.append(
+            match.match_fragment(start).fill_before(Fragment.empty, True)
         )
     return fragment
 
@@ -458,6 +482,13 @@ def covered_depths(from__, to_):
             or (to_.node(d).type.spec.get("isolation"))
         ):
             break
-        if start == to_.start(d):
+        if start == to_.start(d) or (
+            d == from__.depth
+            and d == to_.depth
+            and from__.parent.inline_content
+            and to_.parent.inline_content
+            and d
+            and to_.start(d - 1) == start - 1
+        ):
             result.append(d)
     return result
