@@ -118,7 +118,7 @@ class ContentMatch:
 
     def edge(self, n):
         i = n << 1
-        if i > len(self.next):
+        if i >= len(self.next):
             raise ValueError(f"There's no {n}th edge in this content match")
         return {"type": self.next[i], "next": self.next[i + 1]}
 
@@ -347,7 +347,7 @@ def nfa(expr):
 
 
 def cmp(a, b):
-    return a - b
+    return b - a
 
 
 def null_from(nfa, node):
@@ -419,6 +419,6 @@ def check_for_dead_ends(match, stream):
                 work.append(next)
         if dead:
             stream.err(
-                f'Only non-generatable nodes ({", ".join(nodes)}) in a required position'
+                f'Only non-generatable nodes ({", ".join(nodes)}) in a required position (see https://prosemirror.net/docs/guide/#generatable)'
             )
         i += 1
