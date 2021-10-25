@@ -325,8 +325,10 @@ class Fitter:
 
         depth = self.to_.depth
         after = self.to_.after(depth)
-        while depth > 1 and after == self.to_.end(depth):
+        while depth > 1:
             depth -= 1
+            if after != self.to_.end(depth):
+                break
             after += 1
         return after
 
