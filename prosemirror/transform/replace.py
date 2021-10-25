@@ -1,4 +1,4 @@
-from prosemirror.model import Fragment, Slice
+from prosemirror.model import Fragment, ResolvedPos, Slice
 from typing import List, Optional
 
 from .replace_step import ReplaceAroundStep, ReplaceStep, Step
@@ -56,7 +56,7 @@ class _CloseLevel:
 class Fitter:
     __slots__ = ("to_", "from__", "unplaced", "frontier", "placed")
 
-    def __init__(self, from__, to_, slice):
+    def __init__(self, from__: ResolvedPos, to_: ResolvedPos, slice: Slice):
         self.to_ = to_
         self.from__ = from__
         self.unplaced = slice
@@ -115,7 +115,7 @@ class Fitter:
             return ReplaceStep(from__.pos, to_.pos, slice)
         return None
 
-    def find_fittable(self):
+    def find_fittable(self) -> Optional[_Fittable]:
         for pass_ in [1, 2]:
             for slice_depth in range(self.unplaced.open_start, -1, -1):
                 if slice_depth:
@@ -128,9 +128,8 @@ class Fitter:
                     fragment = self.unplaced.content
                 first = fragment.first_child
                 for frontier_depth in range(self.depth, -1, -1):
-                    frontier_item = self.frontier[frontier_depth]
-                    type_ = frontier_item.type
-                    match = frontier_item.match
+                    type_ = self.frontier[frontier_depth].type
+                    match = self.frontier[frontier_depth].match
 
                     _nothing = object()
                     inject = _nothing
@@ -168,8 +167,9 @@ class Fitter:
                         )
                     if parent and match.match_type(parent.type):
                         break
+        return None
 
-    def open_more(self):
+    def open_more(self) -> bool:
         content = self.unplaced.content
         open_start = self.unplaced.open_start
         open_end = self.unplaced.open_end
@@ -274,7 +274,7 @@ class Fitter:
             self.close_frontier_node()
 
         cur = fragment
-        for i in range(open_end_count):
+        for _ in range(open_end_count):
             node = cur.last_child
             self.frontier.append(
                 _FrontierItem(node.type, node.content_match_at(node.child_count))
@@ -288,7 +288,7 @@ class Fitter:
                 slice.open_end,
             )
         elif slice_depth == 0:
-            self.unplaced = Slice.empty  # type: ignore
+            self.unplaced = Slice.empty
         else:
             self.unplaced = Slice(
                 drop_from_fragment(slice.content, slice_depth - 1, 1),
