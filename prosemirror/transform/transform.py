@@ -107,9 +107,15 @@ class Transform:
             step += 1
             to_remove = None
             if isinstance(mark, MarkType):
-                found = mark.is_in_set(node.marks)
-                if found:
-                    to_remove = [found]
+                set_ = node.marks
+                while True:
+                    found = mark.is_in_set(set_)
+                    if not found:
+                        break
+                    if to_remove is None:
+                        to_remove = []
+                    to_remove.append(found)
+                    set_ = found.remove_from_set(set_)
             elif mark:
                 if mark.is_in_set(node.marks):
                     to_remove = [mark]
