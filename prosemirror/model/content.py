@@ -1,10 +1,13 @@
 import re
 from functools import reduce
+from typing import ClassVar
 
 from .fragment import Fragment
 
 
 class ContentMatch:
+    empty: ClassVar["ContentMatch"]
+
     def __init__(self, valid_end):
         self.valid_end = valid_end
         self.next = []

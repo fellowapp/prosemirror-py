@@ -1,11 +1,12 @@
 import abc
+from typing import Dict, Type
 
 from prosemirror.model import ReplaceError
 
 from .map import StepMap
 
 # like a registry
-STEPS_BY_ID = {}
+STEPS_BY_ID: Dict[str, Type["Step"]] = {}
 
 
 class Step(metaclass=abc.ABCMeta):

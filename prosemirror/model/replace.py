@@ -1,3 +1,4 @@
+from typing import ClassVar
 from .fragment import Fragment
 
 
@@ -38,6 +39,8 @@ def insert_into(content, dist, insert, parent):
 
 
 class Slice:
+    empty: ClassVar["Slice"]
+
     def __init__(self, content, open_start, open_end):
         self.content = content
         self.open_start = open_start

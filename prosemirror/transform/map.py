@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 lower16 = 0xFFFF
 factor16 = 2 ** 16
 
@@ -22,6 +24,8 @@ class MapResult:
 
 
 class StepMap:
+    empty: ClassVar["StepMap"]
+
     def __init__(self, ranges, inverted=False):
         self.ranges = ranges
         self.inverted = inverted
