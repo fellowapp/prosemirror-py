@@ -1,7 +1,7 @@
 import pytest
 
 from prosemirror.model import ContentMatch, Node
-from prosemirror.test_builder import out, schema
+from prosemirror.test_builder import out, test_schema as schema
 
 doc = out["doc"]
 h1 = out["h1"]

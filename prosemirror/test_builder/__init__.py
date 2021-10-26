@@ -1,13 +1,13 @@
 from prosemirror.model import Schema
-from prosemirror.schema.basic import schema
+from prosemirror.schema.basic import schema as _schema
 from prosemirror.schema.list import add_list_nodes
 
 from .build import builders
 
 test_schema = Schema(
     {
-        "nodes": add_list_nodes(schema.spec["nodes"], "paragraph block*", "block"),
-        "marks": schema.spec["marks"],
+        "nodes": add_list_nodes(_schema.spec["nodes"], "paragraph block*", "block"),
+        "marks": _schema.spec["marks"],
     }
 )
 
