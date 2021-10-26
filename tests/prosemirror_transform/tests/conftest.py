@@ -2,7 +2,7 @@ import pydash
 import pytest
 
 from prosemirror.model import Fragment, Slice
-from prosemirror.test_builder import out, schema
+from prosemirror.test_builder import out, test_schema as schema
 from prosemirror.transform import (
     AddMarkStep,
     Mapping,

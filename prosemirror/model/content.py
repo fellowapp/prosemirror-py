@@ -1,5 +1,5 @@
 import re
-from functools import reduce
+from functools import reduce, cmp_to_key
 from typing import ClassVar
 
 from .fragment import Fragment
@@ -121,7 +121,7 @@ class ContentMatch:
 
     def edge(self, n):
         i = n << 1
-        if i > len(self.next):
+        if i >= len(self.next):
             raise ValueError(f"There's no {n}th edge in this content match")
         return {"type": self.next[i], "next": self.next[i + 1]}
 
@@ -350,7 +350,7 @@ def nfa(expr):
 
 
 def cmp(a, b):
-    return a - b
+    return b - a
 
 
 def null_from(nfa, node):
@@ -396,7 +396,8 @@ def dfa(nfa):
         state = ContentMatch((len(nfa) - 1) in states)
         labeled[",".join([str(s) for s in states])] = state
         for i in range(0, len(out), 2):
-            states = sorted(out[i + 1])
+            out[i + 1].sort(key=cmp_to_key(cmp))
+            states = out[i + 1]
             find_by_key = ",".join(str(s) for s in states)
             items_to_extend = [out[i], labeled.get(find_by_key) or explore(states)]
             state.next.extend(items_to_extend)
@@ -422,6 +423,6 @@ def check_for_dead_ends(match, stream):
                 work.append(next)
         if dead:
             stream.err(
-                f'Only non-generatable nodes ({", ".join(nodes)}) in a required position'
+                f'Only non-generatable nodes ({", ".join(nodes)}) in a required position (see https://prosemirror.net/docs/guide/#generatable)'
             )
         i += 1

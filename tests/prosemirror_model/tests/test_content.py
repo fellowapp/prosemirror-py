@@ -1,7 +1,7 @@
 import pytest
 
 from prosemirror.model import ContentMatch, Node
-from prosemirror.test_builder import out, schema
+from prosemirror.test_builder import out, test_schema as schema
 
 doc = out["doc"]
 h1 = out["h1"]
@@ -196,6 +196,12 @@ def test_match_type(expr, types, valid):
             '{"type":"doc","content":[{"type":"code_block"}]}',
             '{"type":"doc","content":[{"type":"paragraph"}]}',
             '{"type":"doc","content":[{"type":"code_block"},{"type":"paragraph"}]}',
+        ),
+        (
+            "heading paragraph? horizontal_rule",
+            '{"type":"doc","content":[{"type":"heading"}]}',
+            '{"type":"doc"}',
+            '{"type":"doc","content":[{"type":"horizontal_rule"}]}',
         ),
     ],
 )

@@ -1,7 +1,7 @@
 import pytest
 
 from prosemirror.model import Fragment, Schema, Slice
-from prosemirror.test_builder import builders, out, schema
+from prosemirror.test_builder import builders, out, test_schema as schema
 from prosemirror.transform import Transform, TransformError, find_wrapping, lift_target
 
 doc = out["doc"]

@@ -96,8 +96,8 @@ class Slice:
             raise ValueError("invalid input for Slice.from_json")
         return cls(
             Fragment.from_json(schema, json_data.get("content")),
-            json_data.get("openStart", 0),
-            json_data.get("openEnd", 0),
+            open_start,
+            open_end,
         )
 
     @classmethod
