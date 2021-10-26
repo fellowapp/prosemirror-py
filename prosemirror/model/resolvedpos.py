@@ -79,6 +79,14 @@ class ResolvedPos:
             return self.parent.child(index).cut(0, d_off)
         return None if index == 0 else self.parent.child(index - 1)
 
+    def pos_at_index(self, index, depth=None):
+        depth = self.resolve_depth(depth)
+        node = self.path[depth * 3]
+        pos = 0 if depth == 0 else self.path[depth * 3 - 1] + 1
+        for i in range(index):
+            pos += node.child(i).node_size
+        return pos
+
     def marks(self):
         parent = self.parent
         index = self.index()

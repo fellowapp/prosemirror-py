@@ -69,9 +69,9 @@ class NodeType:
     def is_atom(self):
         return self.is_leaf or self.spec.get("atom")
 
-    def has_required_attrs(self, ignore=None):
+    def has_required_attrs(self):
         for n in self.attrs:
-            if self.attrs[n].is_required and (not ignore or not (n in ignore)):
+            if self.attrs[n].is_required:
                 return True
         return False
 
@@ -93,7 +93,7 @@ class NodeType:
             Mark.set_from(marks),
         )
 
-    def create_checked(self, attrs, content, marks):
+    def create_checked(self, attrs=None, content=None, marks=None):
         content = Fragment.from_(content)
         if not self.valid_content(content):
             raise ValueError("Invalid content for node " + self.name)
@@ -208,8 +208,8 @@ class MarkType:
             rank += 1
         return result
 
-    def remove_from_set(self, set):
-        return [item for item in set if item.type != self]
+    def remove_from_set(self, set_):
+        return [item for item in set_ if item.type != self]
 
     def is_in_set(self, set):
         return next((item for item in set if item.type == self), None)

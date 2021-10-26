@@ -50,7 +50,7 @@ class Fragment:
                 text += node.text[max(from_, pos) - pos : to - pos]
                 separated = not block_separator
             elif node.is_leaf and leaf_text:
-                text += leaf_text
+                text += leaf_text(node) if callable(leaf_text) else leaf_text
                 separated = not block_separator
             elif not separated and node.is_block:
                 text += block_separator
@@ -235,7 +235,7 @@ class Fragment:
             return cls.from_array(list(nodes))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
-        raise ValueError(f"cannot convert {nodes} to a fragment")
+        raise ValueError(f"cannot convert {nodes!r} to a fragment")
 
     def to_string_inner(self):
         return ", ".join([str(i) for i in self.content])

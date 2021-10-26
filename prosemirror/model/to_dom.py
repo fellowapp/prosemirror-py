@@ -108,12 +108,12 @@ class DOMSerializer:
                         active.append(top)
                         top.children.append(mark_dom[0])
                         top = cast(DocumentFragment, mark_dom[1] or mark_dom[0])
-            top.children.append(self.serialize_node(node))
+            top.children.append(self.serialize_node_inner(node))
 
         fragment.for_each(each)
         return tgt
 
-    def serialize_node(self, node: Node) -> HTMLNode:
+    def serialize_node_inner(self, node: Node) -> HTMLNode:
         dom, content_dom = type(self).render_spec(self.nodes[node.type.name](node))
         if content_dom:
             if node.is_leaf:
@@ -121,8 +121,8 @@ class DOMSerializer:
             self.serialize_fragment(node.content, content_dom)
         return dom
 
-    def serialize_node_and_marks(self, node: Node) -> HTMLNode:
-        dom = self.serialize_node(node)
+    def serialize_node(self, node: Node) -> HTMLNode:
+        dom = self.serialize_node_inner(node)
         for mark in reversed(node.marks):
             wrap = self.serialize_mark(mark, node.is_inline)
             if wrap:

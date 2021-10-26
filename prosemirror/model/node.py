@@ -229,13 +229,18 @@ class Node:
         else:
             return self.type.compatible_content(other.type)
 
-    def default_content_type(self, at):
-        return self.content_match_at(at).default_type
-
     def check(self):
         if not self.type.valid_content(self.content):
             raise ValueError(
                 f"Invalid content for node {self.type.name}: {str(self.content)[:50]}"
+            )
+        copy = Mark.none
+        for mark in self.marks:
+            copy = mark.add_to_set(copy)
+        if not Mark.same_set(copy, self.marks):
+            raise ValueError(
+                f"Invalid collection of marks for node {self.type.name}:"
+                f" {[m.type.name for m in self.marks]!r}"
             )
         return self.content.for_each(lambda node, *args: node.check())
 
