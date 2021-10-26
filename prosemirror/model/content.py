@@ -1,5 +1,5 @@
 import re
-from functools import reduce
+from functools import reduce, cmp_to_key
 
 from .fragment import Fragment
 
@@ -393,7 +393,8 @@ def dfa(nfa):
         state = ContentMatch((len(nfa) - 1) in states)
         labeled[",".join([str(s) for s in states])] = state
         for i in range(0, len(out), 2):
-            states = sorted(out[i + 1])
+            out[i + 1].sort(key=cmp_to_key(cmp))
+            states = out[i + 1]
             find_by_key = ",".join(str(s) for s in states)
             items_to_extend = [out[i], labeled.get(find_by_key) or explore(states)]
             state.next.extend(items_to_extend)
