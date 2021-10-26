@@ -1,5 +1,5 @@
 from prosemirror.model import Fragment, Schema
-from prosemirror.test_builder import schema, eq, out
+from prosemirror.test_builder import test_schema as schema, eq, out
 
 doc = out["doc"]
 blockquote = out["blockquote"]
