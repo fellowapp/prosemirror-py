@@ -90,7 +90,7 @@ class TestCut:
         self.cut(doc(blockquote(p("foo<b>bar"))), doc(blockquote(p("foo"))))
 
     def test_works_to_the_right(self):
-        self.cut(doc(blockquote(p("foo<a>bar"))), doc(blockquote(p("foo"))))
+        self.cut(doc(blockquote(p("foo<a>bar"))), doc(blockquote(p("bar"))))
 
     def test_preserves_marks(self):
         self.cut(
