@@ -11,7 +11,7 @@ This package provides Python implementations of the following [ProseMirror](http
 -   [`prosemirror-model`](https://github.com/ProseMirror/prosemirror-model)
 -   [`prosemirror-transform`](https://github.com/ProseMirror/prosemirror-transform)
 -   [`prosemirror-test-builder`](https://github.com/ProseMirror/prosemirror-test-builder)
--   [`prosemirror-schema-basic`](https://github.com/ProseMirror/prosemirror-schema-basic)
+-   [`prosemirror-schema-basic`](https://github.com/ProseMirror/prosemirror-schema-basic) version 1.1.2
 -   [`prosemirror-schema-list`](https://github.com/ProseMirror/prosemirror-schema-list)
 
 The original implementation has been followed as closely as possible during translation to simplify keeping this package up-to-date with any upstream changes.
