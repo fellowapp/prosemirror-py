@@ -93,7 +93,7 @@ class NodeType:
             Mark.set_from(marks),
         )
 
-    def create_checked(self, attrs, content, marks):
+    def create_checked(self, attrs=None, content=None, marks=None):
         content = Fragment.from_(content)
         if not self.valid_content(content):
             raise ValueError("Invalid content for node " + self.name)

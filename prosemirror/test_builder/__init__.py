@@ -14,6 +14,7 @@ test_schema = Schema(
 out = builders(
     test_schema,
     {
+        "doc": {"nodeType": "doc"},
         "p": {"nodeType": "paragraph"},
         "pre": {"nodeType": "code_block"},
         "h1": {"nodeType": "heading", "level": 1},
