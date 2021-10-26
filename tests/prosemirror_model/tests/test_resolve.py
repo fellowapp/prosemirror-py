@@ -71,3 +71,31 @@ def test_node_resolve(pos, exp):
 )
 def test_resolvedpos_str(pos, result):
     assert str(test_doc.resolve(pos)) == result
+
+
+@pytest.fixture
+def doc_for_pos_at_index():
+    return doc(blockquote(p("one"), blockquote(p("two ", em("three")), p("four"))))
+
+
+@pytest.mark.parametrize(
+    "index,depth,pos",
+    [
+        (0, None, 8),
+        (1, None, 12),
+        (2, None, 17),
+        (0, 2, 7),
+        (1, 2, 18),
+        (2, 2, 24),
+        (0, 1, 1),
+        (1, 1, 6),
+        (2, 1, 25),
+        (0, 0, 0),
+        (1, 0, 26),
+    ],
+)
+def test_pos_at_index(index, depth, pos, doc_for_pos_at_index):
+    d = doc_for_pos_at_index
+
+    p_three = d.resolve(12)
+    assert p_three.pos_at_index(index, depth) == pos
