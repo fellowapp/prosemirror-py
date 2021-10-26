@@ -42,3 +42,12 @@ workflows:
       - test:
           name: test-py37
           version: "3.7"
+      - test:
+          name: test-py38
+          version: "3.8"
+      - test:
+          name: test-py39
+          version: "3.9"
+      - test:
+          name: test-py310
+          version: "3.10"
