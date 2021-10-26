@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 lower16 = 0xFFFF
 factor16 = 2 ** 16
 
@@ -22,6 +24,8 @@ class MapResult:
 
 
 class StepMap:
+    empty: ClassVar["StepMap"]
+
     def __init__(self, ranges, inverted=False):
         self.ranges = ranges
         self.inverted = inverted
@@ -63,7 +67,7 @@ class StepMap:
                 result = start + diff + (0 if side < 0 else new_size)
                 if simple:
                     return result
-                recover = make_recover(i / 3, pos - start)
+                recover = None if pos == (start if assoc < 0 else end) else make_recover(i / 3, pos - start)
                 return MapResult(
                     result, pos != start if assoc < 0 else pos != end, recover
                 )
@@ -183,30 +187,18 @@ class Mapping:
 
     def _map(self, pos, assoc, simple):
         deleted = False
-        recoverables: dict = None
+
         i = self.from_
         while i < self.to:
             map = self.maps[i]
-            rec = None
-            if recoverables:
-                rec = recoverables.get(i)
-            if rec is not None and map.touches(pos, rec):
-                pos = map.recover(rec)
-                i += 1
-                continue
             result = map.map_result(pos, assoc)
             if result.recover is not None:
                 corr = self.get_mirror(i)
                 if corr is not None and corr > i and corr < self.to:
-                    if result.deleted:
-                        i = corr
-                        pos = self.maps[corr].recover(result.recover)
-                        i += 1
-                        continue
-                    else:
-                        if recoverables is None:
-                            recoverables = {}
-                        recoverables[corr] = result.recover
+                    i = corr
+                    pos = self.maps[corr].recover(result.recover)
+                    i += 1
+                    continue
             if result.deleted:
                 deleted = True
             pos = result.pos

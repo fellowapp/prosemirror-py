@@ -107,9 +107,15 @@ class Transform:
             step += 1
             to_remove = None
             if isinstance(mark, MarkType):
-                found = mark.is_in_set(node.marks)
-                if found:
-                    to_remove = [found]
+                set_ = node.marks
+                while True:
+                    found = mark.is_in_set(set_)
+                    if not found:
+                        break
+                    if to_remove is None:
+                        to_remove = []
+                    to_remove.append(found)
+                    set_ = found.remove_from_set(set_)
             elif mark:
                 if mark.is_in_set(node.marks):
                     to_remove = [mark]
@@ -265,7 +271,18 @@ class Transform:
                             slice.open_end,
                         ),
                     )
-        return self.replace(from_, to, slice)
+
+        start_steps = len(self.steps)
+        for i in range(len(target_depths) - 1, -1, -1):
+            self.replace(from_, to, slice)
+            if len(self.steps) > start_steps:
+                break
+            depth = target_depths[i]
+            if depth < 0:
+                continue
+            from_ = from__.before(depth)
+            to = to_.after(depth)
+        return self
 
     def replace_range_with(self, from_, to, node):
         if (
@@ -294,9 +311,15 @@ class Transform:
                 )
             ):
                 return self.delete(from__.before(depth), to_.after(depth))
-        for d in range(1, from__.depth + 1):
-            if from_ - from__.start(d) == from__.depth - d and to > from__.end(d):
+        d = 1
+        while d <= from__.depth and d <= to_.depth:
+            if (
+                from_ - from__.start(d) == from__.depth - d
+                and to > from__.end(d)
+                and to_.end(d) - to != to_.depth - d
+            ):
                 return self.delete(from__.before(d), to)
+            d += 1
         return self.delete(from_, to)
 
     # structure.js

@@ -28,7 +28,7 @@ class AddMarkStep(Step):
         parent = from__.node(from__.shared_depth(self.to))
 
         def iteratee(node, parent, *args):
-            if not parent.type.allows_mark_type(self.mark.type):
+            if not node.is_atom or not parent.type.allows_mark_type(self.mark.type):
                 return node
             return node.mark(self.mark.add_to_set(node.marks))
 

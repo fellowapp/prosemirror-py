@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import ClassVar, Iterable
 
 from prosemirror.utils import text_length
 
@@ -10,6 +10,8 @@ def retIndex(index, offset):
 
 
 class Fragment:
+    empty: ClassVar["Fragment"]
+
     def __init__(self, content, size=None):
         self.content = content
         self.size = size

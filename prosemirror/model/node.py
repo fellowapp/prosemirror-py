@@ -6,7 +6,7 @@ from .mark import Mark
 from .replace import Slice, replace
 from .resolvedpos import ResolvedPos
 
-empty_attrs = {}
+empty_attrs: dict = {}
 
 
 class Node:
