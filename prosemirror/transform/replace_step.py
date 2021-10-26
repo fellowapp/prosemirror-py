@@ -5,7 +5,7 @@ from .step import Step, StepResult
 
 
 class ReplaceStep(Step):
-    def __init__(self, from_, to, slice, structure=None):
+    def __init__(self, from_: int, to: int, slice: Slice, structure=None):
         super().__init__()
         self.from_ = from_
         self.to = to
@@ -33,7 +33,7 @@ class ReplaceStep(Step):
         return ReplaceStep(from_.pos, max(from_.pos, to.pos), self.slice)
 
     def merge(self, other: "ReplaceStep"):
-        if not (isinstance(other, ReplaceStep) or other.structure != self.structure):
+        if not isinstance(other, ReplaceStep) or other.structure or self.structure:
             return None
         if (
             self.from_ + self.slice.size == other.from_
@@ -97,7 +97,16 @@ Step.json_id("replace", ReplaceStep)
 
 
 class ReplaceAroundStep(Step):
-    def __init__(self, from_, to, gap_from, gap_to, slice, insert, structure=None):
+    def __init__(
+        self,
+        from_: int,
+        to: int,
+        gap_from: int,
+        gap_to: int,
+        slice: Slice,
+        insert: int,
+        structure=None,
+    ):
         super().__init__()
         self.from_ = from_
         self.to = to

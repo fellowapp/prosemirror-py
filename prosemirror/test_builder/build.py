@@ -2,7 +2,7 @@ import re
 
 from prosemirror.model import Node
 
-NO_TAG = Node.tag = {}
+NO_TAG = Node.tag = {}  # type: ignore
 
 
 def flatten(schema, children, f):

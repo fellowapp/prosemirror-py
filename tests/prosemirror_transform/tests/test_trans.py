@@ -167,6 +167,33 @@ def test_remove_mark(doc, mark, expect, test_transform):
     )
 
 
+def test_remove_more_than_one_mark_of_same_type_from_block():
+    schema = Schema(
+        {
+            "nodes": {
+                "doc": {"content": "text*"},
+                "text": {},
+            },
+            "marks": {
+                "comment": {"excludes": "", "attrs": {"id": {}}},
+            },
+        }
+    )
+    tr = Transform(
+        schema.node(
+            "doc",
+            None,
+            schema.text(
+                "hi",
+                [schema.mark("comment", {"id": 1}), schema.mark("comment", {"id": 2})],
+            ),
+        )
+    )
+    assert len(tr.doc.first_child.marks) == 2
+    tr.remove_mark(0, 2, schema.marks["comment"])
+    assert not tr.doc.first_child.marks
+
+
 @pytest.mark.parametrize(
     "doc,nodes,expect",
     [
@@ -537,7 +564,7 @@ def test_set_node_markup(doc, expect, type, attrs, test_transform):
         (
             doc(ol(li(p("one<a>")), li(p("three")))),
             doc(ol(li(p("<a>half")), li(p("two")), "<b>")),
-            doc(ol(li(p("onehalf")), li(p("two")), li(p()), li(p("three")))),
+            doc(ol(li(p("onehalf")), li(p("two")), li(p("three")))),
         ),
         (doc(p("a<a>"), p("b"), p("<b>c")), None, doc(p("a<a><b>c"))),
         (doc(h1("wo<a>ah"), blockquote(p("ah<b>ha"))), None, doc(h1("wo<a><b>ha"))),
@@ -644,7 +671,7 @@ def test_set_node_markup(doc, expect, type, attrs, test_transform):
         (
             doc(p("x<a>hi"), blockquote(p("yy"), "<b>"), p("c")),
             doc(p("<a>hi<b>")),
-            doc(p("xhi"), blockquote(p()), p("c")),
+            doc(p("xhi"), p("c")),
         ),
         (doc(p("<a>x")), doc(blockquote(p("hi"), "<a>"), p("b<b>")), doc(p(), p("bx"))),
         (
@@ -687,6 +714,113 @@ def test_replace(doc, source, expect, test_transform):
         doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
     )
     test_transform(tr, expect)
+
+
+def test_doesnt_fail_when_moving_text_would_solve_unsatisfied_content_constraint():
+    s = Schema(
+        {
+            "nodes": {
+                **schema.spec["nodes"],
+                "title": {"content": "text*"},
+                "doc": {"content": "title? block*"},
+            },
+        }
+    )
+    tr = Transform(s.node("doc", None, s.node("title", None, s.text("hi"))))
+    tr.replace(
+        1,
+        1,
+        s.node(
+            "bullet_list",
+            None,
+            [
+                s.node("list_item", None, s.node("paragraph", None, s.text("one"))),
+                s.node("list_item", None, s.node("paragraph", None, s.text("two"))),
+            ],
+        ).slice(2, 12),
+    )
+    assert tr.steps
+
+
+def test_doesnt_fail_pasting_half_open_slice_with_title_and_code_block_into_empty_title():
+    s = Schema(
+        {
+            "nodes": {
+                **schema.spec["nodes"],
+                "title": {"content": "text*"},
+                "doc": {"content": "title? block*"},
+            },
+        }
+    )
+    tr = Transform(s.node("doc", None, [s.node("title", None, [])]))
+    tr.replace(
+        1,
+        1,
+        s.node(
+            "doc",
+            None,
+            [
+                s.node("title", None, s.text("title")),
+                s.node("code_block", None, s.text("two")),
+            ],
+        ).slice(1),
+    )
+    assert tr.steps
+
+
+def test_doesnt_fail_pasting_half_open_slice_with_heading_and_code_block_into_empty_title():
+    s = Schema(
+        {
+            "nodes": {
+                **schema.spec["nodes"],
+                "title": {"content": "text*"},
+                "doc": {"content": "title? block*"},
+            },
+        }
+    )
+    tr = Transform(s.node("doc", None, [s.node("title")]))
+    tr.replace(
+        1,
+        1,
+        s.node(
+            "doc",
+            None,
+            [
+                s.node("heading", {"level": 1}, s.text("heading")),
+                s.node("code_block", None, s.text("code")),
+            ],
+        ).slice(1),
+    )
+    assert tr.steps
+
+
+def test_replacing_in_nodes_with_fixed_content():
+    s = Schema(
+        {
+            "nodes": {
+                "doc": {"content": "block+"},
+                "a": {"content": "inline*"},
+                "b": {"content": "inline*"},
+                "block": {"content": "a b"},
+                "text": {"group": "inline"},
+            }
+        }
+    )
+
+    doc = s.node(
+        "doc",
+        None,
+        [
+            s.node(
+                "block",
+                None,
+                [s.node("a", None, [s.text("aa")]), s.node("b", None, [s.text("bb")])],
+            ),
+        ],
+    )
+    from_ = 3
+    to = doc.content.size
+    assert Transform(doc).replace(from_, to, doc.slice(from_, to)).doc.eq(doc)
 
 
 class TestTopLevelMarkReplace:
@@ -886,8 +1020,13 @@ def test_replace_range_with(doc, node, expect, test_transform):
             doc(p("a"), blockquote(blockquote(p("<a>foo")), p("bar<b>")), p("b")),
             doc(p("a"), p("b")),
         ),
-        (doc(h1("<a>foo"), p("bar"), p("baz<b>")), doc(p())),
+        (doc(h1("<a>foo"), p("bar"), blockquote(p("baz<b>"))), doc(p())),
+        (doc(h1("<a>foo"), p("bar"), p("baz<b>")), doc(h1())),
         (doc(h1("<a>foo"), p("b<b>ar")), doc(p("ar"))),
+        (
+            doc(p("one"), h1("<a>two"), blockquote(p("three<b>")), p("four")),
+            doc(p("one"), h1(), p("four")),
+        ),
     ],
 )
 def test_delete_range(doc, expect, test_transform):

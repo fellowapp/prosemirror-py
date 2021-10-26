@@ -171,16 +171,23 @@ def join_point(doc, pos, dir=-1):
     for d in range(pos_.depth, -1, -1):
         before = None
         after = None
+        index = pos_.index(d)
         if d == pos_.depth:
             before = pos_.node_before
             after = pos_.node_after
         elif dir > 0:
             before = pos_.node(d + 1)
-            after = pos_.node(d).maybe_child(pos_.index(d) + 1)
+            index += 1
+            after = pos_.node(d).maybe_child(index)
         else:
-            before = pos_.node(d).maybe_child(pos_.index(d) - 1)
+            before = pos_.node(d).maybe_child(index - 1)
             after = pos_.node(d + 1)
-        if before and not before.is_text_block and joinable(before, after):
+        if (
+            before
+            and not before.is_text_block
+            and joinable(before, after)
+            and pos_.node(d).can_replace(index, index + 1)
+        ):
             return pos
         if d == 0:
             break
@@ -224,15 +231,14 @@ def drop_point(doc, pos, slice):
             else:
                 bias = 1
             insert_pos = pos_.index(d) + (1 if bias > 0 else 0)
+            parent = pos_.node(d)
+            fits = False
             if pass_ == 1:
-                cond = pos_.node(d).can_replace(insert_pos, insert_pos, content)
+                fits = parent.can_replace(insert_pos, insert_pos, content)
             else:
-                cond = (
-                    pos_.node(d)
-                    .content_match_at(insert_pos)
-                    .find_wrapping(content.first_child.type)
-                )
-            if cond:
+                wrapping = parent.content_match_at(insert_pos).find_wrapping(content.first_child.type)
+                fits = wrapping and parent.can_replace_with(insert_pos, insert_pos, wrapping[0])
+            if fits:
                 if bias == 0:
                     return pos_.pos
                 elif bias < 0:

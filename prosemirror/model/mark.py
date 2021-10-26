@@ -1,4 +1,9 @@
+from typing import ClassVar
+
+
 class Mark:
+    none: ClassVar["Mark"]
+
     def __init__(self, type, attrs):
         self.type = type
         self.attrs = attrs
