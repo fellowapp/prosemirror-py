@@ -197,6 +197,12 @@ def test_match_type(expr, types, valid):
             '{"type":"doc","content":[{"type":"paragraph"}]}',
             '{"type":"doc","content":[{"type":"code_block"},{"type":"paragraph"}]}',
         ),
+        (
+            "heading paragraph? horizontal_rule",
+            '{"type":"doc","content":[{"type":"heading"}]}',
+            '{"type":"doc"}',
+            '{"type":"doc","content":[{"type":"horizontal_rule"}]}',
+        ),
     ],
 )
 def test_fill_before(expr, before, after, result):
