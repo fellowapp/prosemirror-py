@@ -208,13 +208,14 @@ six = "*"
 
 [[package]]
 name = "pandoc"
-version = "1.0.2"
+version = "2.0.1"
 description = "Pandoc Documents for Python"
 category = "dev"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
+plumbum = "*"
 ply = "*"
 
 [[package]]
@@ -238,6 +239,22 @@ importlib-metadata = {version = ">=0.12", markers = "python_version < \"3.8\""}
 
 [package.extras]
 dev = ["pre-commit", "tox"]
+
+[[package]]
+name = "plumbum"
+version = "1.7.1"
+description = "Plumbum: shell combinators library"
+category = "dev"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+
+[package.dependencies]
+pypiwin32 = {version = "*", markers = "platform_system == \"Windows\" and platform_python_implementation != \"PyPy\""}
+
+[package.extras]
+dev = ["paramiko", "psutil", "pytest", "pytest-cov", "pytest-mock", "pytest-timeout"]
+docs = ["Sphinx (>=3.0.0)", "sphinx-rtd-theme (>=0.5.0)"]
+ssh = ["paramiko"]
 
 [[package]]
 name = "ply"
@@ -291,6 +308,17 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
+name = "pypiwin32"
+version = "223"
+description = ""
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pywin32 = ">=223"
+
+[[package]]
 name = "pytest"
 version = "6.2.5"
 description = "pytest: simple powerful testing with Python"
@@ -326,6 +354,14 @@ pytest = ">=4.6"
 
 [package.extras]
 testing = ["fields", "hunter", "process-tests (==2.0.2)", "six", "pytest-xdist", "virtualenv"]
+
+[[package]]
+name = "pywin32"
+version = "302"
+description = "Python for Window Extensions"
+category = "dev"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "regex"
@@ -413,7 +449,7 @@ testing = ["jaraco.itertools", "func-timeout"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6,<4"
-content-hash = "e097cbec9dbe700c739509497b8c2b8dcde1e17a7b366d9cfa561b10ace125e0"
+content-hash = "ea91e0d84540dafc2d8242b6f0a9fc27d075ed3a42b011d97296776012a73f5d"
 
 [metadata.files]
 appdirs = [
@@ -535,7 +571,7 @@ packaging = [
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
 ]
 pandoc = [
-    {file = "pandoc-1.0.2.tar.gz", hash = "sha256:1b54f65f127583be75c74b63378ca42a8adc80955de3d33e8915fec35617b1fd"},
+    {file = "pandoc-2.0.1.tar.gz", hash = "sha256:4d3850314fa56cb6164101ad8af561db0c0d5fd19d047e2ca8a9119bf47dac23"},
 ]
 pathspec = [
     {file = "pathspec-0.8.0-py2.py3-none-any.whl", hash = "sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0"},
@@ -544,6 +580,10 @@ pathspec = [
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
+]
+plumbum = [
+    {file = "plumbum-1.7.1-py2.py3-none-any.whl", hash = "sha256:e97229fdf218698b4e9e939355f4d20d20bf57f8a02710f81f92442e2b2db038"},
+    {file = "plumbum-1.7.1.tar.gz", hash = "sha256:3c0ac8c4ee57b2adddc82909d3c738a62ef5f77faf24ec7cb6f0a117e1679740"},
 ]
 ply = [
     {file = "ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"},
@@ -569,6 +609,10 @@ pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
 ]
+pypiwin32 = [
+    {file = "pypiwin32-223-py3-none-any.whl", hash = "sha256:67adf399debc1d5d14dffc1ab5acacb800da569754fafdc576b2a039485aa775"},
+    {file = "pypiwin32-223.tar.gz", hash = "sha256:71be40c1fbd28594214ecaecb58e7aa8b708eabfa0125c8a109ebd51edbd776a"},
+]
 pytest = [
     {file = "pytest-6.2.5-py3-none-any.whl", hash = "sha256:7310f8d27bc79ced999e760ca304d69f6ba6c6649c0b60fb0e04a4a77cacc134"},
     {file = "pytest-6.2.5.tar.gz", hash = "sha256:131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89"},
@@ -576,6 +620,18 @@ pytest = [
 pytest-cov = [
     {file = "pytest-cov-2.10.1.tar.gz", hash = "sha256:47bd0ce14056fdd79f93e1713f88fad7bdcc583dcd7783da86ef2f085a0bb88e"},
     {file = "pytest_cov-2.10.1-py2.py3-none-any.whl", hash = "sha256:45ec2d5182f89a81fc3eb29e3d1ed3113b9e9a873bcddb2a71faaab066110191"},
+]
+pywin32 = [
+    {file = "pywin32-302-cp310-cp310-win32.whl", hash = "sha256:251b7a9367355ccd1a4cd69cd8dd24bd57b29ad83edb2957cfa30f7ed9941efa"},
+    {file = "pywin32-302-cp310-cp310-win_amd64.whl", hash = "sha256:79cf7e6ddaaf1cd47a9e50cc74b5d770801a9db6594464137b1b86aa91edafcc"},
+    {file = "pywin32-302-cp36-cp36m-win32.whl", hash = "sha256:fe21c2fb332d03dac29de070f191bdbf14095167f8f2165fdc57db59b1ecc006"},
+    {file = "pywin32-302-cp36-cp36m-win_amd64.whl", hash = "sha256:d3761ab4e8c5c2dbc156e2c9ccf38dd51f936dc77e58deb940ffbc4b82a30528"},
+    {file = "pywin32-302-cp37-cp37m-win32.whl", hash = "sha256:48dd4e348f1ee9538dd4440bf201ea8c110ea6d9f3a5010d79452e9fa80480d9"},
+    {file = "pywin32-302-cp37-cp37m-win_amd64.whl", hash = "sha256:496df89f10c054c9285cc99f9d509e243f4e14ec8dfc6d78c9f0bf147a893ab1"},
+    {file = "pywin32-302-cp38-cp38-win32.whl", hash = "sha256:e372e477d938a49266136bff78279ed14445e00718b6c75543334351bf535259"},
+    {file = "pywin32-302-cp38-cp38-win_amd64.whl", hash = "sha256:543552e66936378bd2d673c5a0a3d9903dba0b0a87235ef0c584f058ceef5872"},
+    {file = "pywin32-302-cp39-cp39-win32.whl", hash = "sha256:2393c1a40dc4497fd6161b76801b8acd727c5610167762b7c3e9fd058ef4a6ab"},
+    {file = "pywin32-302-cp39-cp39-win_amd64.whl", hash = "sha256:af5aea18167a31efcacc9f98a2ca932c6b6a6d91ebe31f007509e293dea12580"},
 ]
 regex = [
     {file = "regex-2020.5.14-cp27-cp27m-win32.whl", hash = "sha256:e565569fc28e3ba3e475ec344d87ed3cd8ba2d575335359749298a0899fe122e"},
