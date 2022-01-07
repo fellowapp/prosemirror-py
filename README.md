@@ -1,10 +1,11 @@
 # prosemirror-py
 
 [![CircleCI](https://circleci.com/gh/fellowapp/prosemirror-py.svg?style=shield)](https://circleci.com/gh/fellowapp/prosemirror-py)
-[![Code Coverage](https://codecov.io/gh/fellowapp/prosemirror-py/branch/master/graph/badge.svg)](https://codecov.io/gh/fellowapp/prosemirror-py)
-[![Python Version](https://img.shields.io/pypi/pyversions/prosemirror-py.svg)](https://pypi.org/project/prosemirror-py/)
-[![PyPI Package](https://img.shields.io/pypi/v/prosemirror-py.svg)](https://pypi.org/project/prosemirror-py/)
-[![License](https://img.shields.io/pypi/l/prosemirror-py.svg)](https://github.com/fellowapp/prosemirror-py/blob/master/LICENSE.md)
+[![Code Coverage](https://codecov.io/gh/fellowapp/prosemirror-py/branch/master/graph/badge.svg?style=flat)](https://codecov.io/gh/fellowapp/prosemirror-py)
+[![Python Version](https://img.shields.io/pypi/pyversions/prosemirror-py.svg?style=flat)](https://pypi.org/project/prosemirror-py/)
+[![PyPI Package](https://img.shields.io/pypi/v/prosemirror-py.svg?style=flat)](https://pypi.org/project/prosemirror-py/)
+[![License](https://img.shields.io/pypi/l/prosemirror-py.svg?style=flat)](https://github.com/fellowapp/prosemirror-py/blob/master/LICENSE.md)
+[![Fellow Careers](https://img.shields.io/badge/fellow.app-hiring-576cf7.svg?style=flat)](https://fellow.app/careers/)
 
 This package provides Python implementations of the following [ProseMirror](https://prosemirror.net/) packages:
 
