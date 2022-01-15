@@ -67,7 +67,11 @@ class StepMap:
                 result = start + diff + (0 if side < 0 else new_size)
                 if simple:
                     return result
-                recover = None if pos == (start if assoc < 0 else end) else make_recover(i / 3, pos - start)
+                recover = (
+                    None
+                    if pos == (start if assoc < 0 else end)
+                    else make_recover(i / 3, pos - start)
+                )
                 return MapResult(
                     result, pos != start if assoc < 0 else pos != end, recover
                 )

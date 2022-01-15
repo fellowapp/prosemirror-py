@@ -11,20 +11,20 @@ repository = "https://github.com/fellowinsights/prosemirror-py"
 keywords = ["prosemirror", "collaborative", "editing"]
 
 [tool.poetry.dependencies]
-python = ">=3.6,<4"
-typing-extensions = "^3.7"
+python = ">=3.6.2,<4"
+typing-extensions = "^4.0"
 
 [tool.poetry.dev-dependencies]
-black = { version = "19.10b0", allow-prereleases = true, python = ">=3.6" }
-mypy = "^0.780"
+black = { version = "21.12b0", allow-prereleases = true, python = ">=3.6" }
+mypy = "^0.931"
 pytest = "^6.2"
-flake8 = "^3.8"
-pydash = "^4.7"
-pytest-cov = "^2.10"
-pandoc = "^1.0"
-isort = "^4.3"
+flake8 = "^4.0"
+pydash = "^5.1"
+pytest-cov = "^3.0"
+pandoc = "^2.0"
+isort = "^5.10"
 codecov = "^2.1"
-coverage = "^5.1"
+coverage = "^6.2"
 
 [tool.black]
 max-line-length=88

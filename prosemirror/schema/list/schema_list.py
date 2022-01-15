@@ -11,7 +11,9 @@ orderd_list = {
     "attrs": {"order": {"default": 1}},
     "parseDOM": [{"tag": "ol"}],
     "toDOM": lambda node: (
-        OL_DOM if node.attrs.get("order") == 1 else ["ol", {"start": node.attrs["order"]}, 0]
+        OL_DOM
+        if node.attrs.get("order") == 1
+        else ["ol", {"start": node.attrs["order"]}, 0]
     ),
 }
 
