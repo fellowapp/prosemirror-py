@@ -56,9 +56,10 @@ class Mark:
             json_data = json.loads(json_data)
         if not json_data:
             raise ValueError("Invalid input for Mark.fromJSON")
-        type = schema.marks.get(json_data["type"])
+        name = json_data["type"]
+        type = schema.marks.get(name)
         if not type:
-            raise ValueError(f"There is not mark type {type} in this schema")
+            raise ValueError(f"There is no mark type {name} in this schema")
         return type.create(json_data.get("attrs"))
 
     @classmethod
