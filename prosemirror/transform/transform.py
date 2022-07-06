@@ -1,12 +1,17 @@
-from prosemirror.model import Fragment, MarkType, Node, Slice
+from typing import Union
 
+from prosemirror.model import Fragment, MarkType, Node, NodeType, Slice
+
+from . import replace, structure
 from .map import Mapping
 from .mark_step import AddMarkStep, RemoveMarkStep
 from .replace import close_fragment, covered_depths, fits_trivially, replace_step
 from .replace_step import ReplaceAroundStep, ReplaceStep
 from .structure import can_change_type, insert_point
-from . import structure
-from . import replace
+
+
+def defines_content(type: Union[NodeType, MarkType]):
+    return type.spec.get("defining") or type.spec.get("definingForContent")
 
 
 class TransformError(ValueError):
@@ -24,7 +29,7 @@ class Transform:
     find_wrapping = structure.find_wrapping
     replace_step = replace.replace_step
 
-    def __init__(self, doc):
+    def __init__(self, doc: Node):
         self.doc = doc
         self.steps = []
         self.docs = []
@@ -207,7 +212,11 @@ class Transform:
         pos = from__.pos - 1
         while d > 0:
             spec = from__.node(d).type.spec
-            if spec.get("defining") or spec.get("isolating"):
+            if (
+                spec.get("defining")
+                or spec.get("definingAsContext")
+                or spec.get("isolating")
+            ):
                 break
             if d in target_depths:
                 preferred_target = d
@@ -227,21 +236,16 @@ class Transform:
                 break
             content = node.content
             i += 1
-        if (
-            preferred_depth > 0
-            and left_nodes[preferred_depth - 1].type.spec.get("defining")
-            and from__.node(preferred_target_index).type.name
-            != left_nodes[preferred_depth - 1].type.name
-        ):
-            preferred_depth -= 1
-        elif (
-            preferred_depth >= 2
-            and left_nodes[preferred_depth - 1].is_text_block
-            and left_nodes[preferred_depth - 2].type.spec.get("defining")
-            and from__.node(preferred_target_index).type.name
-            != left_nodes[preferred_depth - 2].type.name
-        ):
-            preferred_depth -= 2
+
+        d = preferred_depth - 1
+        while d >= 0:
+            type = left_nodes[d].type
+            def_ = defines_content(type)
+            if def_ and from__.node(preferred_target_index).type.name != type.name:
+                preferred_depth = d
+            elif (def_ or not type.is_text_block):
+                break
+            d -= 1
 
         for j in range(slice.open_start, -1, -1):
             open_depth = (j + preferred_depth + 1) % (slice.open_start + 1)
@@ -373,6 +377,10 @@ class Transform:
         content = Fragment.empty
         i = len(wrappers) - 1
         while i >= 0:
+            if content.size:
+                match = wrappers[i]["type"].content_match.match_fragment(content)
+                if not match or not match.valid_end:
+                    raise TransformError("Wrapper type given to Transform.wrap does not form valid content of its parent wrapper")
             content = Fragment.from_(
                 wrappers[i]["type"].create(wrappers[i].get("attrs"), content)
             )

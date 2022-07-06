@@ -1,5 +1,6 @@
 from prosemirror.model import Fragment, Schema
-from prosemirror.test_builder import test_schema as schema, eq, out
+from prosemirror.test_builder import eq, out
+from prosemirror.test_builder import test_schema as schema
 
 doc = out["doc"]
 blockquote = out["blockquote"]
@@ -18,9 +19,16 @@ custom_schema = Schema(
     {
         "nodes": {
             "doc": {"content": "paragraph+"},
-            "paragraph": {"content": "text*"},
+            "paragraph": {"content": "(text|contact)*"},
             "text": {
                 "toDebugString": lambda _: "custom_text",
+            },
+            "contact": {
+                "inline": True,
+                "attrs": {"name": {}, "email": {}},
+                "leafText": (
+                    lambda node: f"{node.attrs['name']} <{node.attrs['email']}>"
+                ),
             },
             "hard_break": {
                 "toDebugString": lambda _: "custom_hard_break",
@@ -63,6 +71,17 @@ class TestToString:
             ],
         )
         assert str(f) == "<custom_text, custom_hard_break, custom_text>"
+
+    def test_should_respect_custom_leafText_spec(self):
+        contact = custom_schema.nodes["contact"].create_checked(
+            {"name": "Bob", "email": "bob@example.com"}
+        )
+        paragraph = custom_schema.nodes["paragraph"].create_checked(
+            {}, [custom_schema.text("Hello "), contact]
+        )
+
+        assert contact.text_content, "Bob <bob@example.com>"
+        assert paragraph.text_content, "Hello Bob <bob@example.com>"
 
 
 class TestCut:
@@ -169,6 +188,42 @@ class TestTextBetween:
 
         text = d.text_between(0, d.content.size, "", leaf_text)
         assert text == "foo<image><break>"
+
+    def test_works_with_leafText(self):
+        d = custom_schema.nodes["doc"].create_checked(
+            {},
+            [
+                custom_schema.nodes["paragraph"].create_checked(
+                    {},
+                    [
+                        custom_schema.text("Hello "),
+                        custom_schema.nodes["contact"].create_checked(
+                            {"name": "Alice", "email": "alice@example.com"}
+                        ),
+                    ],
+                )
+            ],
+        )
+        assert d.text_between(0, d.content.size) == "Hello Alice <alice@example.com>"
+
+    def test_should_ignore_leafText_spec_when_passing_a_custom_leaf_text(self):
+        d = custom_schema.nodes["doc"].create_checked(
+            {},
+            [
+                custom_schema.nodes["paragraph"].create_checked(
+                    {},
+                    [
+                        custom_schema.text("Hello "),
+                        custom_schema.nodes["contact"].create_checked(
+                            {"name": "Alice", "email": "alice@example.com"}
+                        ),
+                    ],
+                )
+            ],
+        )
+        assert (
+            d.text_between(0, d.content.size, "", "<anonymous>") == "Hello <anonymous>"
+        )
 
 
 class TestTextContent:

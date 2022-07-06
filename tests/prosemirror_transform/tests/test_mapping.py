@@ -21,5 +21,89 @@ import pytest
         ],
     ],
 )
-def test_all_cases(mapping_info, cases, test_mapping, make_mapping):
+def test_all_mapping_cases(mapping_info, cases, test_mapping, make_mapping):
     test_mapping(make_mapping(*mapping_info), *cases)
+
+
+@pytest.mark.parametrize(
+    "mapping_info,pos,side,flags",
+    [
+        [([0, 2, 0],), 2, -1, "db"],
+        [([0, 2, 0],), 2, 1, "b"],
+        [([0, 2, 2],), 2, -1, "db"],
+        [
+            (
+                [0, 1, 0],
+                [0, 1, 0],
+            ),
+            2,
+            -1,
+            "db",
+        ],
+        [([0, 1, 0],), 2, -1, ""],
+        [([2, 2, 0],), 2, -1, "a"],
+        [([2, 2, 0],), 2, 1, "da"],
+        [([2, 2, 2],), 2, 1, "da"],
+        [
+            (
+                [2, 1, 0],
+                [2, 1, 0],
+            ),
+            2,
+            1,
+            "da",
+        ],
+        [([3, 2, 0],), 2, -1, ""],
+        [([0, 4, 0],), 2, -1, "dbax"],
+        [([0, 4, 0],), 2, 1, "dbax"],
+        [([0, 4, 0],), 2, 1, "dbax"],
+        [
+            (
+                [0, 1, 0],
+                [4, 1, 0],
+                [0, 3, 0],
+            ),
+            2,
+            1,
+            "dbax",
+        ],
+        [
+            (
+                [4, 1, 0],
+                [0, 1, 0],
+            ),
+            2,
+            -1,
+            "",
+        ],
+        [
+            (
+                [2, 1, 0],
+                [0, 2, 0],
+            ),
+            2,
+            -1,
+            "dba",
+        ],
+        [
+            (
+                [2, 1, 0],
+                [0, 1, 0],
+            ),
+            2,
+            -1,
+            "a",
+        ],
+        [
+            (
+                [3, 1, 0],
+                [0, 2, 0],
+            ),
+            2,
+            -1,
+            "db",
+        ],
+    ],
+)
+def test_all_del_cases(mapping_info, pos, side, flags, test_del, make_mapping):
+    test_del(make_mapping(*mapping_info), pos, side, flags)

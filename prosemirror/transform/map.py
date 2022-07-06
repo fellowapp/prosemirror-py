@@ -16,17 +16,51 @@ def recover_offset(value):
     return int((value - (value & lower16)) / factor16)
 
 
+DEL_BEFORE = 1  # 0x0001
+DEL_AFTER = 2  #  0x0010
+DEL_ACROSS = 4  # 0x0100
+DEL_SIDE = 8  #   0x1000
+
+
 class MapResult:
-    def __init__(self, pos, deleted=False, recover=None):
+    def __init__(self, pos, del_info=0, recover=None):
         self.pos = pos
-        self.deleted = deleted
+        self.del_info = del_info
         self.recover = recover
+
+    #   get deleted() { return (this.delInfo & DEL_SIDE) > 0 }
+
+    #   get deletedBefore() { return (this.delInfo & (DEL_BEFORE | DEL_ACROSS)) > 0 }
+
+    #   get deletedAfter() { return (this.delInfo & (DEL_AFTER | DEL_ACROSS)) > 0 }
+
+    #   get deletedAcross() { return (this.delInfo & DEL_ACROSS) > 0 }
+
+    @property
+    def deleted(self):
+        return (self.del_info & DEL_SIDE) > 0
+
+    @property
+    def deleted_before(self):
+        return (self.del_info & (DEL_BEFORE | DEL_ACROSS)) > 0
+
+    @property
+    def deleted_after(self):
+        return (self.del_info & (DEL_AFTER | DEL_ACROSS)) > 0
+
+    @property
+    def deleted_across(self):
+        return (self.del_info & DEL_ACROSS) > 0
 
 
 class StepMap:
     empty: ClassVar["StepMap"]
 
     def __init__(self, ranges, inverted=False):
+        # prosemirror-transform overrides the constructor to return the
+        # StepMap.empty singleton when ranges are empty.
+        # It is not easy to do in Python, and the intent of that is to make sure empty stepmaps can eq to eath
+        # other, which is already the case in Python.
         self.ranges = ranges
         self.inverted = inverted
 
@@ -67,12 +101,21 @@ class StepMap:
                 result = start + diff + (0 if side < 0 else new_size)
                 if simple:
                     return result
-                recover = None if pos == (start if assoc < 0 else end) else make_recover(i / 3, pos - start)
-                return MapResult(
-                    result, pos != start if assoc < 0 else pos != end, recover
+                recover = (
+                    None
+                    if pos == (start if assoc < 0 else end)
+                    else make_recover(i / 3, pos - start)
                 )
+                del_info = (
+                    DEL_AFTER
+                    if pos == start
+                    else (DEL_BEFORE if pos == end else DEL_ACROSS)
+                )
+                if pos != start if assoc < 0 else pos != end:
+                    del_info |= DEL_SIDE
+                return MapResult(result, del_info, recover)
             diff += new_size - old_size
-        return pos + diff if simple else MapResult(pos + diff)
+        return pos + diff if simple else MapResult(pos + diff, 0, None)
 
     def touches(self, pos, recover):
         diff = 0
@@ -186,7 +229,7 @@ class Mapping:
         return self._map(pos, assoc, False)
 
     def _map(self, pos, assoc, simple):
-        deleted = False
+        del_info = 0
 
         i = self.from_
         while i < self.to:
@@ -199,8 +242,7 @@ class Mapping:
                     pos = self.maps[corr].recover(result.recover)
                     i += 1
                     continue
-            if result.deleted:
-                deleted = True
+            del_info |= result.del_info
             pos = result.pos
             i += 1
-        return pos if simple else MapResult(pos, deleted)
+        return pos if simple else MapResult(pos, del_info, None)

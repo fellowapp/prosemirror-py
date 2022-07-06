@@ -41,6 +41,8 @@ class Node:
 
     @property
     def text_content(self):
+        if self.is_leaf and self.type.spec.get("leafText") is not None:
+            return self.type.spec["leafText"](self)
         return self.text_between(0, self.content.size, "")
 
     def text_between(self, from_, to, block_separator="", leaf_text=""):
