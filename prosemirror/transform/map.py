@@ -16,10 +16,10 @@ def recover_offset(value):
     return int((value - (value & lower16)) / factor16)
 
 
-DEL_BEFORE = 1  # 0x0001
-DEL_AFTER = 2  #  0x0010
-DEL_ACROSS = 4  # 0x0100
-DEL_SIDE = 8  #   0x1000
+DEL_BEFORE = 1
+DEL_AFTER = 2
+DEL_ACROSS = 4
+DEL_SIDE = 8
 
 
 class MapResult:
