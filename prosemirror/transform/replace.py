@@ -297,7 +297,7 @@ class Fitter:
             )
 
     def must_move_inline(self):
-        if not self.to_.parent.is_text_block or self.to_.end() == self.to_.pos:
+        if not self.to_.parent.is_text_block:
             return -1
         top = self.frontier[self.depth]
 

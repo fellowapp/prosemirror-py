@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing_extensions import Literal
 
 from .content import ContentMatch
 from .fragment import Fragment
@@ -68,6 +69,10 @@ class NodeType:
     @property
     def is_atom(self):
         return self.is_leaf or self.spec.get("atom")
+
+    @property
+    def whitespace(self) -> Literal["pre", "normal"]:
+        return self.spec.get("whitespace") or ("pre" if self.spec else "normal")
 
     def has_required_attrs(self):
         for n in self.attrs:

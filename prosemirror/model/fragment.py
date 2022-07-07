@@ -1,8 +1,11 @@
-from typing import ClassVar, Iterable
+from typing import ClassVar, Iterable, TYPE_CHECKING
 
 from prosemirror.utils import text_length
 
 from .diff import find_diff_end, find_diff_start
+
+if TYPE_CHECKING:
+    from .node import Node
 
 
 def retIndex(index, offset):
@@ -45,14 +48,17 @@ class Fragment:
     def text_between(self, from_, to, block_separator="", leaf_text=""):
         text, separated = "", True
 
-        def iteratee(node, pos, *args):
+        def iteratee(node: "Node", pos, *args):
             nonlocal text
             nonlocal separated
             if node.is_text:
                 text += node.text[max(from_, pos) - pos : to - pos]
                 separated = not block_separator
-            elif node.is_leaf and leaf_text:
-                text += leaf_text(node) if callable(leaf_text) else leaf_text
+            elif node.is_leaf:
+                if leaf_text:
+                    text += leaf_text(node) if callable(leaf_text) else leaf_text
+                elif node.type.spec.get("leafText") is not None:
+                    text += node.type.spec["leafText"](node)
                 separated = not block_separator
             elif not separated and node.is_block:
                 text += block_separator

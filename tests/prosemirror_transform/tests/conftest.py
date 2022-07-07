@@ -48,6 +48,24 @@ def make_mapping():
 
 
 @pytest.fixture
+def test_del():
+    def t_del(mapping: Mapping, pos: int, side: int, flags: str):
+        r = mapping.map_result(pos, side)
+        found = ""
+        if r.deleted:
+            found += "d"
+        if r.deleted_before:
+            found += "b"
+        if r.deleted_after:
+            found += "a"
+        if r.deleted_across:
+            found += "x"
+        assert found == flags
+
+    return t_del
+
+
+@pytest.fixture
 def make_step():
     return _make_step
 
