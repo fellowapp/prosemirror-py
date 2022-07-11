@@ -72,7 +72,7 @@ class NodeType:
 
     @property
     def whitespace(self) -> Literal["pre", "normal"]:
-        return self.spec.get("whitespace") or ("pre" if self.spec else "normal")
+        return self.spec.get("whitespace") or ("pre" if self.spec.get("code") else "normal")
 
     def has_required_attrs(self):
         for n in self.attrs:
