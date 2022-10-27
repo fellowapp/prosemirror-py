@@ -46,26 +46,27 @@ class Fragment:
         self.nodes_between(0, self.size, f)
 
     def text_between(self, from_, to, block_separator="", leaf_text=""):
-        text, separated = "", True
+        text = []
+        separated = True
 
         def iteratee(node: "Node", pos, *args):
             nonlocal text
             nonlocal separated
             if node.is_text:
-                text += node.text[max(from_, pos) - pos : to - pos]
+                text.append(node.text[max(from_, pos) - pos : to - pos])
                 separated = not block_separator
             elif node.is_leaf:
                 if leaf_text:
-                    text += leaf_text(node) if callable(leaf_text) else leaf_text
+                    text.append(leaf_text(node) if callable(leaf_text) else leaf_text)
                 elif node.type.spec.get("leafText") is not None:
-                    text += node.type.spec["leafText"](node)
+                    text.append(node.type.spec["leafText"](node))
                 separated = not block_separator
             elif not separated and node.is_block:
-                text += block_separator
+                text.append(block_separator)
                 separated = True
 
         self.nodes_between(from_, to, iteratee, 0)
-        return text
+        return "".join(text)
 
     def append(self, other):
         if not other.size:
