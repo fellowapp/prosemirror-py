@@ -1,7 +1,7 @@
 from typing import ClassVar
 
 lower16 = 0xFFFF
-factor16 = 2 ** 16
+factor16 = 2**16
 
 
 def make_recover(index, offset):
@@ -59,8 +59,8 @@ class StepMap:
     def __init__(self, ranges, inverted=False):
         # prosemirror-transform overrides the constructor to return the
         # StepMap.empty singleton when ranges are empty.
-        # It is not easy to do in Python, and the intent of that is to make sure empty stepmaps can eq to eath
-        # other, which is already the case in Python.
+        # It is not easy to do in Python, and the intent of that is to make sure
+        # empty stepmaps can eq to each other, which is already the case in Python.
         self.ranges = ranges
         self.inverted = inverted
 

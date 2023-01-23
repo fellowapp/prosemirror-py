@@ -742,7 +742,7 @@ def test_doesnt_fail_when_moving_text_would_solve_unsatisfied_content_constraint
     assert tr.steps
 
 
-def test_doesnt_fail_pasting_half_open_slice_with_title_and_code_block_into_empty_title():
+def test_pasting_half_open_slice_with_title_and_code_block_into_empty_title():
     s = Schema(
         {
             "nodes": {
@@ -768,7 +768,7 @@ def test_doesnt_fail_pasting_half_open_slice_with_title_and_code_block_into_empt
     assert tr.steps
 
 
-def test_doesnt_fail_pasting_half_open_slice_with_heading_and_code_block_into_empty_title():
+def test_pasting_half_open_slice_with_heading_and_code_block_into_empty_title():
     s = Schema(
         {
             "nodes": {

@@ -103,8 +103,8 @@ class TestCanSplit:
         else:
             assert not res
 
-    def test_doesnt_return_true_when_the_split_off_content_doesnt_fit_in_the_given_node_type(
-        self
+    def test_doesnt_return_true_when_split_content_doesnt_fit_in_given_node_type(
+        self,
     ):
         s = Schema(
             {

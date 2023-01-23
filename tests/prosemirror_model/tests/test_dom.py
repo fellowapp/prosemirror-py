@@ -30,7 +30,11 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
 @pytest.mark.parametrize(
     "desc,doc,html",
     [
-        ("it can represent simple node", doc(p("hello")), "<p>hello</p>",),
+        (
+            "it can represent simple node",
+            doc(p("hello")),
+            "<p>hello</p>",
+        ),
         (
             "it can represent a line break",
             doc(p("hi", br, "there")),
@@ -54,21 +58,24 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
                     a({"href": "foo"}, "big ", a({"href": "bar"}, "nested"), " link"),
                 )
             ),
-            '<p>a <a href="foo">big </a><a href="bar">nested</a><a href="foo"> link</a></p>',
+            '<p>a <a href="foo">big </a><a href="bar">nested</a>'
+            '<a href="foo"> link</a></p>',
         ),
         (
             "it can represent an unordered list",
             doc(
                 ul(li(p("one")), li(p("two")), li(p("three", strong("!")))), p("after")
             ),
-            "<ul><li><p>one</p></li><li><p>two</p></li><li><p>three<strong>!</strong></p></li></ul><p>after</p>",
+            "<ul><li><p>one</p></li><li><p>two</p></li><li><p>three"
+            "<strong>!</strong></p></li></ul><p>after</p>",
         ),
         (
             "it can represent an ordered list",
             doc(
                 ol(li(p("one")), li(p("two")), li(p("three", strong("!")))), p("after")
             ),
-            "<ol><li><p>one</p></li><li><p>two</p></li><li><p>three<strong>!</strong></p></li></ol><p>after</p>",
+            "<ol><li><p>one</p></li><li><p>two</p></li><li><p>three"
+            "<strong>!</strong></p></li></ol><p>after</p>",
         ),
         (
             "it can represent a blockquote",
@@ -83,7 +90,8 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
         (
             "it can represent inline code",
             doc(p("text and ", code("code that is ", em("emphasized"), "..."))),
-            "<p>text and <code>code that is </code><em><code>emphasized</code></em><code>...</code></p>",
+            "<p>text and <code>code that is </code><em><code>emphasized</code>"
+            "</em><code>...</code></p>",
         ),
         (
             "it can represent a code block",
@@ -135,7 +143,8 @@ def test_parser(doc, html, desc):
             ),
             p(strong("foo", code("bar"), em(code("baz"))), em("quux"), "xyz"),
             "<strong>foo<code>bar</code></strong>"
-            '<em><i data-emphasis="true"><strong><code>baz</code></strong>quux</i></em>xyz',
+            '<em><i data-emphasis="true"><strong><code>baz</code>'
+            "</strong>quux</i></em>xyz",
         ),
     ],
 )

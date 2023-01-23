@@ -1,7 +1,3 @@
-# from prosemirror.transform import find_wrapping, lift_target, can_split, ReplaceAroundStep
-# from prosemirror.model import Slice, Fragment, NodeRange
-
-
 OL_DOM = ["ol", 0]
 UL_DOM = ["ul", 0]
 LI_DOM = ["li", 0]
@@ -11,7 +7,9 @@ orderd_list = {
     "attrs": {"order": {"default": 1}},
     "parseDOM": [{"tag": "ol"}],
     "toDOM": lambda node: (
-        OL_DOM if node.attrs.get("order") == 1 else ["ol", {"start": node.attrs["order"]}, 0]
+        OL_DOM
+        if node.attrs.get("order") == 1
+        else ["ol", {"start": node.attrs["order"]}, 0]
     ),
 }
 

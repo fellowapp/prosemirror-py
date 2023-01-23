@@ -145,9 +145,6 @@ class ContentMatch:
 
         return "\n".join((iteratee(m, i)) for m, i in enumerate(seen))
 
-    def __repr__(self):
-        return f"ContentMatch<{dict(valid_end=self.valid_end, next=self.next, cache=self.wrap_cache)}>"
-
 
 ContentMatch.empty = ContentMatch(True)
 
@@ -423,6 +420,7 @@ def check_for_dead_ends(match, stream):
                 work.append(next)
         if dead:
             stream.err(
-                f'Only non-generatable nodes ({", ".join(nodes)}) in a required position (see https://prosemirror.net/docs/guide/#generatable)'
+                f'Only non-generatable nodes ({", ".join(nodes)}) in a required '
+                "position (see https://prosemirror.net/docs/guide/#generatable)"
             )
         i += 1
