@@ -1,4 +1,4 @@
-name: CI
+name: Lint
 
 on:
   push:
@@ -7,21 +7,18 @@ on:
   pull_request:
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
       - name: cache poetry install
         uses: actions/cache@v3
         with:
           path: ~/.local
-          key: poetry-0
+          key: poetry-3.11-0
       - uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
@@ -35,7 +32,5 @@ jobs:
       - run: poetry install --no-interaction --no-root
         if: steps.cache-deps.outputs.cache-hit != 'true'
       - run: poetry install --no-interaction
-      - run: poetry run pytest --cov=./prosemirror/
       - run: poetry run black --check prosemirror tests
       - run: poetry run ruff prosemirror tests
-      - run: poetry run codecov
