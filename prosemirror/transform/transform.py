@@ -243,7 +243,7 @@ class Transform:
             def_ = defines_content(type)
             if def_ and from__.node(preferred_target_index).type.name != type.name:
                 preferred_depth = d
-            elif (def_ or not type.is_text_block):
+            elif def_ or not type.is_text_block:
                 break
             d -= 1
 
@@ -380,7 +380,10 @@ class Transform:
             if content.size:
                 match = wrappers[i]["type"].content_match.match_fragment(content)
                 if not match or not match.valid_end:
-                    raise TransformError("Wrapper type given to Transform.wrap does not form valid content of its parent wrapper")
+                    raise TransformError(
+                        "Wrapper type given to Transform.wrap does not form valid "
+                        "content of its parent wrapper"
+                    )
             content = Fragment.from_(
                 wrappers[i]["type"].create(wrappers[i].get("attrs"), content)
             )

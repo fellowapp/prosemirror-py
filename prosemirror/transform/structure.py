@@ -236,8 +236,12 @@ def drop_point(doc, pos, slice):
             if pass_ == 1:
                 fits = parent.can_replace(insert_pos, insert_pos, content)
             else:
-                wrapping = parent.content_match_at(insert_pos).find_wrapping(content.first_child.type)
-                fits = wrapping and parent.can_replace_with(insert_pos, insert_pos, wrapping[0])
+                wrapping = parent.content_match_at(insert_pos).find_wrapping(
+                    content.first_child.type
+                )
+                fits = wrapping and parent.can_replace_with(
+                    insert_pos, insert_pos, wrapping[0]
+                )
             if fits:
                 if bias == 0:
                     return pos_.pos
