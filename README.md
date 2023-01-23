@@ -33,3 +33,58 @@ directly via a native Python API.
 The full ProseMirror test suite has been translated and passes. This project
 only supports Python 3. There are no type annotations at the moment, although
 the original has annotations available in doc comments.
+
+## Usage
+
+Since this library is a direct port, the best place to learn how to use it is
+the [official ProseMirror documentation](https://prosemirror.net/docs/guide/).
+Here is a simple example using the included "basic" schema:
+
+```python
+from prosemirror.transform import Transform
+from prosemirror.schema.basic import schema
+
+# Create a document containing a single paragraph with the text "Hello, world!"
+doc = schema.node("doc", {}, [
+    schema.node("paragraph", {}, [
+        schema.text("Hello, world!")
+    ])
+])
+
+# Create a Transform which will be applied to the document.
+tr = Transform(doc)
+
+# Delete the text from position 3 to 5. Adds a ReplaceStep to the transform.
+tr.delete(3, 5)
+
+# Make the first three characters bold. Adds an AddMarkStep to the transform.
+tr.add_mark(1, 4, schema.mark("strong"))
+
+# This transform can be converted to JSON to be sent and applied elsewhere.
+assert [step.to_json() for step in tr.steps] == [{
+    'stepType': 'replace',
+    'from': 3,
+    'to': 5
+}, {
+    'stepType': 'addMark',
+    'mark': {'type': 'strong', 'attrs': {}},
+    'from': 1,
+    'to': 4
+}]
+
+# The resulting document can also be converted to JSON.
+assert tr.doc.to_json() == {
+    'type': 'doc',
+    'content': [{
+        'type': 'paragraph',
+        'content': [{
+            'type': 'text',
+            'marks': [{'type': 'strong', 'attrs': {}}],
+            'text': 'Heo'
+        }, {
+            'type': 'text',
+            'text': ', world!'
+        }]
+    }]
+}
+```
