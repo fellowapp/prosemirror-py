@@ -1,6 +1,6 @@
 # prosemirror-py
 
-[![CI](https://github.com/fellowapp/prosemirror-py/actions/workflows/ci.yml/badge.svg)](https://github.com/fellowapp/prosemirror-py/actions/workflows/ci.yml)
+[![CI](https://github.com/fellowapp/prosemirror-py/actions/workflows/test.yml/badge.svg)](https://github.com/fellowapp/prosemirror-py/actions/workflows/test.yml)
 [![Code Coverage](https://codecov.io/gh/fellowapp/prosemirror-py/branch/master/graph/badge.svg?style=flat)](https://codecov.io/gh/fellowapp/prosemirror-py)
 [![Python Version](https://img.shields.io/pypi/pyversions/prosemirror.svg?style=flat)](https://pypi.org/project/prosemirror/)
 [![PyPI Package](https://img.shields.io/pypi/v/prosemirror.svg?style=flat)](https://pypi.org/project/prosemirror/)
