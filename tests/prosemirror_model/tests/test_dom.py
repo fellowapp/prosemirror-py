@@ -150,3 +150,10 @@ def test_parser(doc, html, desc):
 )
 def test_serializer(serializer, doc, expect, desc):
     assert str(serializer.serialize_fragment(doc.content)) == expect, desc
+
+
+def test_html_is_escaped():
+    assert (
+        str(serializer.serialize_node(schema.text("<b>bold &</b>")))
+        == "&lt;b&gt;bold &amp;&lt;/b&gt;"
+    )
