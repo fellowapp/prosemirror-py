@@ -42,9 +42,7 @@ class Element(DocumentFragment):
         super().__init__(children)
 
     def __str__(self):
-        attrs_str = " ".join(
-            [f'{k}="{html.escape(v)}"' for k, v in self.attrs.items()]
-        )
+        attrs_str = " ".join([f'{k}="{html.escape(v)}"' for k, v in self.attrs.items()])
         open_tag_str = " ".join([s for s in [self.name, attrs_str] if s])
         if self.name in self.self_closing_elements:
             assert not self.children, "self-closing elements should not have children"
