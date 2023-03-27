@@ -1,13 +1,10 @@
+import html
 from typing import cast, Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from . import Fragment, Mark, Node, Schema
 
 
 HTMLNode = Union["Element", str]
-
-
-def escape_attr_value(s: str) -> str:
-    return s.replace('"', '\\"')
 
 
 class DocumentFragment:
@@ -46,7 +43,7 @@ class Element(DocumentFragment):
 
     def __str__(self):
         attrs_str = " ".join(
-            [f'{k}="{escape_attr_value(v)}"' for k, v in self.attrs.items()]
+            [f'{k}="{html.escape(v)}"' for k, v in self.attrs.items()]
         )
         open_tag_str = " ".join([s for s in [self.name, attrs_str] if s])
         if self.name in self.self_closing_elements:
@@ -144,7 +141,7 @@ class DOMSerializer:
         cls, structure: HTMLOutputSpec
     ) -> Tuple[HTMLNode, Optional[Element]]:
         if isinstance(structure, str):
-            return structure, None
+            return html.escape(structure), None
         if isinstance(structure, Element):
             return structure, None
         tag_name = structure[0]
