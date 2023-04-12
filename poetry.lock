@@ -541,18 +541,18 @@ files = [
 
 [[package]]
 name = "pydash"
-version = "5.1.2"
+version = "7.0.0"
 description = "The kitchen sink of Python utility libraries for doing \"stuff\" in a functional way. Based on the Lo-Dash Javascript library."
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "pydash-5.1.2-py3-none-any.whl", hash = "sha256:a2e0c0900fc5a3cc16c9556d34d7e8a59caa9adebcf319876c9a3ccc35dc545f"},
-    {file = "pydash-5.1.2.tar.gz", hash = "sha256:0556062f6583c21fa70dd9a2c1a4e63bbe8cd54e14fecdfb579b46c36d93836f"},
+    {file = "pydash-7.0.0-py3-none-any.whl", hash = "sha256:65eec35f3be7addcdadf6d1e3c20af77a4db966c2eed08c6eddb19092559e148"},
+    {file = "pydash-7.0.0.tar.gz", hash = "sha256:5321092644ce02bfb00453c85e2eb8ee7e134f54acb205398aeffb9ee2073f38"},
 ]
 
 [package.extras]
-dev = ["Sphinx", "black", "build", "coverage", "docformatter", "flake8", "flake8-black", "flake8-bugbear", "flake8-isort", "invoke", "isort", "pylint", "pytest", "pytest-cov", "sphinx-rtd-theme", "tox", "twine", "wheel"]
+dev = ["Sphinx", "black", "build", "coverage", "docformatter", "flake8", "flake8-black", "flake8-bugbear", "flake8-isort", "importlib-metadata (<5)", "invoke", "isort", "mypy", "pylint", "pytest", "pytest-cov", "pytest-mypy-testing", "sphinx-autodoc-typehints", "sphinx-rtd-theme", "tox", "twine", "wheel"]
 
 [[package]]
 name = "pyflakes"
@@ -725,4 +725,4 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4"
-content-hash = "2d986f3721f23927f09587eee9ed4c3efdba93943a2c545e380418077f259b8a"
+content-hash = "73894bb172c955d22c4316d63f318ed2e38b5e60ea0aae8b854df1aa3d6a5664"
