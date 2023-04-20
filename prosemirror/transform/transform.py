@@ -3,6 +3,7 @@ from typing import Union
 from prosemirror.model import Fragment, MarkType, Node, NodeType, Slice
 
 from . import replace, structure
+from .attr_step import AttrStep
 from .map import Mapping
 from .mark_step import AddMarkStep, RemoveMarkStep
 from .replace import close_fragment, covered_depths, fits_trivially, replace_step
@@ -455,6 +456,9 @@ class Transform:
                 True,
             )
         )
+
+    def set_node_attribute(self, pos, attr, value):
+        return self.step(AttrStep(pos, attr, value))
 
     def split(self, pos, depth=None, types_after=None):
         if depth is None:

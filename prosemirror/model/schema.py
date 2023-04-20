@@ -27,7 +27,7 @@ def compute_attrs(attrs, value):
             if attr.has_default:
                 given = attr.default
             else:
-                raise ValueError("No value supplied for attribute" + name)
+                raise ValueError("No value supplied for attribute " + name)
         built[name] = given
     return built
 
