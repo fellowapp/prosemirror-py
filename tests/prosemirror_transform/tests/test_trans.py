@@ -949,6 +949,45 @@ class TestEnforcingHeadingAndBody:
         assert tr.doc.eq(doc(h(), b(p("One"))))
 
 
+def test_keeps_isolating_nodes_together():
+    s = Schema(
+        {
+            "nodes": schema.spec["nodes"]
+            | {
+                "iso": {
+                    "group": "block",
+                    "content": "block+",
+                    "isolating": True,
+                },
+            },
+        }
+    )
+    doc = s.node("doc", None, [s.node("paragraph", None, [s.text("one")])])
+    iso = Fragment.from_(
+        s.node("iso", None, [s.node("paragraph", None, [s.text("two")])])
+    )
+    assert (
+        Transform(doc)
+        .replace(2, 3, Slice(iso, 2, 0))
+        .doc.eq(
+            s.node(
+                "doc",
+                None,
+                [
+                    s.node("paragraph", None, [s.text("o")]),
+                    s.node("iso", None, [s.node("paragraph", None, [s.text("two")])]),
+                    s.node("paragraph", None, [s.text("e")]),
+                ],
+            )
+        )
+    )
+    assert (
+        Transform(doc)
+        .replace(2, 3, Slice(iso, 2, 2))
+        .doc.eq(s.node("doc", None, [s.node("paragraph", None, [s.text("otwoe")])]))
+    )
+
+
 @pytest.mark.parametrize(
     "doc,source,expect",
     [
