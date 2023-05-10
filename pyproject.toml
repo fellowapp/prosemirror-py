@@ -23,7 +23,7 @@ pydash = "^5.1.2"
 pandoc = "^2.3"
 pytest-cov = "^4.0.0"
 isort = "^5.11.4"
-codecov = "^2.1.12"
+codecov = "^2.1.13"
 coverage = "^7.0.5"
 ruff = "^0.0.230"
 
