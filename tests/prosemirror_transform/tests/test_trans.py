@@ -952,8 +952,8 @@ class TestEnforcingHeadingAndBody:
 def test_keeps_isolating_nodes_together():
     s = Schema(
         {
-            "nodes": schema.spec["nodes"]
-            | {
+            "nodes": {
+                **schema.spec["nodes"],
                 "iso": {
                     "group": "block",
                     "content": "block+",
