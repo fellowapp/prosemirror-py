@@ -1051,3 +1051,37 @@ def test_delete_range(doc, expect, test_transform):
         doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a")
     )
     test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,mark,expect",
+    [
+        # adds a mark
+        (doc(p("<a>", img())), schema.mark("em"), doc(p("<a>", em(img())))),
+        # doesn't duplicate a mark
+        (doc(p("<a>", em(img()))), schema.mark("em"), doc(p("<a>", em(img())))),
+        # replaces a mark
+        (
+            doc(p("<a>", a(img()))),
+            schema.mark("link", {"href": "x"}),
+            doc(p("<a>", a({"href": "x"}, img()))),
+        ),
+    ],
+)
+def test_add_node_mark(doc, mark, expect, test_transform):
+    test_transform(Transform(doc).add_node_mark(doc.tag["a"], mark), expect)
+
+
+@pytest.mark.parametrize(
+    "doc,mark,expect",
+    [
+        # removes a mark
+        (doc(p("<a>", em(img()))), schema.mark("em"), doc(p("<a>", img()))),
+        # doesn't do anything when there is no mark
+        (doc(p("<a>", img())), schema.mark("em"), doc(p("<a>", img()))),
+        # can remove a mark from multiple marks
+        (doc(p("<a>", em(a(img())))), schema.mark("em"), doc(p("<a>", a(img())))),
+    ],
+)
+def test_remove_node_mark(doc, mark, expect, test_transform):
+    test_transform(Transform(doc).remove_node_mark(doc.tag["a"], mark), expect)
