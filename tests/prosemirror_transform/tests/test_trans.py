@@ -524,7 +524,7 @@ def test_set_block_type_works_after_another_step(test_transform):
 @pytest.mark.parametrize(
     "doc,expect,type,attrs",
     [
-        (doc("<a>", p("foo")), doc(h1("foo")), "heading", {"lecel": 1}),
+        (doc("<a>", p("foo")), doc(h1("foo")), "heading", {"level": 1}),
         (
             doc(p("foo<a>", img, "bar")),
             doc(p("foo", img({"src": "bar", "alt": "y"}), "bar")),
@@ -535,6 +535,23 @@ def test_set_block_type_works_after_another_step(test_transform):
 )
 def test_set_node_markup(doc, expect, type, attrs, test_transform):
     tr = Transform(doc).set_node_markup(doc.tag.get("a"), schema.nodes[type], attrs)
+    test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect,attr,value",
+    [
+        (doc("<a>", h1("foo")), doc(h2("foo")), "level", 2),
+        (
+            doc(p("<a>", img({"src": "foo", "alt": None, "title": None}))),
+            doc(p(img({"src": "bar"}))),
+            "src",
+            "bar",
+        ),
+    ],
+)
+def test_set_node_attribute(doc, expect, attr, value, test_transform):
+    tr = Transform(doc).set_node_attribute(doc.tag.get("a"), attr, value)
     test_transform(tr, expect)
 
 
