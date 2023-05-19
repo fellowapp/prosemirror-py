@@ -1,4 +1,4 @@
-from typing import ClassVar, Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar, Iterable
 
 from prosemirror.utils import text_length
 
@@ -133,10 +133,10 @@ class Fragment:
         return Fragment(copy, size)
 
     def add_to_start(self, node):
-        return Fragment([node] + self.content, self.size + node.node_size)
+        return Fragment([node, *self.content], self.size + node.node_size)
 
     def add_to_end(self, node):
-        return Fragment(self.content + [node], self.size + node.node_size)
+        return Fragment([*self.content, node], self.size + node.node_size)
 
     def eq(self, other):
         if len(self.content) != len(other.content):

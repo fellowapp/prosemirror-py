@@ -1,5 +1,5 @@
 import re
-from functools import reduce, cmp_to_key
+from functools import cmp_to_key, reduce
 from typing import ClassVar
 
 from .fragment import Fragment
@@ -75,7 +75,7 @@ class ContentMatch:
                 next = match.next[i + 1]
                 if not (type.is_text or type.has_required_attrs()) and next not in seen:
                     seen.append(next)
-                    found = search(next, types + [type])
+                    found = search(next, [*types, type])
                     if found:
                         return found
 
@@ -323,7 +323,7 @@ def nfa(expr):
             connect(compile(expr["expr"], loop), loop)
             return [edge(loop)]
         elif expr["type"] == "opt":
-            return [edge(from_)] + compile(expr["expr"], from_)
+            return [edge(from_), *compile(expr["expr"], from_)]
         elif expr["type"] == "range":
             cur = from_
             for i in range(expr["min"]):
