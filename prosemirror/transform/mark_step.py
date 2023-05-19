@@ -153,3 +153,112 @@ class RemoveMarkStep(Step):
 
 
 Step.json_id("removeMark", RemoveMarkStep)
+
+
+class AddNodeMarkStep(Step):
+    def __init__(self, pos, mark):
+        super().__init__()
+        self.pos = pos
+        self.mark = mark
+
+    def apply(self, doc):
+        node = doc.node_at(self.pos)
+        if not node:
+            return StepResult.fail("No node at mark step's position")
+        updated = node.type.create(node.attrs, None, self.mark.add_to_set(node.marks))
+        return StepResult.from_replace(
+            doc,
+            self.pos,
+            self.pos + 1,
+            Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
+        )
+
+    def invert(self, doc):
+        node = doc.node_at(self.pos)
+        if node:
+            new_set = self.mark.add_to_set(node.marks)
+            if len(new_set) == len(node.marks):
+                for i in range(len(node.marks)):
+                    if not node.marks[i].is_in_set(new_set):
+                        return AddNodeMarkStep(self.pos, node.marks[i])
+                return AddNodeMarkStep(self.pos, self.mark)
+        return RemoveNodeMarkStep(self.pos, self.mark)
+
+    def map(self, mapping):
+        pos = mapping.map_result(self.pos, 1)
+        return None if pos.deleted_after else AddNodeMarkStep(pos.pos, self.mark)
+
+    def to_json(self):
+        return {
+            "stepType": "addNodeMark",
+            "pos": self.pos,
+            "mark": self.mark.to_json(),
+        }
+
+    @staticmethod
+    def from_json(schema, json_data):
+        if isinstance(json_data, str):
+            import json
+
+            json_data = json.loads(json_data)
+        if not isinstance(json_data["pos"], int):
+            raise ValueError("Invalid input for AddNodeMarkStep.from_json")
+        return AddNodeMarkStep(
+            json_data["pos"], schema.mark_from_json(json_data["mark"])
+        )
+
+
+Step.json_id("addNodeMark", AddNodeMarkStep)
+
+
+class RemoveNodeMarkStep(Step):
+    def __init__(self, pos, mark):
+        super().__init__()
+        self.pos = pos
+        self.mark = mark
+
+    def apply(self, doc):
+        node = doc.node_at(self.pos)
+        if not node:
+            return StepResult.fail("No node at mark step's position")
+        updated = node.type.create(
+            node.attrs, None, self.mark.remove_from_set(node.marks)
+        )
+        return StepResult.from_replace(
+            doc,
+            self.pos,
+            self.pos + 1,
+            Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
+        )
+
+    def invert(self, doc):
+        node = doc.node_at(self.pos)
+        if not node or not self.mark.is_in_set(node.marks):
+            return self
+        return AddNodeMarkStep(self.pos, self.mark)
+
+    def map(self, mapping):
+        pos = mapping.map_result(self.pos, 1)
+        return None if pos.deleted_after else RemoveNodeMarkStep(pos.pos, self.mark)
+
+    def to_json(self):
+        return {
+            "stepType": "removeNodeMark",
+            "pos": self.pos,
+            "mark": self.mark.to_json(),
+        }
+
+    @staticmethod
+    def from_json(schema, json_data):
+        if isinstance(json_data, str):
+            import json
+
+            json_data = json.loads(json_data)
+        if not isinstance(json_data["pos"], int):
+            raise ValueError("Invalid input for RemoveNodeMarkStep.from_json")
+        return RemoveNodeMarkStep(
+            json_data["pos"], schema.mark_from_json(json_data["mark"])
+        )
+
+
+Step.json_id("removeNodeMark", RemoveNodeMarkStep)

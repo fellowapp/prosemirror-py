@@ -1,11 +1,11 @@
 from typing import Union
 
-from prosemirror.model import Fragment, MarkType, Node, NodeType, Slice
+from prosemirror.model import Fragment, Mark, MarkType, Node, NodeType, Slice
 
 from . import replace, structure
 from .attr_step import AttrStep
 from .map import Mapping
-from .mark_step import AddMarkStep, RemoveMarkStep
+from .mark_step import AddMarkStep, AddNodeMarkStep, RemoveMarkStep, RemoveNodeMarkStep
 from .replace import close_fragment, covered_depths, fits_trivially, replace_step
 from .replace_step import ReplaceAroundStep, ReplaceStep
 from .structure import can_change_type, insert_point
@@ -459,6 +459,19 @@ class Transform:
 
     def set_node_attribute(self, pos, attr, value):
         return self.step(AttrStep(pos, attr, value))
+
+    def add_node_mark(self, pos, mark):
+        return self.step(AddNodeMarkStep(pos, mark))
+
+    def remove_node_mark(self, pos, mark):
+        if not isinstance(mark, Mark):
+            node = self.doc.node_at(pos)
+            if not node:
+                raise ValueError("No node at position " + pos)
+            mark = mark.is_in_set(node.marks)
+            if not mark:
+                return self
+        return self.step(RemoveNodeMarkStep(pos, mark))
 
     def split(self, pos, depth=None, types_after=None):
         if depth is None:

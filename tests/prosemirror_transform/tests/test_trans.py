@@ -949,6 +949,45 @@ class TestEnforcingHeadingAndBody:
         assert tr.doc.eq(doc(h(), b(p("One"))))
 
 
+def test_keeps_isolating_nodes_together():
+    s = Schema(
+        {
+            "nodes": {
+                **schema.spec["nodes"],
+                "iso": {
+                    "group": "block",
+                    "content": "block+",
+                    "isolating": True,
+                },
+            },
+        }
+    )
+    doc = s.node("doc", None, [s.node("paragraph", None, [s.text("one")])])
+    iso = Fragment.from_(
+        s.node("iso", None, [s.node("paragraph", None, [s.text("two")])])
+    )
+    assert (
+        Transform(doc)
+        .replace(2, 3, Slice(iso, 2, 0))
+        .doc.eq(
+            s.node(
+                "doc",
+                None,
+                [
+                    s.node("paragraph", None, [s.text("o")]),
+                    s.node("iso", None, [s.node("paragraph", None, [s.text("two")])]),
+                    s.node("paragraph", None, [s.text("e")]),
+                ],
+            )
+        )
+    )
+    assert (
+        Transform(doc)
+        .replace(2, 3, Slice(iso, 2, 2))
+        .doc.eq(s.node("doc", None, [s.node("paragraph", None, [s.text("otwoe")])]))
+    )
+
+
 @pytest.mark.parametrize(
     "doc,source,expect",
     [
@@ -1051,3 +1090,37 @@ def test_delete_range(doc, expect, test_transform):
         doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a")
     )
     test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,mark,expect",
+    [
+        # adds a mark
+        (doc(p("<a>", img())), schema.mark("em"), doc(p("<a>", em(img())))),
+        # doesn't duplicate a mark
+        (doc(p("<a>", em(img()))), schema.mark("em"), doc(p("<a>", em(img())))),
+        # replaces a mark
+        (
+            doc(p("<a>", a(img()))),
+            schema.mark("link", {"href": "x"}),
+            doc(p("<a>", a({"href": "x"}, img()))),
+        ),
+    ],
+)
+def test_add_node_mark(doc, mark, expect, test_transform):
+    test_transform(Transform(doc).add_node_mark(doc.tag["a"], mark), expect)
+
+
+@pytest.mark.parametrize(
+    "doc,mark,expect",
+    [
+        # removes a mark
+        (doc(p("<a>", em(img()))), schema.mark("em"), doc(p("<a>", img()))),
+        # doesn't do anything when there is no mark
+        (doc(p("<a>", img())), schema.mark("em"), doc(p("<a>", img()))),
+        # can remove a mark from multiple marks
+        (doc(p("<a>", em(a(img())))), schema.mark("em"), doc(p("<a>", a(img())))),
+    ],
+)
+def test_remove_node_mark(doc, mark, expect, test_transform):
+    test_transform(Transform(doc).remove_node_mark(doc.tag["a"], mark), expect)

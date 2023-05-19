@@ -116,8 +116,22 @@ class Fitter:
         return None
 
     def find_fittable(self) -> Optional[_Fittable]:
+        start_depth = self.unplaced.open_start
+        cur = self.unplaced.content
+        open_end = self.unplaced.open_end
+        for d in range(start_depth):
+            node = cur.first_child
+            if cur.child_count > 1:
+                open_end = 0
+            if node.type.spec.get("isolating") and open_end <= d:
+                start_depth = d
+                break
+            cur = node.content
+
         for pass_ in [1, 2]:
-            for slice_depth in range(self.unplaced.open_start, -1, -1):
+            for slice_depth in range(
+                start_depth if pass_ == 1 else self.unplaced.open_start, -1, -1
+            ):
                 if slice_depth:
                     parent = content_at(
                         self.unplaced.content, slice_depth - 1
