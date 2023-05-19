@@ -1,6 +1,5 @@
 from prosemirror.model import Schema
 
-
 p_dom = ["p", 0]
 blockquote_dom = ["blockquote", 0]
 hr_dom = ["hr"]

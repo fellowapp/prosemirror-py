@@ -1,8 +1,7 @@
 import html
-from typing import cast, Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, cast
 
 from . import Fragment, Mark, Node, Schema
-
 
 HTMLNode = Union["Element", str]
 

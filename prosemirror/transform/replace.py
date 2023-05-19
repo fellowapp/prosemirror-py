@@ -1,5 +1,6 @@
-from prosemirror.model import Fragment, ResolvedPos, Slice
 from typing import List, Optional
+
+from prosemirror.model import Fragment, ResolvedPos, Slice
 
 from .replace_step import ReplaceAroundStep, ReplaceStep, Step
 

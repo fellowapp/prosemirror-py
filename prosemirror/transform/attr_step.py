@@ -1,6 +1,6 @@
-from prosemirror.model import Slice, Fragment
+from prosemirror.model import Fragment, Slice
 
-from .step import Step, StepResult, StepMap
+from .step import Step, StepMap, StepResult
 
 
 class AttrStep(Step):
