@@ -72,7 +72,6 @@ def test_eq(a, b, res):
 
 
 def test_add_to_set(ist):
-
     ist(em_.add_to_set([]), [em_], Mark.same_set)
     ist(em_.add_to_set([em_]), [em_], Mark.same_set)
     ist(em_.add_to_set([strong]), [em_, strong], Mark.same_set)
@@ -124,7 +123,6 @@ def test_remove_form_set(ist):
 
 
 class TestResolvedPosMarks:
-
     custom_doc = Node.from_json(
         custom_schema,
         {
