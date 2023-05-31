@@ -56,7 +56,15 @@ nodes = {
         "attrs": {"src": {}, "alt": {"default": None}, "title": {"default": None}},
         "group": "inline",
         "draggable": True,
-        "parseDOM": [{"tag": "img", "getAttrs": lambda dom_: {"src": dom_.get('src'), "title": dom_.get('title')} }],
+        "parseDOM": [
+            {
+                "tag": "img",
+                "getAttrs": lambda dom_: {
+                    "src": dom_.get("src"),
+                    "title": dom_.get("title"),
+                },
+            }
+        ],
         "toDOM": lambda node: [
             "img",
             {
@@ -83,7 +91,7 @@ marks = {
     "link": {
         "attrs": {"href": {}, "title": {"default": None}},
         "inclusive": False,
-        "parseDOM": [{"tag": "a", "getAttrs": lambda d: {'href': d.get('href')}}],
+        "parseDOM": [{"tag": "a", "getAttrs": lambda d: {"href": d.get("href")}}],
         "toDOM": lambda node, _: [
             "a",
             {"href": node.attrs["href"], "title": node.attrs["title"]},

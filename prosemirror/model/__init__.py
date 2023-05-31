@@ -1,12 +1,12 @@
 from .content import ContentMatch
 from .fragment import Fragment
+from .from_dom import DOMParser
 from .mark import Mark
 from .node import Node
 from .replace import ReplaceError, Slice
 from .resolvedpos import NodeRange, ResolvedPos
 from .schema import MarkType, NodeType, Schema
 from .to_dom import DOMSerializer
-from .from_dom import DOMParser
 
 __all__ = [
     "Node",
@@ -21,5 +21,5 @@ __all__ = [
     "MarkType",
     "ContentMatch",
     "DOMSerializer",
-    "DOMParser"
+    "DOMParser",
 ]
