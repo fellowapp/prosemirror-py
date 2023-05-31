@@ -110,19 +110,15 @@ class DOMParser:
 		context = ParseContext(self, options, False)
 
 		for d in itertools.chain([dom_], dom_.iterdescendants()):
-			print(d, d.text, d.tag)
 			if d.text is not None and d.text.strip() and d.tag.lower() != 'lxmltext':
-				print("Inserting lxmltext: ", d.text)
 				d.insert(0, lxml.html.fromstring(f'<lxmltext>{d.text}</lxmltext>'))
 				d.text = None
 
 			if d.tail is not None and d.tail.strip():
-				print("Inserting lxmltext tail: ", d.tail, d.getparent())
 				parent = d.getparent()
 				parent.insert(parent.index(d)+1, lxml.html.fromstring(f'<lxmltext>{d.tail}</lxmltext>'))
 				d.tail = None
 
-		print(lxml.html.tostring(dom_))
 		context.add_all(dom_, options.from_, options.to_)
 
 		return cast(Node, context.finish())
@@ -341,7 +337,6 @@ class NodeContext:
 		match: ContentMatch | None,
 		options: int
 	) -> None:
-		print("NC constructor")
 		self.type = _type
 		self.options = options
 		self.attrs = attrs
@@ -360,7 +355,6 @@ class NodeContext:
 		self.stash_marks = []
 
 	def find_wrapping(self, node: Node) -> List[NodeType] | None:
-		print("NC findWrapping")
 		if not self.match:
 			if not self.type:
 				return []
@@ -385,7 +379,6 @@ class NodeContext:
 		return self.match.find_wrapping(node.type)
 
 	def finish(self, open_end: bool) -> Node | Fragment:
-		print("NC finish")
 		if not self.options & OPT_PRESERVE_WS:
 			try:
 				last: Node | None = self.content[-1]
@@ -407,12 +400,9 @@ class NodeContext:
 		if not open_end and self.match is not None:
 			content = content.append(self.match.fill_before(Fragment.empty, True))
 
-		#assert self.type
-
 		return self.type.create(self.attrs, content, self.marks) if self.type else content
 
 	def pop_from_stash_mark(self, mark: Mark) -> Mark | None:
-		print("NC popFromStashMark")
 		found_mark: Mark | None = None
 		for stash_mark in self.stash_marks[::-1]:
 			if mark.eq(stash_mark):
@@ -424,7 +414,6 @@ class NodeContext:
 		return found_mark
 
 	def apply_pending(self, next_type: NodeType) -> None:
-		print("NC applyPending")
 		pending = self.pending_marks
 		for mark in pending:
 			if (
@@ -438,7 +427,6 @@ class NodeContext:
 				self.pending_marks = mark.remove_from_set(self.pending_marks)
 
 	def inline_context(self, node: DOMNode) -> bool:
-		print("NC inlineContext")
 		if self.type:
 			return self.type.inline_content
 		if self.content:
@@ -457,7 +445,6 @@ class ParseContext:
 	parser: DOMParser
 
 	def __init__(self, parser: DOMParser, options: ParseOptions, is_open: bool) -> None:
-		print("constructor")
 		self.parser = parser
 		self.options = options
 		self.is_open = is_open
@@ -479,11 +466,9 @@ class ParseContext:
 
 	@property
 	def top(self) -> NodeContext:
-		print("top")
 		return self.nodes[self.open]
 
 	def add_DOM(self, dom_: DOMNode) -> None:
-		print("addDOM")
 		if get_node_type(dom_) == 3:
 			self.add_text_node(dom_)
 		elif get_node_type(dom_) == 1:
@@ -515,15 +500,9 @@ class ParseContext:
 		return None
 
 	def add_text_node(self, dom_: DOMNode) -> None:
-		print("addTextNode")
 		value = dom_.text
 		top = self.top
-		print(
-			f'"{value}"',
-			top.options & OPT_PRESERVE_WS_FULL,
-			top.inline_context(dom_),
-			re.search(r'[^ \t\r\n\u000c]', value) is not None
-		)
+		
 		if (
 			top.options & OPT_PRESERVE_WS_FULL
 			or top.inline_context(dom_)  # type: ignore
@@ -555,7 +534,6 @@ class ParseContext:
 			self.find_inside(dom_)  # type: ignore
 
 	def add_element(self, dom_: DOMNode, match_after: ParseRule | None = None) -> None:
-		print("addElement")
 		name = dom_.tag.lower()
 
 		if name in LIST_TAGS and self.parser.normalize_lists:
@@ -564,17 +542,14 @@ class ParseContext:
 		rule_id = self.parser.match_tag(dom_, self, match_after)
 		rule = self.options.rule_from_node(dom_) if self.options.rule_from_node else rule_id
 
-		print(dom_, rule)
-		if rule:
-			print(rule.skip, rule.close_parent)
 		if (rule and rule.ignore) or name in IGNORE_TAGS:
 			self.find_inside(dom_)
 			self.ignore_fallback(dom_)
 		elif rule is None or rule.skip or rule.close_parent:
 			if rule is not None and rule.close_parent:
 				self.open = max(0, self.open - 1)
-			elif rule is not None and get_node_type(cast(DOMNode, rule.skip)): # wtf line 493 of from_dom.js they cast a bool to any and access nodeType on it
-				dom_ = cast(DOMNode, rule.skip) # wtf
+			elif rule is not None and get_node_type(cast(DOMNode, rule.skip)):
+				dom_ = cast(DOMNode, rule.skip)
 
 			top = self.top
 			sync = False
@@ -604,17 +579,14 @@ class ParseContext:
 			self.add_element_by_rule(dom_, rule, rule_id if rule.consuming is False else None)
 
 	def leaf_fallback(self, dom_: DOMNode) -> None:
-		print("leafFallback")
 		if dom_.tag.upper() == 'BR' and self.top.type and self.top.type.inline_content:
 			self.add_text_node(lxml.html.fromstring('<lxmltext>\n</lxmltext>'))
 
 	def ignore_fallback(self, dom_: DOMNode) -> None:
-		print("ignoreFallback")
 		if dom_.tag.upper() == 'BR' and (not self.top.type or self.top.type.inline_content):
 			self.find_place(self.parser.schema.text("-"))
 
 	def read_styles(self, styles: List[str]) -> Tuple[List[Mark], List[Mark]] | None:
-		print("readStyles")
 		add: List[Mark] = Mark.none
 		remove: List[Mark] = Mark.none
 
@@ -642,7 +614,6 @@ class ParseContext:
 		return add, remove
 
 	def add_element_by_rule(self, dom_: DOMNode, rule: ParseRule, continue_after: ParseRule | None = None) -> None:
-		print("addElementByRule", "r", rule, "c", continue_after)
 		sync: bool = False
 		mark: Mark | None = None
 		node_type: NodeType | None = None
@@ -695,7 +666,6 @@ class ParseContext:
 			self.remove_pending_mark(mark, start_in)
 
 	def add_all(self, parent: DOMNode, start_index: int | None = None, end_index: int | None = None) -> None:
-		print("addAll", parent.tag)
 		index = start_index if start_index is not None else 0
 
 		try:
@@ -704,20 +674,17 @@ class ParseContext:
 			pass
 		else:
 			end = None if end_index is None else list(parent)[end_index]
-			print("allAll condition", dom_, end, len(parent), dom_.text)
+
 			while dom_ != end:
-				print("addAll sub: ", dom_, dom_.text)
 				self.find_at_point(parent, index)
 				self.add_DOM(dom_)
 
 				dom_ = dom_.getnext()
 				index += 1
 
-		print("addAll[",index,"]")
 		self.find_at_point(parent, index)
 
 	def find_place(self, node: Node) -> bool:
-		print("findPlace")
 		route: List[NodeType] | None = None
 		sync: NodeContext | None = None
 
@@ -749,7 +716,6 @@ class ParseContext:
 		return True
 
 	def insert_node(self, node: Node) -> bool:
-		print("insertNode")
 		if node.is_inline and self.needs_block and self.top.type is None:
 			block = self.textblock_from_context()
 			if block is not None:
@@ -776,7 +742,6 @@ class ParseContext:
 		return False
 
 	def enter(self, type_: NodeType, attrs: Attrs | None = None, preserve_ws: WSType = None) -> bool:
-		print("enter")
 		ok = self.find_place(type_.create(attrs))
 		if ok:
 			self.enter_inner(type_, attrs, True, preserve_ws)
@@ -784,7 +749,6 @@ class ParseContext:
 		return ok
 
 	def enter_inner(self, type_: NodeType, attrs: Attrs | None = None, solid: bool = False, preserve_ws: WSType = None) -> None:
-		print("enterInner")
 		self.close_extra()
 
 		top = self.top
@@ -805,7 +769,6 @@ class ParseContext:
 		self.open += 1
 
 	def close_extra(self, open_end: bool = False) -> None:
-		print("closeExtra")
 		i = len(self.nodes) - 1
 
 		if i > self.open:
@@ -818,13 +781,11 @@ class ParseContext:
 			self.nodes = self.nodes[:self.open+1]
 
 	def finish(self) -> Node | Fragment:
-		print("finish")
 		self.open = 0
 		self.close_extra(self.is_open)
 		return self.nodes[0].finish(self.is_open or bool(self.options.top_open))
 
 	def sync(self, to_: NodeContext) -> bool:
-		print("sync")
 		i = self.open
 		while i >= 0:
 			if self.nodes[i] == to_:
@@ -836,7 +797,6 @@ class ParseContext:
 
 	@property
 	def current_pos(self) -> int:
-		print("currentPos")
 		self.close_extra()
 		pos = 0
 
@@ -855,22 +815,18 @@ class ParseContext:
 		return pos
 
 	def find_at_point(self, parent: DOMNode, offset: int) -> None:
-		print("findAtPoint")
 		if self.find is not None:
 			for f in self.find:
 				if f.node == parent and f.offset == offset:
-					print("Setting fpos", self.current_pos)
 					f.pos = self.current_pos
 
 	def find_inside(self, parent: DOMNode) -> None:
-		print("findInside")
 		if self.find is not None:
 			for f in self.find:
 				if f.pos is None and get_node_type(parent) == 1 and node_contains(parent, f.node):
 					f.pos = self.current_pos
 
 	def find_around(self, parent: DOMNode, content: DOMNode, before: bool) -> None:
-		print("findAround")
 		if parent != content and self.find is not None:
 			for f in self.find:
 				if f.pos is None and get_node_type(parent) == 1 and node_contains(parent, f.node):
@@ -879,14 +835,12 @@ class ParseContext:
 						f.pos = self.current_pos
 
 	def find_in_text(self, text_node: DOMNode) -> None:
-		print("findInText")
 		if self.find is not None:
 			for f in self.find:
 				if f.node == text_node:
 					f.pos = self.current_pos - (len(text_node.text) - f.offset)
 
 	def matches_context(self, context: str) -> bool:
-		print("matchesContext")
 		if "|" in context:
 			return any([self.matches_context(s) for s in re.split(r'\s*\|\s*', context)])
 
@@ -931,7 +885,6 @@ class ParseContext:
 		return match(len(parts) - 1, self.open)
 
 	def textblock_from_context(self) -> NodeType | None:
-		print("textblockFromContext")
 		context = self.options.context
 
 		if context:
@@ -951,7 +904,6 @@ class ParseContext:
 		return None
 
 	def add_pending_mark(self, mark: Mark) -> None:
-		print("addPendingMark")
 		found = find_same_mark_in_set(mark, self.top.pending_marks)
 
 		if found is not None:
@@ -960,7 +912,6 @@ class ParseContext:
 		self.top.pending_marks = mark.add_to_set(self.top.pending_marks)
 
 	def remove_pending_mark(self, mark: Mark, upto: NodeContext) -> None:
-		print("removePendingMark")
 		depth = self.open
 		while depth >= 0:
 			level = self.nodes[depth]
