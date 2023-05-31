@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, ClassVar, Iterable
+from typing import TYPE_CHECKING, ClassVar, Iterable, cast
 
 from prosemirror.utils import text_length
 
 from .diff import find_diff_end, find_diff_start
 
 if TYPE_CHECKING:
-    from .node import Node
+    from .node import Node, TextNode
 
 
 def retIndex(index, offset):
@@ -53,7 +53,8 @@ class Fragment:
             nonlocal text
             nonlocal separated
             if node.is_text:
-                text.append(node.text[max(from_, pos) - pos : to - pos])
+                text_node = cast("TextNode", node)
+                text.append(text_node.text[max(from_, pos) - pos : to - pos])
                 separated = not block_separator
             elif node.is_leaf:
                 if leaf_text:

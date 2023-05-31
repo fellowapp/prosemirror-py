@@ -20,7 +20,7 @@ class ContentMatch:
             return ContentMatch.empty
         expr = parse_expr(stream)
         if stream.next:
-            stream.err("Unexpected traling text")
+            stream.err("Unexpected trailing text")
         match = dfa(nfa(expr))
         check_for_dead_ends(match, stream)
         return match

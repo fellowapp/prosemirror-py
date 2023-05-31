@@ -1,8 +1,8 @@
-from typing import ClassVar
+from typing import List
 
 
 class Mark:
-    none: ClassVar["Mark"]
+    none: List["Mark"] = []
 
     def __init__(self, type, attrs):
         self.type = type
@@ -78,6 +78,3 @@ class Mark:
             return [marks]
         copy = marks[:]
         return sorted(copy, key=lambda item: item.type.rank)
-
-
-Mark.none = []
