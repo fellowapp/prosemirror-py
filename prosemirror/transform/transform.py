@@ -32,8 +32,8 @@ class Transform:
 
     def __init__(self, doc: Node):
         self.doc = doc
-        self.steps = []
-        self.docs = []
+        self.steps = []  # type: ignore
+        self.docs = []  # type: ignore
         self.mapping = Mapping()
 
     @property

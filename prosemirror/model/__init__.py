@@ -1,5 +1,6 @@
 from .content import ContentMatch
 from .fragment import Fragment
+from .from_dom import DOMParser
 from .mark import Mark
 from .node import Node
 from .replace import ReplaceError, Slice
@@ -20,4 +21,5 @@ __all__ = [
     "MarkType",
     "ContentMatch",
     "DOMSerializer",
+    "DOMParser",
 ]

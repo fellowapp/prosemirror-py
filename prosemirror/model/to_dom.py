@@ -98,7 +98,7 @@ class DOMSerializer:
                     rendered += 1
                     mark_dom = self.serialize_mark(add, node.is_inline)
                     if mark_dom:
-                        active.append(add)
+                        active.append(add)  # type: ignore
                         active.append(top)
                         top.children.append(mark_dom[0])
                         top = cast(DocumentFragment, mark_dom[1] or mark_dom[0])

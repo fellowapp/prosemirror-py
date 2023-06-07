@@ -1,11 +1,12 @@
 from collections import OrderedDict
-
-from typing_extensions import Literal
+from typing import Any, Dict, Literal, cast
 
 from .content import ContentMatch
 from .fragment import Fragment
 from .mark import Mark
 from .node import Node, TextNode
+
+Attrs = Dict[str, Any]
 
 
 def default_attrs(attrs):
@@ -73,7 +74,7 @@ class NodeType:
 
     @property
     def whitespace(self) -> Literal["pre", "normal"]:
-        return self.spec.get("whitespace") or (
+        return cast(Literal["pre", "normal"], self.spec.get("whitespace")) or (
             "pre" if self.spec.get("code") else "normal"
         )
 
@@ -244,6 +245,7 @@ class Schema:
                 content_expr_cache[content_expr] = ContentMatch.parse(
                     content_expr, self.nodes
                 )
+
             type.content_match = content_expr_cache[content_expr]
             type.inline_content = type.content_match.inline_content
             if mark_expr == "_":

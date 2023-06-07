@@ -1,6 +1,7 @@
 import pytest
 
 from prosemirror.model import DOMSerializer
+from prosemirror.model.from_dom import from_html
 from prosemirror.schema.basic import schema
 from prosemirror.test_builder import out
 
@@ -110,7 +111,7 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
         ),
     ],
 )
-def test_parser(doc, html, desc):
+def test_serializer_first(doc, html, desc):
     """Parser is not implemented, this is just testing serializer right now"""
     schema = doc.type.schema
     dom = DOMSerializer.from_schema(schema).serialize_fragment(doc.content)
@@ -157,3 +158,211 @@ def test_html_is_escaped():
         str(serializer.serialize_node(schema.text("<b>bold &</b>")))
         == "&lt;b&gt;bold &amp;&lt;/b&gt;"
     )
+
+
+@pytest.mark.parametrize(
+    "desc,doc,expect",
+    [
+        (
+            "Basic text node",
+            """<div><p>test</p></div>""",
+            {
+                "type": "doc",
+                "content": [
+                    {"type": "paragraph", "content": [{"type": "text", "text": "test"}]}
+                ],
+            },
+        ),
+        (
+            "Styled(marks) nodes pt1",
+            """<div><p>test <strong>some bolded text</strong></p></div>""",
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "test "},
+                            {
+                                "type": "text",
+                                "marks": [{"type": "strong", "attrs": {}}],
+                                "text": "some bolded text",
+                            },
+                        ],
+                    }
+                ],
+            },
+        ),
+        (
+            "Styled nodes pt2",
+            """<div><p>test <strong>some bolded text</strong></p><p>another test """
+            """<em>em</em></p></div>""",
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "test "},
+                            {
+                                "type": "text",
+                                "marks": [{"type": "strong", "attrs": {}}],
+                                "text": "some bolded text",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "another test "},
+                            {
+                                "type": "text",
+                                "marks": [{"type": "em", "attrs": {}}],
+                                "text": "em",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ),
+        (
+            "Slightly more complex test, testing pre and tail text around elements",
+            """<div><p>test <a href="www.google.ca">google</a>\nsome more text here"""
+            """</p><img src="google.ca"/><p><strong>Hello</strong></p><h1>Test """
+            """heading</h1><p><em>Test <strong>break</strong></em><br/>Another bit """
+            """of testing data.</p></div>""",
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "test "},
+                            {
+                                "type": "text",
+                                "marks": [
+                                    {
+                                        "type": "link",
+                                        "attrs": {
+                                            "href": "www.google.ca",
+                                            "title": None,
+                                        },
+                                    }
+                                ],
+                                "text": "google",
+                            },
+                            {"type": "text", "text": " some more text here"},
+                        ],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "image",
+                                "attrs": {
+                                    "src": "google.ca",
+                                    "alt": None,
+                                    "title": None,
+                                },
+                            }
+                        ],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "marks": [{"type": "strong", "attrs": {}}],
+                                "text": "Hello",
+                            }
+                        ],
+                    },
+                    {
+                        "type": "heading",
+                        "attrs": {"level": 1},
+                        "content": [{"type": "text", "text": "Test heading"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "marks": [{"type": "em", "attrs": {}}],
+                                "text": "Test ",
+                            },
+                            {
+                                "type": "text",
+                                "marks": [
+                                    {"type": "em", "attrs": {}},
+                                    {"type": "strong", "attrs": {}},
+                                ],
+                                "text": "break",
+                            },
+                            {"type": "hard_break"},
+                            {"type": "text", "text": "Another bit of testing data."},
+                        ],
+                    },
+                ],
+            },
+        ),
+        (
+            "Unstructured",
+            """Testing the result of this""",
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "Testing the result of this"}
+                        ],
+                    }
+                ],
+            },
+        ),
+        (
+            "Unstructured with tail",
+            """Testing the <p>result <strong>o<em>f</em></strong></p> this""",
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "Testing the"}],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {"type": "text", "text": "result "},
+                            {
+                                "type": "text",
+                                "marks": [{"type": "strong", "attrs": {}}],
+                                "text": "o",
+                            },
+                            {
+                                "type": "text",
+                                "marks": [
+                                    {"type": "em", "attrs": {}},
+                                    {"type": "strong", "attrs": {}},
+                                ],
+                                "text": "f",
+                            },
+                        ],
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": " this"}],
+                    },
+                ],
+            },
+        ),
+    ],
+)
+def test_parser(doc, expect, desc):
+    """
+    The `expect` dicts are straight copies from the output of the JS lib run in Node,
+    with 1 exception of 'attrs' key in marks dicts, in JS if blank attrs isn't written,
+    this library does write out 'attrs' even if it is blank, I didn't want to modify
+    behavior of existing files with the addition of this
+    """
+    assert from_html(schema, doc) == expect, desc
