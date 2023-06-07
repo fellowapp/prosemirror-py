@@ -446,6 +446,21 @@ htmlsoup = ["BeautifulSoup4"]
 source = ["Cython (>=0.29.7)"]
 
 [[package]]
+name = "lxml-stubs"
+version = "0.4.0"
+description = "Type annotations for the lxml package"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "lxml-stubs-0.4.0.tar.gz", hash = "sha256:184877b42127256abc2b932ba8bd0ab5ea80bd0b0fee618d16daa40e0b71abee"},
+    {file = "lxml_stubs-0.4.0-py3-none-any.whl", hash = "sha256:3b381e9e82397c64ea3cc4d6f79d1255d015f7b114806d4826218805c10ec003"},
+]
+
+[package.extras]
+test = ["coverage[toml] (==5.2)", "pytest (>=6.0.0)", "pytest-mypy-plugins (==1.9.3)"]
+
+[[package]]
 name = "mccabe"
 version = "0.7.0"
 description = "McCabe checker, plugin for flake8"
@@ -821,4 +836,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4"
-content-hash = "7647c73653c7daf956817a3487f8dfa4e3ec8f17daca8c11f68a4f90387b17ec"
+content-hash = "c4ac00b32576c25d368f996a1e7a3b1ea41516c173e53fc9368b6f9390ecebfd"
