@@ -1,8 +1,8 @@
-from typing import List
+from typing import Final, List
 
 
 class Mark:
-    none: List["Mark"] = []
+    none: Final[List["Mark"]] = []
 
     def __init__(self, type, attrs):
         self.type = type

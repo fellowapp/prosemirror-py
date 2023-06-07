@@ -116,15 +116,16 @@ class DOMParser:
 
         for d in itertools.chain([dom_], dom_.iterdescendants()):
             if d.text is not None and d.text.strip() and d.tag.lower() != "lxmltext":
-                d.insert(0, lxml.html.fromstring(f"<lxmltext>{d.text}</lxmltext>"))
+                child = lxml.html.Element("lxmltext")
+                child.text = d.text
+                d.insert(0, child)
                 d.text = None
 
             if d.tail is not None and d.tail.strip():
                 parent = d.getparent()
-                parent.insert(
-                    parent.index(d) + 1,
-                    lxml.html.fromstring(f"<lxmltext>{d.tail}</lxmltext>"),
-                )
+                child = lxml.html.Element("lxmltext")
+                child.text = d.tail
+                parent.insert(parent.index(d) + 1, child)
                 d.tail = None
 
         context.add_all(dom_, options.from_, options.to_)
@@ -166,8 +167,6 @@ class DOMParser:
                     rule.attrs = result
 
                 return rule
-
-            i += 1
 
         return None
 
@@ -505,7 +504,7 @@ class ParseContext:
     def top(self) -> NodeContext:
         return self.nodes[self.open]
 
-    def add_DOM(self, dom_: DOMNode) -> None:
+    def add_dom(self, dom_: DOMNode) -> None:
         if get_node_type(dom_) == 3:
             self.add_text_node(dom_)
         elif get_node_type(dom_) == 1:
@@ -635,7 +634,9 @@ class ParseContext:
 
     def leaf_fallback(self, dom_: DOMNode) -> None:
         if dom_.tag.upper() == "BR" and self.top.type and self.top.type.inline_content:
-            self.add_text_node(lxml.html.fromstring("<lxmltext>\n</lxmltext>"))
+            child = lxml.html.Element("lxmltext")
+            child.text = "\n"
+            self.add_text_node(child)
 
     def ignore_fallback(self, dom_: DOMNode) -> None:
         if dom_.tag.upper() == "BR" and (
@@ -647,9 +648,9 @@ class ParseContext:
         add: List[Mark] = Mark.none
         remove: List[Mark] = Mark.none
 
-        for i, style in enumerate(styles):
+        for i in range(0, len(styles), 2):
             after: ParseRule | None = None
-            while i < len(styles) - 1:
+            while True:
                 rule = self.parser.match_style(styles[i], styles[i + 1], self, after)
                 if not rule:
                     break
@@ -670,7 +671,6 @@ class ParseContext:
                     after = rule
                 else:
                     break
-            i += 2
 
         return add, remove
 
@@ -739,7 +739,7 @@ class ParseContext:
 
             while dom_ != end:
                 self.find_at_point(parent, index)
-                self.add_DOM(dom_)
+                self.add_dom(dom_)
 
                 dom_ = dom_.getnext()
                 index += 1
