@@ -1,12 +1,32 @@
+from __future__ import annotations
+
 import re
+from dataclasses import dataclass
 from functools import cmp_to_key, reduce
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar, List, NamedTuple, Optional
 
 from .fragment import Fragment
 
+if TYPE_CHECKING:
+    from .schema import NodeType
+
+
+@dataclass
+class MatchEdge:
+    type: NodeType
+    next: ContentMatch
+
 
 class ContentMatch:
+    """
+    Instances of this class represent a match state of a node type's
+    [content expression](#model.NodeSpec.content), and can be used to
+    find out whether further content matches here, and whether a given
+    position is a valid end of the node.
+    """
     empty: ClassVar["ContentMatch"]
+    valid_end: bool
+    next: List[MatchEdge]
 
     def __init__(self, valid_end):
         self.valid_end = valid_end
@@ -26,9 +46,9 @@ class ContentMatch:
         return match
 
     def match_type(self, type, *args):
-        for i in range(0, len(self.next), 2):
-            if self.next[i].name == type.name:
-                return self.next[i + 1]
+        for next in self.next:
+            if next.type.name == type.name:
+                return next.next
         return None
 
     def match_fragment(self, frag, start=0, end=None):
@@ -45,20 +65,20 @@ class ContentMatch:
     def inline_content(self):
         if not self.next:
             return None
-        first = self.next[0]
+        first = self.next[0].type
         return first.is_inline if first else False
 
     @property
     def default_type(self):
-        for i in range(0, len(self.next), 2):
-            type = self.next[i]
+        for next in self.next:
+            type = next.type
             if not (type.is_text or type.has_required_attrs()):
                 return type
 
     def compatible(self, other):
-        for i in range(0, len(self.next), 2):
-            for j in range(0, len(other.next), 2):
-                if self.next[i].name == other.next[j].name:
+        for i in self.next:
+            for j in other.next:
+                if i.type.name == j.type.name:
                     return True
         return False
 
@@ -70,9 +90,9 @@ class ContentMatch:
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
                 return Fragment.from_([tp.create_and_fill() for tp in types])
-            for i in range(0, len(match.next), 2):
-                type = match.next[i]
-                next = match.next[i + 1]
+            for i in match.next:
+                type = i.type
+                next = i.next
                 if not (type.is_text or type.has_required_attrs()) and next not in seen:
                     seen.append(next)
                     found = search(next, [*types, type])
@@ -102,13 +122,13 @@ class ContentMatch:
                     result.append(obj["type"])
                     obj = obj["via"]
                 return list(reversed(result))
-            for i in range(0, len(match.next), 2):
-                type = match.next[i]
+            for i in range(len(match.next)):
+                type = match.next[i].type
                 if (
                     not type.is_leaf
                     and not type.has_required_attrs()
                     and type.name not in seen
-                    and (not current["type"] or match.next[i + 1].valid_end)
+                    and (not current["type"] or match.next[i].next.valid_end)
                 ):
                     active.append(
                         {"match": type.content_match, "via": current, "type": type}
@@ -117,33 +137,34 @@ class ContentMatch:
 
     @property
     def edge_count(self):
-        return len(self.next) >> 1
+        return len(self.next)
 
     def edge(self, n):
-        i = n << 1
-        if i >= len(self.next):
+        if n >= len(self.next):
             raise ValueError(f"There's no {n}th edge in this content match")
-        return {"type": self.next[i], "next": self.next[i + 1]}
+        return {"type": self.next[n].type, "next": self.next[n].next}
 
     def __str__(self):
         seen = []
 
         def scan(m):
             nonlocal seen
-            for i in range(1, len(m.next), 2):
-                if m.next[i] in seen:
-                    scan(m.next[i])
+            seen.append(m)
+            for i in m.next:
+                if i.next not in seen:
+                    scan(i.next)
 
         scan(self)
 
         def iteratee(m, i):
-            out = i + ("*" if m.valid_end else " ") + " "
-            for i in range(0, len(m.next), 2):
+            out = str(i) + ("*" if m.valid_end else " ") + " "
+            for i in m.next:
                 out += (
-                    (", " if i else "") + m.next(i) + "->" + seen.index(m.next[i + 1])
+                    (", " if i else "") + i.type.name + "->" + str(seen.index(i.next))
                 )
+            return out
 
-        return "\n".join((iteratee(m, i)) for m, i in enumerate(seen))
+        return "\n".join((iteratee(m, i)) for i, m in enumerate(seen))
 
 
 ContentMatch.empty = ContentMatch(True)
@@ -368,36 +389,41 @@ def null_from(nfa, node):
     return sorted(result)
 
 
+class DFAState(NamedTuple):
+    state: NodeType
+    next: List[int]
+
+
 def dfa(nfa):
     labeled = {}
 
-    def explore(states):
+    def explore(states: List[int]):
         nonlocal labeled
-        out = []
+        out: List[DFAState] = []
         for node in states:
             for item in nfa[node]:
                 term, to = item.get("term"), item.get("to")
                 if not term:
                     continue
-                known = term in out
-                if known:
-                    set = out[out.index(term) + 1]
-                else:
-                    set = False
+                set: Optional[List[int]] = None
+                for t in out:
+                    if t[0] == term:
+                        set = t[1]
                 for n in null_from(nfa, to):
-                    if not set:
+                    if set is None:
                         set = []
-                        out.extend([term, set])
+                        out.append(DFAState(term, set))
                     if n not in set:
                         set.append(n)
         state = ContentMatch((len(nfa) - 1) in states)
         labeled[",".join([str(s) for s in states])] = state
-        for i in range(0, len(out), 2):
-            out[i + 1].sort(key=cmp_to_key(cmp))
-            states = out[i + 1]
+        for i in range(len(out)):
+            out[i][1].sort(key=cmp_to_key(cmp))
+            states = out[i][1]
             find_by_key = ",".join(str(s) for s in states)
-            items_to_extend = [out[i], labeled.get(find_by_key) or explore(states)]
-            state.next.extend(items_to_extend)
+            state.next.append(
+                MatchEdge(out[i][0], labeled.get(find_by_key) or explore(states))
+            )
         return state
 
     return explore(null_from(nfa, 0))
@@ -410,9 +436,9 @@ def check_for_dead_ends(match, stream):
         state = work[i]
         dead = not state.valid_end
         nodes = []
-        for j in range(0, len(state.next), 2):
-            node = state.next[j]
-            next = state.next[j + 1]
+        for j in range(len(state.next)):
+            node = state.next[j].type
+            next = state.next[j].next
             nodes.append(node.name)
             if dead and not (node.is_text or node.has_required_attrs()):
                 dead = False
