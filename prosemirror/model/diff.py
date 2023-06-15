@@ -1,7 +1,17 @@
+from typing import TYPE_CHECKING, Optional, TypedDict
+
 from prosemirror.utils import text_length
 
+if TYPE_CHECKING:
+    from prosemirror.model.fragment import Fragment
 
-def find_diff_start(a, b, pos):
+
+class Diff(TypedDict):
+    a: int
+    b: int
+
+
+def find_diff_start(a: "Fragment", b: "Fragment", pos: int) -> Optional[int]:
     i = 0
     while True:
         if a.child_count == i or b.child_count == i:
@@ -37,7 +47,9 @@ def find_diff_start(a, b, pos):
         i += 1
 
 
-def find_diff_end(a, b, pos_a, pos_b):
+def find_diff_end(
+    a: "Fragment", b: "Fragment", pos_a: int, pos_b: int
+) -> Optional[Diff]:
     i_a, i_b = a.child_count, b.child_count
     while True:
         if i_a == 0 or i_b == 0:
