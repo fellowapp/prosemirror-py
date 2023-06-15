@@ -1,4 +1,6 @@
+from typing import Dict
 from prosemirror.model import Schema
+from prosemirror.model.schema import NodeSpec, MarkSpec
 
 p_dom = ["p", 0]
 blockquote_dom = ["blockquote", 0]
@@ -6,7 +8,7 @@ hr_dom = ["hr"]
 pre_dom = ["pre", ["code", 0]]
 br_dom = ["br"]
 
-nodes = {
+nodes: Dict[str, NodeSpec] = {
     "doc": {"content": "block+"},
     "paragraph": {
         "content": "inline*",
@@ -87,7 +89,7 @@ em_dom = ["em", 0]
 strong_dom = ["strong", 0]
 code_dom = ["code", 0]
 
-marks = {
+marks: Dict[str, MarkSpec] = {
     "link": {
         "attrs": {"href": {}, "title": {"default": None}},
         "inclusive": False,
@@ -110,4 +112,4 @@ marks = {
 }
 
 
-schema = Schema({"nodes": nodes, "marks": marks})
+schema: Schema[str, str] = Schema({"nodes": nodes, "marks": marks})

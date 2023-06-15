@@ -225,7 +225,7 @@ class DOMParser:
             return
 
         for name in schema.marks:
-            rules = schema.marks[name].spec["parseDOM"]
+            rules = schema.marks[name].spec.get("parseDOM")
 
             if rules:
                 for rule in rules:
@@ -986,15 +986,15 @@ class ParseContext:
 
                 if (
                     default is not None
-                    and default.is_textblock
+                    and default.is_text_block
                     and default.default_attrs
                 ):
                     return default
 
                 d -= 1
 
-        for name, type_ in self.parser.schema.nodes.iteritems():
-            if type_.is_textblock and type_.default_attrs:
+        for name, type_ in self.parser.schema.nodes.items():
+            if type_.is_text_block and type_.default_attrs:
                 return type_
 
         return None

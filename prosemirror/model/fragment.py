@@ -236,7 +236,7 @@ class Fragment:
         return cls(joined or array, size)
 
     @classmethod
-    def from_(cls, nodes):
+    def from_(cls, nodes) -> "Fragment":
         if not nodes:
             return cls.empty
         if isinstance(nodes, cls):

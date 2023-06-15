@@ -4,7 +4,7 @@ from prosemirror.schema.list import add_list_nodes
 
 from .build import builders
 
-test_schema = Schema(
+test_schema: Schema[str, str] = Schema(
     {
         "nodes": add_list_nodes(_schema.spec["nodes"], "paragraph block*", "block"),
         "marks": _schema.spec["marks"],

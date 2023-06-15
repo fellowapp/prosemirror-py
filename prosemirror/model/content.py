@@ -205,6 +205,8 @@ TOKEN_REGEX = re.compile(r"\w+|\W")
 
 
 class TokenStream:
+    inline: Optional[bool]
+
     def __init__(self, string: str, node_types: Dict[str, "NodeType"]) -> None:
         self.string = string
         self.node_types = node_types

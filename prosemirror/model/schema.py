@@ -1,15 +1,34 @@
-from collections import OrderedDict
-from typing import Any, Dict, Literal, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Literal,
+    Optional,
+    TypeAlias,
+    TypeVar,
+    Union,
+    cast,
+)
+
+from typing_extensions import NotRequired, TypedDict
+
+from prosemirror.model.fragment import Fragment
+from prosemirror.model.mark import Mark
+from prosemirror.model.node import Node, TextNode
+from prosemirror.utils import JSON, JSONDict
 
 from .content import ContentMatch
-from .fragment import Fragment
-from .mark import Mark
-from .node import Node, TextNode
 
-Attrs = Dict[str, Any]
+if TYPE_CHECKING:
+    pass
+
+Attrs: TypeAlias = JSONDict
 
 
-def default_attrs(attrs):
+def default_attrs(attrs: "Attributes") -> Optional[Attrs]:
     defaults = {}
     for attr_name, attr in attrs.items():
         if attr.has_default:
@@ -18,14 +37,14 @@ def default_attrs(attrs):
     return defaults
 
 
-def compute_attrs(attrs, value):
+def compute_attrs(attrs: "Attributes", value: Optional[Attrs]) -> Attrs:
     built = {}
     for name in attrs:
         given = None
         if value:
             given = value.get(name)
         if given is None:
-            attr = attrs.get(name)
+            attr = attrs[name]
             if attr.has_default:
                 given = attr.default
             else:
@@ -34,7 +53,7 @@ def compute_attrs(attrs, value):
     return built
 
 
-def init_attrs(attrs):
+def init_attrs(attrs: Optional["AttributeSpecs"]) -> "Attributes":
     result = {}
     if attrs:
         for name in attrs:
@@ -43,34 +62,53 @@ def init_attrs(attrs):
 
 
 class NodeType:
-    def __init__(self, name, schema, spec):
+    """
+    Node types are objects allocated once per `Schema` and used to
+    [tag](#model.Node.type) `Node` instances. They contain information
+    about the node type, such as its name and what kind of node it
+    represents.
+    """
+
+    name: str
+
+    schema: "Schema[Any, Any]"
+
+    spec: "NodeSpec"
+
+    inline_content: bool
+
+    content_match: "ContentMatch"
+
+    mark_set: Optional[List["MarkType"]]
+
+    def __init__(self, name: str, schema: "Schema[Any, Any]", spec: "NodeSpec") -> None:
         self.name = name
         self.schema = schema
         self.spec = spec
-        self.groups = spec.get("group").split(" ") if "group" in spec else []
+        self.groups = spec["group"].split(" ") if "group" in spec else []
         self.attrs = init_attrs(spec.get("attrs"))
         self.default_attrs = default_attrs(self.attrs)
-        self.content_match = None
+        self.content_match = None  # type: ignore[assignment]
         self.mark_set = None
-        self.inline_content = None
+        self.inline_content = None  # type: ignore[assignment]
         self.is_block = not (spec.get("inline") or name == "text")
         self.is_text = name == "text"
 
     @property
-    def is_inline(self):
+    def is_inline(self) -> bool:
         return not self.is_block
 
     @property
-    def is_text_block(self):
+    def is_text_block(self) -> bool:  # FIXME: name is wrong, should be is_textblock
         return self.is_block and self.inline_content
 
     @property
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         return self.content_match == ContentMatch.empty
 
     @property
-    def is_atom(self):
-        return self.is_leaf or self.spec.get("atom")
+    def is_atom(self) -> bool:
+        return self.is_leaf or bool(self.spec.get("atom"))
 
     @property
     def whitespace(self) -> Literal["pre", "normal"]:
@@ -78,21 +116,26 @@ class NodeType:
             "pre" if self.spec.get("code") else "normal"
         )
 
-    def has_required_attrs(self):
+    def has_required_attrs(self) -> bool:
         for n in self.attrs:
             if self.attrs[n].is_required:
                 return True
         return False
 
-    def compatible_content(self, other):
+    def compatible_content(self, other: "NodeType") -> bool:
         return self == other or (self.content_match.compatible(other.content_match))
 
-    def compute_attrs(self, attrs):
+    def compute_attrs(self, attrs: Optional[Attrs]) -> Attrs:
         if not attrs and self.default_attrs:
             return self.default_attrs
         return compute_attrs(self.attrs, attrs)
 
-    def create(self, attrs=None, content=None, marks=None):
+    def create(
+        self,
+        attrs: Optional[Attrs] = None,
+        content: Optional[Union[Fragment, Node, List[Node]]] = None,
+        marks: Optional[List[Mark]] = None,
+    ) -> Node:
         if self.is_text:
             raise ValueError("NodeType.create cannot construct text nodes")
         return Node(
@@ -102,28 +145,39 @@ class NodeType:
             Mark.set_from(marks),
         )
 
-    def create_checked(self, attrs=None, content=None, marks=None):
+    def create_checked(
+        self,
+        attrs: Optional[Attrs] = None,
+        content: Optional[Union[Fragment, Node, List[Node]]] = None,
+        marks: Optional[List[Mark]] = None,
+    ) -> Node:
         content = Fragment.from_(content)
         if not self.valid_content(content):
             raise ValueError("Invalid content for node " + self.name)
         return Node(self, self.compute_attrs(attrs), content, Mark.set_from(marks))
 
-    def create_and_fill(self, attrs=None, content=None, marks=None):
+    def create_and_fill(
+        self,
+        attrs: Optional[Attrs] = None,
+        content: Optional[Union[Fragment, Node, List[Node]]] = None,
+        marks: Optional[List[Mark]] = None,
+    ) -> Optional[Node]:
         attrs = self.compute_attrs(attrs)
-        content = Fragment.from_(content)
-        if content.size:
-            before = self.content_match.fill_before(content)
+        frag = Fragment.from_(content)
+        if frag.size:
+            before = self.content_match.fill_before(frag)
             if not before:
                 return None
-            content = before.append(content)
-        after = self.content_match.match_fragment(content).fill_before(
-            Fragment.empty, True
-        )
+            frag = before.append(frag)
+        matched = self.content_match.match_fragment(frag)
+        if not matched:
+            return None
+        after = matched.fill_before(Fragment.empty, True)
         if not after:
             return None
-        return Node(self, attrs, content.append(after), Mark.set_from(marks))
+        return Node(self, attrs, frag.append(after), Mark.set_from(marks))
 
-    def valid_content(self, content):
+    def valid_content(self, content: Fragment) -> bool:
         result = self.content_match.match_fragment(content)
         if not result or not result.valid_end:
             return False
@@ -132,15 +186,15 @@ class NodeType:
                 return False
         return True
 
-    def allows_mark_type(self, mark_type):
+    def allows_mark_type(self, mark_type: "MarkType") -> bool:
         return self.mark_set is None or mark_type in self.mark_set
 
-    def allows_marks(self, marks):
+    def allows_marks(self, marks: List[Mark]) -> bool:
         if self.mark_set is None:
             return True
         return all(self.allows_mark_type(mark.type) for mark in marks)
 
-    def allowed_marks(self, marks):
+    def allowed_marks(self, marks: List[Mark]) -> List[Mark]:
         if self.mark_set is None:
             return marks
         copy = None
@@ -155,61 +209,76 @@ class NodeType:
         elif len(copy):
             return copy
         else:
-            return Mark.empty
+            return Mark.none
 
     @classmethod
-    def compile(cls, nodes: OrderedDict, schema):
-        result = {}
+    def compile(
+        cls, nodes: Dict["Nodes", "NodeSpec"], schema: "Schema[Nodes, Marks]"
+    ) -> Dict["Nodes", "NodeType"]:
+        result: Dict["Nodes", "NodeType"] = {}
 
         for name, spec in nodes.items():
             result[name] = NodeType(name, schema, spec)
 
-        top_node = schema.spec.get("topNode") or "doc"
+        top_node = cast(Nodes, schema.spec.get("topNode") or "doc")
         if not result.get(top_node):
             raise ValueError(f"Schema is missing its top node type {top_node}")
-        if not result.get("text"):
+        if not result.get(cast(Nodes, "text")):
             raise ValueError("every schema needs a 'text' type")
-        if getattr(result.get("text"), "attrs", {}):
+        if result[cast(Nodes, "text")].attrs:
             raise ValueError("the text node type should not have attributes")
         return result
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<NodeType {self.name}>"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
 
+Attributes: TypeAlias = Dict[str, "Attribute"]
+
+
 class Attribute:
-    def __init__(self, options):
+    def __init__(self, options: "AttributeSpec") -> None:
         self.has_default = "default" in options
         self.default = options["default"] if self.has_default else None
 
     @property
-    def is_required(self):
+    def is_required(self) -> bool:
         return not self.has_default
 
 
 class MarkType:
-    def __init__(self, name, rank, schema, spec):
+    excluded: List["MarkType"]
+    instance: Optional[Mark]
+
+    def __init__(
+        self, name: str, rank: int, schema: "Schema", spec: "MarkSpec"
+    ) -> None:
         self.name = name
         self.schema = schema
         self.spec = spec
         self.attrs = init_attrs(spec.get("attrs"))
         self.rank = rank
-        self.excluded = None
+        self.excluded = None  # type: ignore[assignment]
         defaults = default_attrs(self.attrs)
-        self.instance = False
+        self.instance = None
         if defaults:
             self.instance = Mark(self, defaults)
 
-    def create(self, attrs=None):
+    def create(
+        self,
+        attrs: Optional[Attrs] = None,
+    ) -> Mark:
         if not attrs and self.instance:
             return self.instance
         return Mark(self, compute_attrs(self.attrs, attrs))
 
     @classmethod
-    def compile(cls, marks: OrderedDict, schema):
+    def compile(
+        cls, marks: Dict["Marks", "MarkSpec"], schema: "Schema[Nodes, Marks]"
+    ) -> Dict["Marks", "MarkType"]:
         result = {}
         rank = 0
         for name, spec in marks.items():
@@ -217,23 +286,96 @@ class MarkType:
             rank += 1
         return result
 
-    def remove_from_set(self, set_):
+    def remove_from_set(self, set_: List["Mark"]) -> List["Mark"]:
         return [item for item in set_ if item.type != self]
 
-    def is_in_set(self, set):
+    def is_in_set(self, set: List[Mark]) -> Optional[Mark]:
         return next((item for item in set if item.type == self), None)
 
-    def excludes(self, other):
+    def excludes(self, other: "MarkType") -> bool:
         return any(other.name == e.name for e in self.excluded)
 
 
-class Schema:
-    def __init__(self, spec):
-        self.spec = {**spec}
-        self.spec["nodes"] = OrderedDict(self.spec["nodes"])
-        self.spec["marks"] = OrderedDict(self.spec.get("marks", {}))
+Nodes = TypeVar("Nodes", bound=str)
+Marks = TypeVar("Marks", bound=str)
+
+
+class SchemaSpec(TypedDict, Generic[Nodes, Marks]):
+    """
+    An object describing a schema, as passed to the [`Schema`](#model.Schema)
+    constructor.
+    """
+
+    # The node types in this schema. Maps names to
+    # [`NodeSpec`](#model.NodeSpec) objects that describe the node type
+    # associated with that name. Their order is significant—it
+    # determines which [parse rules](#model.NodeSpec.parseDOM) take
+    # precedence by default, and which nodes come first in a given
+    # [group](#model.NodeSpec.group).
+    nodes: Dict[Nodes, "NodeSpec"]
+
+    # The mark types that exist in this schema. The order in which they
+    # are provided determines the order in which [mark
+    # sets](#model.Mark.addToSet) are sorted and in which [parse
+    # rules](#model.MarkSpec.parseDOM) are tried.
+    marks: NotRequired[Dict[Marks, "MarkSpec"]]
+
+    # The name of the default top-level node for the schema. Defaults
+    # to `"doc"`.
+    topNode: NotRequired[str]
+
+
+class NodeSpec(TypedDict, total=False):
+    """
+    A description of a node type, used when defining a schema.
+    """
+
+    content: str
+    marks: str
+    group: str
+    inline: bool
+    atom: bool
+    attrs: "AttributeSpecs"
+    selectable: bool
+    draggable: bool
+    code: bool
+    whitespace: Literal["pre", "normal"]
+    definingAsContext: bool
+    definingForContent: bool
+    defining: bool
+    isolating: bool
+    toDOM: Callable[[Node], Any]  # FIXME: add types
+    parseDOM: List[Dict[str, Any]]  # FIXME: add types
+
+
+AttributeSpecs: TypeAlias = Dict[str, "AttributeSpec"]
+
+
+class MarkSpec(TypedDict, total=False):
+    attrs: AttributeSpecs
+    inclusive: bool
+    excludes: str
+    group: str
+    spanning: bool
+    toDOM: Callable[[Mark, bool], Any]  # FIXME: add types
+    parseDOM: List[Dict[str, Any]]  # FIXME: add types
+
+
+class AttributeSpec(TypedDict, total=False):
+    default: JSON
+
+
+class Schema(Generic[Nodes, Marks]):
+    spec: SchemaSpec
+
+    nodes: Dict[Nodes, "NodeType"]
+
+    marks: Dict[Marks, "MarkType"]
+
+    def __init__(self, spec: SchemaSpec) -> None:
+        self.spec = spec
         self.nodes = NodeType.compile(self.spec["nodes"], self)
-        self.marks = MarkType.compile(self.spec["marks"], self)
+        self.marks = MarkType.compile(self.spec.get("marks", {}), self)
         content_expr_cache = {}
         for prop in self.nodes:
             if prop in self.marks:
@@ -243,7 +385,7 @@ class Schema:
             mark_expr = type.spec.get("marks")
             if content_expr not in content_expr_cache:
                 content_expr_cache[content_expr] = ContentMatch.parse(
-                    content_expr, self.nodes
+                    content_expr, cast(Dict[str, "NodeType"], self.nodes)
                 )
 
             type.content_match = content_expr_cache[content_expr]
@@ -256,25 +398,25 @@ class Schema:
                 type.mark_set = []
             else:
                 type.mark_set = None
-            # type.mark_set = None if mark_expr == "_" else {
-            #     gather_marks(self, mark_expr.split(" ")) if mark_expr else (
-            #         [] if (mark_expr == "" or not type.inline_content) else None
-            #     )
-            # }
-        for prop in self.marks:
-            type = self.marks.get(prop)
-            excl = type.spec.get("excludes")
-            type.excluded = (
-                [type]
+        for mark in self.marks.values():
+            excl = mark.spec.get("excludes")
+            mark.excluded = (
+                [mark]
                 if excl is None
                 else ([] if excl == "" else (gather_marks(self, excl.split(" "))))
             )
 
-        self.top_node_type = self.nodes.get((self.spec.get("topNode") or "doc"))
-        self.cached = {}
+        self.top_node_type = self.nodes[cast(Nodes, self.spec.get("topNode") or "doc")]
+        self.cached: Dict[str, Any] = {}
         self.cached["wrappings"] = {}
 
-    def node(self, type, attrs=None, content=None, marks=None):
+    def node(
+        self,
+        type: Union[str, NodeType],
+        attrs: Optional[Attrs] = None,
+        content: Optional[Union[Fragment, Node]] = None,
+        marks: Optional[List[Mark]] = None,
+    ) -> Node:
         if isinstance(type, str):
             type = self.node_type(type)
         elif not isinstance(type, NodeType):
@@ -283,29 +425,37 @@ class Schema:
             raise ValueError(f"Node type from different schema used ({type.name})")
         return type.create_checked(attrs, content, marks)
 
-    def text(self, text, marks=None):
-        type = self.nodes.get("text")
+    def text(self, text: str, marks: Optional[List[Mark]] = None) -> TextNode:
+        type = self.nodes[cast(Nodes, "text")]
         return TextNode(type, type.default_attrs, text, Mark.set_from(marks))
 
-    def mark(self, type, attrs=None):
+    def mark(
+        self,
+        type: Union[str, MarkType],
+        attrs: Optional[
+            Union[Dict[str, Optional[str]], Dict[str, str], Dict[str, int]]
+        ] = None,
+    ) -> Mark:
         if isinstance(type, str):
-            type = self.marks[type]
+            type = self.marks[cast(Marks, type)]
         return type.create(attrs)
 
-    def node_from_json(self, json_data):
+    def node_from_json(self, json_data: JSON) -> Union[Node, TextNode]:
         return Node.from_json(self, json_data)
 
-    def mark_from_json(self, json_data):
+    def mark_from_json(
+        self, json_data: Dict[str, Union[str, Dict[str, Optional[str]], Dict[str, int]]]
+    ) -> Mark:
         return Mark.from_json(self, json_data)
 
-    def node_type(self, name):
-        found = self.nodes.get(name)
+    def node_type(self, name: str) -> NodeType:
+        found = self.nodes.get(cast(Nodes, name))
         if not found:
             raise ValueError(f"Unknown node type: {name}")
         return found
 
 
-def gather_marks(schema, marks):
+def gather_marks(schema: Schema, marks: List[str]) -> List[MarkType]:
     found = []
     for name in marks:
         mark = schema.marks.get(name)
@@ -313,8 +463,7 @@ def gather_marks(schema, marks):
         if mark:
             found.append(mark)
         else:
-            for prop in schema.marks:
-                mark = schema.marks.get(prop)
+            for mark in schema.marks.values():
                 if name == "_" or (
                     mark.spec.get("group") and name in mark.spec["group"].split(" ")
                 ):
