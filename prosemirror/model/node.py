@@ -1,3 +1,5 @@
+from typing_extensions import TypeGuard
+
 from prosemirror.utils import text_length
 
 from .comparedeep import compare_deep
@@ -345,3 +347,12 @@ def wrap_marks(marks, str):
         str = marks[i].type.name + "(" + str + ")"
         i -= 1
     return str
+
+
+def is_text(node: Node) -> TypeGuard[TextNode]:
+    """
+    Helper function to check if a node is a text node, but with
+    type narrowing. (TypeGuard cannot narrow the type of `self`; see
+    https://mypy.readthedocs.io/en/stable/type_narrowing.html#typeguards-as-methods)
+    """
+    return node.is_text

@@ -418,7 +418,9 @@ class NodeContext:
 
         content = Fragment.from_(self.content)
         if not open_end and self.match is not None:
-            content = content.append(self.match.fill_before(Fragment.empty, True))
+            content = content.append(
+                cast(Fragment, self.match.fill_before(Fragment.empty, True))
+            )
 
         return (
             self.type.create(self.attrs, content, self.marks) if self.type else content

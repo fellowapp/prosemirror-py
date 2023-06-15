@@ -1,6 +1,7 @@
 from typing import Dict
+
 from prosemirror.model import Schema
-from prosemirror.model.schema import NodeSpec, MarkSpec
+from prosemirror.model.schema import MarkSpec, NodeSpec
 
 p_dom = ["p", 0]
 blockquote_dom = ["blockquote", 0]

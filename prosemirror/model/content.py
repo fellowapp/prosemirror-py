@@ -18,6 +18,7 @@ from typing import (
 from .fragment import Fragment
 
 if TYPE_CHECKING:
+    from .node import Node
     from .schema import NodeType
 
 
@@ -111,7 +112,9 @@ class ContentMatch:
             nonlocal seen
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
-                return Fragment.from_([tp.create_and_fill() for tp in types])
+                return Fragment.from_(
+                    [cast("Node", tp.create_and_fill()) for tp in types]
+                )
             for i in match.next:
                 type = i.type
                 next = i.next

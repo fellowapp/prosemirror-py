@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
-from prosemirror.model import Fragment, ResolvedPos, Slice
+from prosemirror.model import Fragment, Node, ResolvedPos, Slice
 
 from .replace_step import ReplaceAroundStep, ReplaceStep, Step
 
@@ -98,7 +98,9 @@ class Fitter:
         open_start = from__.depth
         open_end = to_.depth
         while open_start and open_end and content.child_count == 1:
-            content = content.first_child.content
+            first_child = content.first_child
+            assert first_child
+            content = first_child.content
             open_start -= 1
             open_end -= 1
 
@@ -137,6 +139,7 @@ class Fitter:
                     parent = content_at(
                         self.unplaced.content, slice_depth - 1
                     ).first_child
+                    assert parent
                     fragment = parent.content
                 else:
                     parent = None
@@ -165,7 +168,7 @@ class Fitter:
                     if pass_ == 1 and (
                         (match.match_type(first.type) or _lazy_inject())
                         if first
-                        else type_.compatible_content(parent.type)
+                        else parent and type_.compatible_content(parent.type)
                     ):
                         return _Fittable(
                             slice_depth,
@@ -189,7 +192,7 @@ class Fitter:
         open_start = self.unplaced.open_start
         open_end = self.unplaced.open_end
         inner = content_at(content, open_start)
-        if not inner.child_count or inner.first_child.is_leaf:
+        if not inner.child_count or cast("Node", inner.first_child).is_leaf:
             return False
         self.unplaced = Slice(
             content,
@@ -404,28 +407,28 @@ class Fitter:
 def drop_from_fragment(fragment: Fragment, depth: int, count: int) -> Fragment:
     if depth == 0:
         return fragment.cut_by_index(count)
+    first_child = fragment.first_child
+    assert first_child
     return fragment.replace_child(
         0,
-        fragment.first_child.copy(
-            drop_from_fragment(fragment.first_child.content, depth - 1, count)
-        ),
+        first_child.copy(drop_from_fragment(first_child.content, depth - 1, count)),
     )
 
 
 def add_to_fragment(fragment: Fragment, depth: int, content: Fragment) -> Fragment:
     if depth == 0:
         return fragment.append(content)
+    last_child = fragment.last_child
+    assert last_child
     return fragment.replace_child(
         fragment.child_count - 1,
-        fragment.last_child.copy(
-            add_to_fragment(fragment.last_child.content, depth - 1, content)
-        ),
+        last_child.copy(add_to_fragment(last_child.content, depth - 1, content)),
     )
 
 
 def content_at(fragment: Fragment, depth: int) -> Fragment:
     for _ in range(depth):
-        fragment = fragment.first_child.content
+        fragment = cast(Node, fragment.first_child).content
     return fragment
 
 
