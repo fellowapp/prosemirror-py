@@ -161,7 +161,7 @@ class Transform:
         for i in range(node.child_count):
             child = node.child(i)
             end = cur + child.node_size
-            allowed = match.match_type(child.type, child.attrs)
+            allowed = match.match_type(child.type)
             if not allowed:
                 del_steps.append(ReplaceStep(cur, end, Slice.empty))
             else:

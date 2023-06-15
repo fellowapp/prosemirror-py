@@ -1081,8 +1081,8 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
             i = 0
             while i < match.edge_count:
                 result = match.edge(i)
-                _type = result["type"]
-                _next = result["next"]
+                _type = result.type
+                _next = result.next
 
                 if _type == node_type:
                     return True
