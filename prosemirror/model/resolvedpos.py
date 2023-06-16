@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union, cast
+from typing import TYPE_CHECKING, List, Optional, Union, cast, Callable
 
 from .mark import Mark
 
@@ -144,7 +144,9 @@ class ResolvedPos:
         return 0
 
     def block_range(
-        self, other: Optional["ResolvedPos"] = None, pred: None = None
+        self,
+        other: Optional["ResolvedPos"] = None,
+        pred: Optional[Callable[["Node"], bool]] = None,
     ) -> Optional["NodeRange"]:
         if other is None:
             other = self

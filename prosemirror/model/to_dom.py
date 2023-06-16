@@ -8,6 +8,7 @@ from typing import (
     Sequence,
     Tuple,
     Union,
+    Set,
     cast,
 )
 
@@ -27,27 +28,28 @@ class DocumentFragment:
         return "".join([str(c) for c in self.children])
 
 
-class Element(DocumentFragment):
-    self_closing_elements = frozenset(
-        [
-            "area",
-            "base",
-            "br",
-            "col",
-            "embed",
-            "hr",
-            "img",
-            "input",
-            "keygen",
-            "link",
-            "meta",
-            "param",
-            "source",
-            "track",
-            "wbr",
-        ]
-    )
+SELF_CLOSING_ELEMENTS = frozenset(
+    {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "keygen",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    }
+)
 
+
+class Element(DocumentFragment):
     def __init__(
         self, name: str, attrs: Dict[str, str], children: List[HTMLNode]
     ) -> None:
@@ -58,7 +60,7 @@ class Element(DocumentFragment):
     def __str__(self) -> str:
         attrs_str = " ".join([f'{k}="{html.escape(v)}"' for k, v in self.attrs.items()])
         open_tag_str = " ".join([s for s in [self.name, attrs_str] if s])
-        if self.name in self.self_closing_elements:
+        if self.name in SELF_CLOSING_ELEMENTS:
             assert not self.children, "self-closing elements should not have children"
             return f"<{open_tag_str}>"
         children_str = "".join([str(c) for c in self.children])
@@ -157,7 +159,7 @@ class DOMSerializer:
         tag_name = structure[0]
         if " " in tag_name[1:]:
             raise NotImplementedError("XML namespaces are not supported")
-        content_dom = None
+        content_dom: Optional[Element] = None
         dom = Element(name=tag_name, attrs={}, children=[])
         attrs = structure[1] if len(structure) > 1 else None
         start = 1

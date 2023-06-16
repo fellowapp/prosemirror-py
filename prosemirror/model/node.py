@@ -271,7 +271,7 @@ class Node:
         return True
 
     def can_replace_with(
-        self, from_: int, to: int, type: "NodeType", marks: None = None
+        self, from_: int, to: int, type: "NodeType", marks: Optional[List[Mark]] = None
     ) -> bool:
         if marks and not self.type.allows_marks(marks):
             return False

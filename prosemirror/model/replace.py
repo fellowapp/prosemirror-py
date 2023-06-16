@@ -34,7 +34,7 @@ def remove_range(content: Fragment, from_: int, to: int) -> Fragment:
 
 
 def insert_into(
-    content: Fragment, dist: int, insert: Fragment, parent: None
+    content: Fragment, dist: int, insert: Fragment, parent: Optional["Node"]
 ) -> Optional[Fragment]:
     a = content.find_index(dist)
     index, offset = a["index"], a["offset"]

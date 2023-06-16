@@ -14,7 +14,7 @@ class Mark:
         self.attrs = attrs
 
     def add_to_set(self, set: List["Mark"]) -> List["Mark"]:
-        copy = None
+        copy: Optional[List["Mark"]] = None
         placed = False
         for i in range(len(set)):
             other = set[i]

@@ -22,9 +22,6 @@ from prosemirror.utils import JSON, JSONDict
 
 from .content import ContentMatch
 
-if TYPE_CHECKING:
-    pass
-
 Attrs: TypeAlias = JSONDict
 
 
@@ -197,7 +194,7 @@ class NodeType:
     def allowed_marks(self, marks: List[Mark]) -> List[Mark]:
         if self.mark_set is None:
             return marks
-        copy = None
+        copy: Optional[List[Mark]] = None
         for i, mark in enumerate(marks):
             if not self.allows_mark_type(mark.type):
                 if not copy:

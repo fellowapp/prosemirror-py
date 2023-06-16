@@ -1037,7 +1037,7 @@ class ParseContext:
 
 def normalize_list(dom_: DOMNode) -> None:
     child = next(iter(dom_))
-    prev_item = None
+    prev_item: Optional[DOMNode] = None
 
     while child is not None:
         name = child.tag.lower() if get_node_type(child) == 1 else None

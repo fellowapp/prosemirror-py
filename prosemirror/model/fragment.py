@@ -265,7 +265,8 @@ class Fragment:
     def from_array(cls, array: List["Node"]) -> "Fragment":
         if not array:
             return cls.empty
-        joined, size = None, 0
+        joined: Optional[List["Node"]] = None
+        size = 0
         for i in range(len(array)):
             node = array[i]
             size += node.node_size
