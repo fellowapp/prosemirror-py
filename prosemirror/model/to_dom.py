@@ -206,7 +206,7 @@ class DOMSerializer:
         return gather_to_dom(schema.marks)
 
 
-def gather_to_dom(obj: Dict[str, Any]) -> Dict[str, Callable]:  # type: ignore
+def gather_to_dom(obj: Dict[str, Any]) -> Dict[str, Callable[..., Any]]:
     result = {}
     for name in obj:
         to_dom = obj[name].spec.get("toDOM")

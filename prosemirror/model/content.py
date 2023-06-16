@@ -434,11 +434,11 @@ def nfa(
         elif expr["type"] == "seq":
             i = 0
             while True:
-                nxt = compile(expr["exprs"][i], from_)
+                next_ = compile(expr["exprs"][i], from_)
                 if i == len(expr["exprs"]) - 1:
-                    return nxt
+                    return next_
                 from_ = node()
-                connect(nxt, from_)
+                connect(next_, from_)
                 i += 1
         elif expr["type"] == "star":
             loop = node()
@@ -488,7 +488,7 @@ def null_from(
         nonlocal result
         edges = nfa[n]
         if len(edges) == 1 and not edges[0].get("term"):
-            return scan(cast(int, edges[0].get("to")))
+            return scan(cast(int, edges[0]["to"]))
         result.append(n)
         for edge in edges:
             term, to = edge.get("term"), edge.get("to")
