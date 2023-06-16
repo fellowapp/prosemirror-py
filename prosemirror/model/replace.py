@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, Union, cast
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, cast
 
 from prosemirror.utils import JSON, JSONDict
-from .fragment import Fragment
 
+from .fragment import Fragment
 
 if TYPE_CHECKING:
     from .node import Node, TextNode

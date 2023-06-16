@@ -1,14 +1,19 @@
-from typing import Final, List
+from typing import TYPE_CHECKING, Any, Final, List, Optional, cast
+
+from prosemirror.utils import JSONDict
+
+if TYPE_CHECKING:
+    from .schema import MarkType, Schema
 
 
 class Mark:
     none: Final[List["Mark"]] = []
 
-    def __init__(self, type, attrs):
+    def __init__(self, type: "MarkType", attrs: JSONDict) -> None:
         self.type = type
         self.attrs = attrs
 
-    def add_to_set(self, set):
+    def add_to_set(self, set: List["Mark"]) -> List["Mark"]:
         copy = None
         placed = False
         for i in range(len(set)):
@@ -34,36 +39,36 @@ class Mark:
             copy.append(self)
         return copy
 
-    def remove_from_set(self, set):
+    def remove_from_set(self, set: List["Mark"]) -> List["Mark"]:
         return [item for item in set if not item.eq(self)]
 
-    def is_in_set(self, set):
+    def is_in_set(self, set: List["Mark"]) -> bool:
         return any(item.eq(self) for item in set)
 
-    def eq(self, other):
+    def eq(self, other: "Mark") -> bool:
         if self == other:
             return True
         return self.type.name == other.type.name and self.attrs == other.attrs
 
-    def to_json(self):
+    def to_json(self) -> JSONDict:
         return {"type": self.type.name, "attrs": self.attrs}
 
     @classmethod
-    def from_json(cls, schema, json_data):
-        if isinstance(json_data, str):
-            import json
-
-            json_data = json.loads(json_data)
+    def from_json(
+        cls,
+        schema: "Schema[Any, Any]",
+        json_data: JSONDict,
+    ) -> "Mark":
         if not json_data:
             raise ValueError("Invalid input for Mark.fromJSON")
         name = json_data["type"]
         type = schema.marks.get(name)
         if not type:
             raise ValueError(f"There is no mark type {name} in this schema")
-        return type.create(json_data.get("attrs"))
+        return type.create(cast(Optional[JSONDict], json_data.get("attrs")))
 
     @classmethod
-    def same_set(cls, a, b):
+    def same_set(cls, a: List["Mark"], b: List["Mark"]) -> bool:
         if a == b:
             return True
         if len(a) != len(b):
@@ -71,7 +76,7 @@ class Mark:
         return all(item_a.eq(item_b) for (item_a, item_b) in zip(a, b))
 
     @classmethod
-    def set_from(cls, marks):
+    def set_from(cls, marks: Optional[List["Mark"]]) -> List["Mark"]:
         if not marks:
             return cls.none
         if isinstance(marks, cls):

@@ -68,7 +68,7 @@ class DOMSerializer:
         tgt: DocumentFragment = target or DocumentFragment(children=[])
 
         top = tgt
-        active: Optional[List[DocumentFragment]] = None
+        active: Optional[List[Tuple[Mark, DocumentFragment]]] = None
 
         def each(node: Node, *_):
             nonlocal top, active
@@ -84,22 +84,20 @@ class DOMSerializer:
                         rendered += 1
                         continue
                     if (
-                        not next.eq(active[keep])
+                        not next.eq(active[keep][0])
                         or next.type.spec.get("spanning") is False
                     ):
                         break
-                    keep += 2
+                    keep += 1
                     rendered += 1
                 while keep < len(active):
-                    top = active.pop()
-                    active.pop()
+                    top = active.pop()[1]
                 while rendered < len(node.marks):
                     add = node.marks[rendered]
                     rendered += 1
                     mark_dom = self.serialize_mark(add, node.is_inline)
                     if mark_dom:
-                        active.append(add)  # type: ignore
-                        active.append(top)
+                        active.append((add, top))
                         top.children.append(mark_dom[0])
                         top = cast(DocumentFragment, mark_dom[1] or mark_dom[0])
             top.children.append(self.serialize_node_inner(node))
