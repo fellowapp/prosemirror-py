@@ -123,7 +123,7 @@ class Fitter:
         cur = self.unplaced.content
         open_end = self.unplaced.open_end
         for d in range(start_depth):
-            node = cur.first_child
+            node = cast("Node", cur.first_child)
             if cur.child_count > 1:
                 open_end = 0
             if node.type.spec.get("isolating") and open_end <= d:

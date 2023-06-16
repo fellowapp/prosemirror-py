@@ -119,7 +119,7 @@ class ResolvedPos:
             i += 1
         return marks
 
-    def marks_across(self, end):
+    def marks_across(self, end: "ResolvedPos") -> Optional[List["Mark"]]:
         after = self.parent.maybe_child(self.index())
         if not after or not after.is_inline:
             return None
@@ -159,13 +159,13 @@ class ResolvedPos:
             d -= 1
         return None
 
-    def same_parent(self, other):
+    def same_parent(self, other: "ResolvedPos") -> bool:
         return self.pos - self.parent_offset == other.pos - other.parent_offset
 
-    def max(self, other):
+    def max(self, other: "ResolvedPos") -> "ResolvedPos":
         return other if other.pos > self.pos else self
 
-    def min(self, other):
+    def min(self, other: "ResolvedPos") -> "ResolvedPos":
         return other if other.pos < self.pos else self
 
     def __str__(self) -> str:
