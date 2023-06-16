@@ -346,6 +346,8 @@ class NodeSpec(TypedDict, total=False):
     isolating: bool
     toDOM: Callable[[Node], Any]  # FIXME: add types
     parseDOM: List[Dict[str, Any]]  # FIXME: add types
+    toDebugString: Callable[[Node], str]
+    leafText: Callable[[Node], str]
 
 
 AttributeSpecs: TypeAlias = Dict[str, "AttributeSpec"]
