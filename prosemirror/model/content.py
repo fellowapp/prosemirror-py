@@ -1,5 +1,4 @@
 import re
-from dataclasses import dataclass, field
 from functools import cmp_to_key, reduce
 from typing import (
     TYPE_CHECKING,
@@ -22,16 +21,24 @@ if TYPE_CHECKING:
     from .schema import NodeType
 
 
-@dataclass
 class MatchEdge:
     type: "NodeType"
     next: "ContentMatch"
 
+    def __init__(self, type: "NodeType", next: "ContentMatch") -> None:
+        self.type = type
+        self.next = next
 
-@dataclass
+
 class WrapCacheEntry:
     target: "NodeType"
     computed: Optional[List["NodeType"]]
+
+    def __init__(
+        self, target: "NodeType", computed: Optional[List["NodeType"]]
+    ) -> None:
+        self.target = target
+        self.computed = computed
 
 
 class Active(TypedDict):
@@ -40,7 +47,6 @@ class Active(TypedDict):
     via: Optional["Active"]
 
 
-@dataclass(eq=False)
 class ContentMatch:
     """
     Instances of this class represent a match state of a node type's
@@ -51,16 +57,21 @@ class ContentMatch:
 
     empty: ClassVar["ContentMatch"]
     valid_end: bool
-    next: List[MatchEdge] = field(default_factory=list, init=False)
-    wrap_cache: List[WrapCacheEntry] = field(default_factory=list, init=False)
+    next: List[MatchEdge]
+    wrap_cache: List[WrapCacheEntry]
+
+    def __init__(self, valid_end: bool) -> None:
+        self.valid_end = valid_end
+        self.next = []
+        self.wrap_cache = []
 
     @classmethod
     def parse(cls, string: str, node_types: Dict[str, "NodeType"]) -> "ContentMatch":
         stream = TokenStream(string, node_types)
-        if stream.next is None:
+        if stream.next() is None:
             return ContentMatch.empty
         expr = parse_expr(stream)
-        if stream.next:
+        if stream.next() is not None:
             stream.err("Unexpected trailing text")
         match = dfa(nfa(expr))
         check_for_dead_ends(match, stream)
@@ -218,7 +229,6 @@ class TokenStream:
         self.pos = 0
         self.tokens = [i for i in TOKEN_REGEX.findall(string) if i.strip()]
 
-    @property
     def next(self) -> Optional[str]:
         try:
             return self.tokens[self.pos]
@@ -226,7 +236,7 @@ class TokenStream:
             return None
 
     def eat(self, tok: str) -> Union[int, bool]:
-        if self.next == tok:
+        if self.next() == tok:
             pos = self.pos
             self.pos += 1
             return pos or True
@@ -292,7 +302,8 @@ def parse_expr_seq(stream: TokenStream) -> Expr:
     exprs = []
     while True:
         exprs.append(parse_expr_subscript(stream))
-        if not (stream.next and stream.next != ")" and stream.next != "|"):
+        next_ = stream.next()
+        if not (next_ and next_ != ")" and next_ != "|"):
             break
     if len(exprs) == 1:
         return exprs[0]
@@ -319,7 +330,7 @@ NUMBER_REGEX = re.compile(r"\D")
 
 
 def parse_num(stream: TokenStream) -> int:
-    next = stream.next
+    next = stream.next()
     assert next is not None
     if NUMBER_REGEX.match(next):
         stream.err(f'Expected number, got "{next}"')
@@ -332,7 +343,7 @@ def parse_expr_range(stream: TokenStream, expr: Expr) -> Expr:
     min_ = parse_num(stream)
     max_ = min_
     if stream.eat(","):
-        if stream.next != "}":
+        if stream.next() != "}":
             max_ = parse_num(stream)
         else:
             max_ = -1
@@ -363,7 +374,7 @@ def parse_expr_atom(
         if not stream.eat(")"):
             stream.err("missing closing patren")
         return expr
-    elif not re.match(r"\W", cast(str, stream.next)):
+    elif not re.match(r"\W", cast(str, stream.next())):
 
         def iteratee(type: "NodeType") -> Expr:
             nonlocal stream
@@ -374,14 +385,14 @@ def parse_expr_atom(
             return {"type": "name", "value": type}
 
         exprs = [
-            iteratee(type) for type in resolve_name(stream, cast(str, stream.next))
+            iteratee(type) for type in resolve_name(stream, cast(str, stream.next()))
         ]
         stream.pos += 1
         if len(exprs) == 1:
             return exprs[0]
         return {"type": "choice", "exprs": exprs}
     else:
-        stream.err(f'Unexpected token "{stream.next}"')
+        stream.err(f'Unexpected token "{stream.next()}"')
 
 
 class Edge(TypedDict):

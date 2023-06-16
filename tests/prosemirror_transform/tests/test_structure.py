@@ -24,7 +24,7 @@ schema = Schema(
 
 
 def n(name, *content):
-    return schema.nodes[name].create(None, content)
+    return schema.nodes[name].create(None, list(content))
 
 
 def t(str, em=None):

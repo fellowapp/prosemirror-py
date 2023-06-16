@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Union, cast, Callable
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, cast
 
 from .mark import Mark
 

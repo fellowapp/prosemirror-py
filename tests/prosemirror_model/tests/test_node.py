@@ -1,4 +1,5 @@
 from typing import Literal
+
 from prosemirror.model import Fragment, Schema
 from prosemirror.test_builder import eq, out
 from prosemirror.test_builder import test_schema as schema

@@ -1,5 +1,4 @@
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -87,7 +86,7 @@ class NodeType:
         self.default_attrs = default_attrs(self.attrs)
         self.content_match = None  # type: ignore[assignment]
         self.mark_set = None
-        self.inline_content = None  # type: ignore[assignment]
+        self.inline_content = False
         self.is_block = not (spec.get("inline") or name == "text")
         self.is_text = name == "text"
 
@@ -413,7 +412,7 @@ class Schema(Generic[Nodes, Marks]):
         self,
         type: Union[str, NodeType],
         attrs: Optional[Attrs] = None,
-        content: Optional[Union[Fragment, Node]] = None,
+        content: Optional[Union[Fragment, Node, List[Node]]] = None,
         marks: Optional[List[Mark]] = None,
     ) -> Node:
         if isinstance(type, str):

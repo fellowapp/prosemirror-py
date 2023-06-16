@@ -300,7 +300,11 @@ class Node:
                 f"Invalid collection of marks for node {self.type.name}:"
                 f" {[m.type.name for m in self.marks]!r}"
             )
-        return self.content.for_each(lambda node, *args: node.check())
+
+        def iteratee(node: "Node", offset: int, index: int) -> None:
+            node.check()
+
+        return self.content.for_each(iteratee)
 
     def to_json(self) -> JSONDict:
         obj: Dict[str, JSON] = {"type": self.type.name}
