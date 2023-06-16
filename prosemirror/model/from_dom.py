@@ -7,6 +7,8 @@ import lxml
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement as DOMNode
 
+from prosemirror.utils import JSONDict
+
 from .content import ContentMatch
 from .fragment import Fragment
 from .mark import Mark
@@ -707,7 +709,7 @@ class ParseContext:
         elif rule.get_content is not None:
             self.find_inside(dom_)
             rule.get_content(dom_, self.parser.schema).for_each(
-                lambda node: self.insert_node(node)
+                lambda node, offset, index: self.insert_node(node)
             )
         else:
             content_dom = dom_
@@ -1169,7 +1171,7 @@ def get_node_type(element: DOMNode) -> int:
     return 8
 
 
-def from_html(schema: Schema, html: str) -> Dict[str, Any]:
+def from_html(schema: Schema, html: str) -> JSONDict:
     fragment = lxml.html.fragment_fromstring(html, create_parent="document-fragment")
 
     prose_doc = DOMParser.from_schema(schema).parse(fragment)

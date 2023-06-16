@@ -1,10 +1,9 @@
-from typing import TYPE_CHECKING, Any, List, Optional, Union, cast
+from typing import TYPE_CHECKING, List, Optional, Union, cast
 
 from .mark import Mark
 
 if TYPE_CHECKING:
-    from prosemirror.model.mark import Mark
-    from prosemirror.model.node import Node, TextNode
+    from .node import Node
 
 
 class ResolvedPos:
@@ -109,7 +108,7 @@ class ResolvedPos:
         other = parent.maybe_child(index)
         if not main:
             main, other = other, main
-        marks = main.marks
+        marks = cast("Node", main).marks
         i = 0
         while i < len(marks):
             if marks[i].type.spec.get("inclusive") is False and (

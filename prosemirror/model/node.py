@@ -1,13 +1,7 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, TypedDict, Union
 
 from typing_extensions import TypeGuard
 
-from prosemirror.model.content import ContentMatch
-from prosemirror.model.fragment import Fragment
-from prosemirror.model.mark import Mark
-from prosemirror.model.replace import Slice
-from prosemirror.model.resolvedpos import ResolvedPos
-from prosemirror.model.schema import NodeType, Schema
 from prosemirror.utils import JSON, JSONDict, text_length
 
 from .comparedeep import compare_deep
@@ -16,13 +10,24 @@ from .mark import Mark
 from .replace import Slice, replace
 from .resolvedpos import ResolvedPos
 
+if TYPE_CHECKING:
+    from .content import ContentMatch
+    from .schema import MarkType, NodeType, Schema
+
+
 empty_attrs: dict = {}
+
+
+class ChildInfo(TypedDict):
+    node: Optional["Node"]
+    index: int
+    offset: int
 
 
 class Node:
     def __init__(
         self,
-        type: NodeType,
+        type: "NodeType",
         attrs: JSONDict,
         content: Optional[Fragment],
         marks: List[Mark],
@@ -46,15 +51,21 @@ class Node:
     def maybe_child(self, index: int) -> Optional["Node"]:
         return self.content.maybe_child(index)
 
-    def for_each(self, f):
+    def for_each(self, f: Callable[["Node", int, int], None]) -> None:
         self.content.for_each(f)
 
     def nodes_between(
-        self, from_: int, to: int, f: Callable, start_pos: int = 0
+        self,
+        from_: int,
+        to: int,
+        f: Callable[["Node", int, Optional["Node"], int], Optional[bool]],
+        start_pos: int = 0,
     ) -> None:
         self.content.nodes_between(from_, to, f, start_pos, self)
 
-    def descendants(self, f):
+    def descendants(
+        self, f: Callable[["Node", int, Optional["Node"], int], Optional[bool]]
+    ) -> None:
         self.nodes_between(0, self.content.size, f)
 
     @property
@@ -90,7 +101,7 @@ class Node:
 
     def has_markup(
         self,
-        type: NodeType,
+        type: "NodeType",
         attrs: Optional[JSONDict] = None,
         marks: Optional[List[Mark]] = None,
     ) -> bool:
@@ -110,7 +121,7 @@ class Node:
             return self
         return self.__class__(self.type, self.attrs, self.content, marks)
 
-    def cut(self, from_: int, to: Optional[int]) -> "Node":
+    def cut(self, from_: int, to: Optional[int] = None) -> "Node":
         if from_ == 0 and to == self.content.size:
             return self
         return self.copy(self.content.cut(from_, to))
@@ -146,7 +157,7 @@ class Node:
                 return node
             pos -= offset + 1
 
-    def child_after(self, pos):
+    def child_after(self, pos: int) -> ChildInfo:
         index_info = self.content.find_index(pos)
         index, offset = index_info["index"], index_info["offset"]
         return {
@@ -155,7 +166,7 @@ class Node:
             "offset": offset,
         }
 
-    def child_before(self, pos):
+    def child_before(self, pos: int) -> ChildInfo:
         if pos == 0:
             return {"node": None, "index": 0, "offset": 0}
         index_info = self.content.find_index(pos)
@@ -171,11 +182,15 @@ class Node:
     def resolve_no_cache(self, pos: int) -> ResolvedPos:
         return ResolvedPos.resolve(self, pos)
 
-    def range_has_mark(self, from_, to, type):
+    def range_has_mark(
+        self, from_: int, to: int, type: Union[Mark, "MarkType"]
+    ) -> bool:
         found = False
         if to > from_:
 
-            def iteratee(node):
+            def iteratee(
+                node: "Node", pos: int, parent: Optional["Node"], index: int
+            ) -> bool:
                 nonlocal found
                 if type.is_in_set(node.marks):
                     found = True
@@ -185,7 +200,7 @@ class Node:
         return found
 
     @property
-    def is_block(self):
+    def is_block(self) -> bool:
         return self.type.is_block
 
     @property
@@ -225,10 +240,10 @@ class Node:
             name += f"({self.content.to_string_inner()})"
         return wrap_marks(self.marks, name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.__str__()}>"
 
-    def content_match_at(self, index: int) -> ContentMatch:
+    def content_match_at(self, index: int) -> "ContentMatch":
         match = self.type.content_match.match_fragment(self.content, 0, index)
         if not match:
             raise ValueError("Called contentMatchAt on a node with invalid content")
@@ -245,7 +260,7 @@ class Node:
         if end is None:
             end = replacement.child_count
         one = self.content_match_at(from_).match_fragment(replacement, start, end)
-        two: Optional[ContentMatch] = None
+        two: Optional["ContentMatch"] = None
         if one:
             two = one.match_fragment(self.content, to)
         if not two or not two.valid_end:
@@ -256,23 +271,23 @@ class Node:
         return True
 
     def can_replace_with(
-        self, from_: int, to: int, type: NodeType, marks: None = None
+        self, from_: int, to: int, type: "NodeType", marks: None = None
     ) -> bool:
         if marks and not self.type.allows_marks(marks):
             return False
         start = self.content_match_at(from_).match_type(type)
-        end: Optional[ContentMatch] = None
+        end: Optional["ContentMatch"] = None
         if start:
             end = start.match_fragment(self.content, to)
         return end.valid_end if end else False
 
-    def can_append(self, other):
+    def can_append(self, other: "Node") -> bool:
         if other.content.size:
-            return self.can_replace(self.child_count, self.child_before, other.content)
+            return self.can_replace(self.child_count, self.child_count, other.content)
         else:
             return self.type.compatible_content(other.type)
 
-    def check(self):
+    def check(self) -> None:
         if not self.type.valid_content(self.content):
             raise ValueError(
                 f"Invalid content for node {self.type.name}: {str(self.content)[:50]}"
@@ -299,7 +314,7 @@ class Node:
         return obj
 
     @classmethod
-    def from_json(cls, schema: Schema, json_data: Any) -> "Node":
+    def from_json(cls, schema: "Schema", json_data: Any) -> "Node":
         if isinstance(json_data, str):
             import json
 
@@ -322,7 +337,7 @@ class Node:
 class TextNode(Node):
     def __init__(
         self,
-        type: NodeType,
+        type: "NodeType",
         attrs: JSONDict,
         content: str,
         marks: List[Mark],
@@ -348,7 +363,13 @@ class TextNode(Node):
     def text_content(self) -> str:
         return self.text
 
-    def text_between(self, from_, to):
+    def text_between(
+        self,
+        from_: int,
+        to: int,
+        block_separator: str = "",
+        leaf_text: Union[Callable, str] = "",
+    ) -> str:
         return self.text[from_:to]
 
     @property

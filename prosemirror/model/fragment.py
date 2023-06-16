@@ -197,7 +197,7 @@ class Fragment:
         except IndexError:
             return None
 
-    def for_each(self, f: Callable) -> None:
+    def for_each(self, f: Callable[["Node", int, int], Any]) -> None:
         i = 0
         p = 0
         while i < len(self.content):
@@ -303,4 +303,4 @@ class Fragment:
 
 Fragment.empty = Fragment([], 0)
 
-from . import node as pm_node
+from . import node as pm_node  # noqa: E402

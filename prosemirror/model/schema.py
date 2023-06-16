@@ -31,7 +31,7 @@ Attrs: TypeAlias = JSONDict
 def default_attrs(attrs: "Attributes") -> Optional[Attrs]:
     defaults = {}
     for attr_name, attr in attrs.items():
-        if attr.has_default:
+        if not attr.has_default:
             return None
         defaults[attr_name] = attr.default
     return defaults
@@ -429,7 +429,9 @@ class Schema(Generic[Nodes, Marks]):
 
     def text(self, text: str, marks: Optional[List[Mark]] = None) -> TextNode:
         type = self.nodes[cast(Nodes, "text")]
-        return TextNode(type, type.default_attrs, text, Mark.set_from(marks))
+        return TextNode(
+            type, cast(Attrs, type.default_attrs), text, Mark.set_from(marks)
+        )
 
     def mark(
         self,
