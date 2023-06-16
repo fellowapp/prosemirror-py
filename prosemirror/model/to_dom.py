@@ -2,15 +2,19 @@ import html
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, cast
 
 from . import Fragment, Mark, Node, Schema
+from prosemirror.model.fragment import Fragment
+from prosemirror.model.mark import Mark
+from prosemirror.model.node import Node
+from prosemirror.model.schema import Schema
 
 HTMLNode = Union["Element", str]
 
 
 class DocumentFragment:
-    def __init__(self, children: List[HTMLNode]):
+    def __init__(self, children: List[HTMLNode]) -> None:
         self.children = children
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "".join([str(c) for c in self.children])
 
 
@@ -35,12 +39,14 @@ class Element(DocumentFragment):
         ]
     )
 
-    def __init__(self, name: str, attrs: Dict[str, str], children: List[HTMLNode]):
+    def __init__(
+        self, name: str, attrs: Dict[str, str], children: List[HTMLNode]
+    ) -> None:
         self.name = name
         self.attrs = attrs
         super().__init__(children)
 
-    def __str__(self):
+    def __str__(self) -> str:
         attrs_str = " ".join([f'{k}="{html.escape(v)}"' for k, v in self.attrs.items()])
         open_tag_str = " ".join([s for s in [self.name, attrs_str] if s])
         if self.name in self.self_closing_elements:
@@ -58,7 +64,7 @@ class DOMSerializer:
         self,
         nodes: Dict[str, Callable[[Node], HTMLOutputSpec]],
         marks: Dict[str, Callable[[Mark, bool], HTMLOutputSpec]],
-    ):
+    ) -> None:
         self.nodes = nodes
         self.marks = marks
 
@@ -70,7 +76,7 @@ class DOMSerializer:
         top = tgt
         active: Optional[List[Tuple[Mark, DocumentFragment]]] = None
 
-        def each(node: Node, *_):
+        def each(node: Node, offset: int, index: int) -> None:
             nonlocal top, active
 
             if active or node.marks:
@@ -175,18 +181,18 @@ class DOMSerializer:
         return cls(cls.nodes_from_schema(schema), cls.marks_from_schema(schema))
 
     @classmethod
-    def nodes_from_schema(cls, schema: Schema):
+    def nodes_from_schema(cls, schema: Schema) -> Dict[str, Callable]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
             result["text"] = lambda node: node.text
         return result
 
     @classmethod
-    def marks_from_schema(cls, schema: Schema):
+    def marks_from_schema(cls, schema: Schema) -> Dict[str, Callable]:
         return gather_to_dom(schema.marks)
 
 
-def gather_to_dom(obj: Dict[str, Any]):
+def gather_to_dom(obj: Dict[str, Any]) -> Dict[str, Callable]:
     result = {}
     for name in obj:
         to_dom = obj[name].spec.get("toDOM")
