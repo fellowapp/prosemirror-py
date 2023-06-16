@@ -57,7 +57,7 @@ class ParseRule:
     attrs: Optional[Attrs]
     get_attrs: Optional[Callable[[DOMNode], Union[None, Attrs, Literal[False]]]]
     content_element: Union[str, DOMNode, Callable[[DOMNode], DOMNode], None]
-    get_content: Optional[Callable[[DOMNode, Schema], Fragment]]
+    get_content: Optional[Callable[[DOMNode, Schema[str, str]], Fragment]]
     preserve_whitespace: WSType
 
     @classmethod
@@ -88,10 +88,10 @@ class DOMParser:
     _styles: List[ParseRule]
     _normalize_lists: bool
 
-    schema: Schema
+    schema: Schema[str, str]
     rules: List[ParseRule]
 
-    def __init__(self, schema: Schema, rules: List[ParseRule]) -> None:
+    def __init__(self, schema: Schema[str, str], rules: List[ParseRule]) -> None:
         self.schema = schema
         self.rules = rules
         self._tags = [rule for rule in rules if rule.tag is not None]
@@ -209,7 +209,7 @@ class DOMParser:
         return None
 
     @classmethod
-    def schema_rules(cls, schema: Schema) -> List[ParseRule]:
+    def schema_rules(cls, schema: Schema[str, str]) -> List[ParseRule]:
         result: List[ParseRule] = []
 
         def insert(rule: ParseRule) -> None:
@@ -253,13 +253,13 @@ class DOMParser:
         return result
 
     @classmethod
-    def from_schema(cls, schema: Schema) -> "DOMParser":
+    def from_schema(cls, schema: Schema[str, str]) -> "DOMParser":
         if "dom_parser" not in schema.cached:
             schema.cached["dom_parser"] = DOMParser(
                 schema, DOMParser.schema_rules(schema)
             )
 
-        return schema.cached["dom_parser"]
+        return cast("DOMParser", schema.cached["dom_parser"])
 
 
 BLOCK_TAGS: Dict[str, bool] = {
@@ -412,11 +412,10 @@ class NodeContext:
                 m = re.findall(r"[ \t\r\n\u000c]+$", last.text)
 
                 if m:
-                    text = cast(TextNode, last)
                     if len(last.text) == len(m[0]):
                         self.content.pop()
                     else:
-                        self.content[-1] = text.with_text(text.text[0 : -len(m[0])])
+                        self.content[-1] = last.with_text(last.text[0 : -len(m[0])])
 
         content = Fragment.from_(self.content)
         if not open_end and self.match is not None:
@@ -547,7 +546,7 @@ class ParseContext:
 
         if (
             top.options & OPT_PRESERVE_WS_FULL
-            or top.inline_context(dom_)  # type: ignore
+            or top.inline_context(dom_)
             or re.search(r"[^ \t\r\n\u000c]", value) is not None
         ):
             if not (top.options & OPT_PRESERVE_WS):
@@ -585,7 +584,7 @@ class ParseContext:
 
             self.find_in_text(dom_)
         else:
-            self.find_inside(dom_)  # type: ignore
+            self.find_inside(dom_)
 
     def add_element(
         self, dom_: DOMNode, match_after: Optional[ParseRule] = None
@@ -670,7 +669,7 @@ class ParseContext:
                             remove = m.add_to_set(remove)
                 else:
                     add = (
-                        self.parser.schema.marks[rule.mark]
+                        self.parser.schema.marks[cast(str, rule.mark)]
                         .create(rule.attrs)
                         .add_to_set(add)
                     )
@@ -1041,7 +1040,7 @@ def normalize_list(dom_: DOMNode) -> None:
     prev_item = None
 
     while child is not None:
-        name = child.tag.lower() if get_node_type(child) == 1 else None  # type: ignore
+        name = child.tag.lower() if get_node_type(child) == 1 else None
 
         if name and name in LIST_TAGS and prev_item:
             prev_item.append(child)
@@ -1171,7 +1170,7 @@ def get_node_type(element: DOMNode) -> int:
     return 8
 
 
-def from_html(schema: Schema, html: str) -> JSONDict:
+def from_html(schema: Schema[str, str], html: str) -> JSONDict:
     fragment = lxml.html.fragment_fromstring(html, create_parent="document-fragment")
 
     prose_doc = DOMParser.from_schema(schema).parse(fragment)

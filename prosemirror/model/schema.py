@@ -254,7 +254,7 @@ class MarkType:
     instance: Optional[Mark]
 
     def __init__(
-        self, name: str, rank: int, schema: "Schema", spec: "MarkSpec"
+        self, name: str, rank: int, schema: "Schema[str, str]", spec: "MarkSpec"
     ) -> None:
         self.name = name
         self.schema = schema
@@ -296,8 +296,8 @@ class MarkType:
         return any(other.name == e.name for e in self.excluded)
 
 
-Nodes = TypeVar("Nodes", bound=str)
-Marks = TypeVar("Marks", bound=str)
+Nodes = TypeVar("Nodes", bound=str, covariant=True)
+Marks = TypeVar("Marks", bound=str, covariant=True)
 
 
 class SchemaSpec(TypedDict, Generic[Nodes, Marks]):
@@ -368,13 +368,13 @@ class AttributeSpec(TypedDict, total=False):
 
 
 class Schema(Generic[Nodes, Marks]):
-    spec: SchemaSpec
+    spec: SchemaSpec[Nodes, Marks]
 
     nodes: Dict[Nodes, "NodeType"]
 
     marks: Dict[Marks, "MarkType"]
 
-    def __init__(self, spec: SchemaSpec) -> None:
+    def __init__(self, spec: SchemaSpec[Nodes, Marks]) -> None:
         self.spec = spec
         self.nodes = NodeType.compile(self.spec["nodes"], self)
         self.marks = MarkType.compile(self.spec.get("marks", {}), self)
@@ -459,7 +459,7 @@ class Schema(Generic[Nodes, Marks]):
         return found
 
 
-def gather_marks(schema: Schema, marks: List[str]) -> List[MarkType]:
+def gather_marks(schema: Schema[str, str], marks: List[str]) -> List[MarkType]:
     found = []
     for name in marks:
         mark = schema.marks.get(name)

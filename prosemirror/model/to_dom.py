@@ -1,11 +1,20 @@
 import html
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+)
 
-from . import Fragment, Mark, Node, Schema
-from prosemirror.model.fragment import Fragment
-from prosemirror.model.mark import Mark
-from prosemirror.model.node import Node
-from prosemirror.model.schema import Schema
+from .fragment import Fragment
+from .mark import Mark
+from .node import Node
+from .schema import Schema
 
 HTMLNode = Union["Element", str]
 
@@ -177,22 +186,26 @@ class DOMSerializer:
         return dom, content_dom
 
     @classmethod
-    def from_schema(cls, schema: Schema) -> "DOMSerializer":
+    def from_schema(cls, schema: Schema[str, str]) -> "DOMSerializer":
         return cls(cls.nodes_from_schema(schema), cls.marks_from_schema(schema))
 
     @classmethod
-    def nodes_from_schema(cls, schema: Schema) -> Dict[str, Callable]:
+    def nodes_from_schema(
+        cls, schema: Schema[str, str]
+    ) -> Dict[str, Callable[["Node"], HTMLOutputSpec]]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
             result["text"] = lambda node: node.text
         return result
 
     @classmethod
-    def marks_from_schema(cls, schema: Schema) -> Dict[str, Callable]:
+    def marks_from_schema(
+        cls, schema: Schema[str, str]
+    ) -> Dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
         return gather_to_dom(schema.marks)
 
 
-def gather_to_dom(obj: Dict[str, Any]) -> Dict[str, Callable]:
+def gather_to_dom(obj: Dict[str, Any]) -> Dict[str, Callable]:  # type: ignore
     result = {}
     for name in obj:
         to_dom = obj[name].spec.get("toDOM")

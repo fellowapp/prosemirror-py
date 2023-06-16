@@ -96,7 +96,7 @@ class Slice:
         return json
 
     @classmethod
-    def from_json(cls, schema: "Schema", json_data: JSONDict) -> "Slice":
+    def from_json(cls, schema: "Schema[str, str]", json_data: JSONDict) -> "Slice":
         if not json_data:
             return cls.empty
         open_start = json_data.get("openStart", 0) or 0

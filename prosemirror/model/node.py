@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .schema import MarkType, NodeType, Schema
 
 
-empty_attrs: dict = {}
+empty_attrs: JSONDict = {}
 
 
 class ChildInfo(TypedDict):
@@ -79,7 +79,7 @@ class Node:
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Union[Callable, str] = "",
+        leaf_text: Union[Callable[["Node"], str], str] = "",
     ) -> str:
         return self.content.text_between(from_, to, block_separator, leaf_text)
 
@@ -314,7 +314,7 @@ class Node:
         return obj
 
     @classmethod
-    def from_json(cls, schema: "Schema", json_data: Any) -> "Node":
+    def from_json(cls, schema: "Schema[str, str]", json_data: Any) -> "Node":
         if isinstance(json_data, str):
             import json
 
@@ -368,7 +368,7 @@ class TextNode(Node):
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Union[Callable, str] = "",
+        leaf_text: Union[Callable[["Node"], str], str] = "",
     ) -> str:
         return self.text[from_:to]
 

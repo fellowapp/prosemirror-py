@@ -71,7 +71,7 @@ class Fragment:
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Union[Callable, str] = "",
+        leaf_text: Union[Callable[["Node"], str], str] = "",
     ) -> str:
         text = []
         separated = True
@@ -250,7 +250,7 @@ class Fragment:
         return None
 
     @classmethod
-    def from_json(cls, schema: "Schema", value: Any) -> "Fragment":
+    def from_json(cls, schema: "Schema[str, str]", value: Any) -> "Fragment":
         if not value:
             return cls.empty
         if isinstance(value, str):
