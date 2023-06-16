@@ -1,5 +1,4 @@
-from collections.abc import Mapping, Sequence
-from typing import Union
+from typing import Mapping, Sequence, Union
 
 from typing_extensions import TypeAlias
 

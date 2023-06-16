@@ -6,13 +6,12 @@ from typing import (
     List,
     Literal,
     Optional,
-    TypeAlias,
     TypeVar,
     Union,
     cast,
 )
 
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import NotRequired, TypeAlias, TypedDict
 
 from prosemirror.model.fragment import Fragment
 from prosemirror.model.mark import Mark
