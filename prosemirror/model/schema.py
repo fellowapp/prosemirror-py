@@ -121,7 +121,7 @@ class NodeType:
         return self == other or (self.content_match.compatible(other.content_match))
 
     def compute_attrs(self, attrs: Optional[Attrs]) -> Attrs:
-        if not attrs and self.default_attrs:
+        if attrs is None and self.default_attrs is not None:
             return self.default_attrs
         return compute_attrs(self.attrs, attrs)
 
