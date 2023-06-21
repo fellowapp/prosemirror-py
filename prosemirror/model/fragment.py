@@ -11,7 +11,7 @@ from typing import (
     cast,
 )
 
-from prosemirror.utils import JSON, text_length
+from prosemirror.utils import MutableJSONList, text_length
 
 if TYPE_CHECKING:
     from prosemirror.model.schema import Schema
@@ -244,7 +244,7 @@ class Fragment:
             i += 1
             cur_pos = end
 
-    def to_json(self) -> JSON:
+    def to_json(self) -> Optional[MutableJSONList]:
         if self.content:
             return [item.to_json() for item in self.content]
         return None

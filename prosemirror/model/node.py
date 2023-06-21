@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, TypedDict, Union
+import copy
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, TypedDict, Union, cast
 
 from typing_extensions import TypeGuard
 
-from prosemirror.utils import JSON, JSONDict, text_length
+from prosemirror.utils import JSONDict, MutableJSONDict, text_length
 
 from .comparedeep import compare_deep
 from .fragment import Fragment
@@ -306,11 +307,10 @@ class Node:
 
         return self.content.for_each(iteratee)
 
-    def to_json(self) -> JSONDict:
-        obj: Dict[str, JSON] = {"type": self.type.name}
-        for _ in self.attrs:
-            obj["attrs"] = self.attrs
-            break
+    def to_json(self) -> MutableJSONDict:
+        obj: MutableJSONDict = {"type": self.type.name}
+        if self.attrs:
+            obj["attrs"] = cast(MutableJSONDict, copy.deepcopy(self.attrs))
         if getattr(self.content, "size", None):
             obj["content"] = self.content.to_json()
         if len(self.marks):
@@ -407,7 +407,7 @@ class TextNode(Node):
 
     def to_json(
         self,
-    ) -> JSONDict:
+    ) -> MutableJSONDict:
         return {**super().to_json(), "text": self.text}
 
 

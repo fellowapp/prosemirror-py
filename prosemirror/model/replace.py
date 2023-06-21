@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, cast
 
-from prosemirror.utils import JSON, JSONDict
+from prosemirror.utils import JSONDict, MutableJSONDict
 
 from .fragment import Fragment
 
@@ -85,10 +85,10 @@ class Slice:
     def __str__(self) -> str:
         return f"{self.content}({self.open_start},{self.open_end})"
 
-    def to_json(self) -> JSON:
+    def to_json(self) -> Optional[MutableJSONDict]:
         if not self.content.size:
             return None
-        json = {"content": self.content.to_json()}
+        json: MutableJSONDict = {"content": self.content.to_json()}
         if self.open_start > 0:
             json["openStart"] = self.open_start
         if self.open_end > 0:

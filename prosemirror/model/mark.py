@@ -1,6 +1,7 @@
+import copy
 from typing import TYPE_CHECKING, Any, Final, List, Optional, cast
 
-from prosemirror.utils import JSONDict
+from prosemirror.utils import JSONDict, MutableJSONDict
 
 if TYPE_CHECKING:
     from .schema import MarkType, Schema
@@ -50,8 +51,11 @@ class Mark:
             return True
         return self.type.name == other.type.name and self.attrs == other.attrs
 
-    def to_json(self) -> JSONDict:
-        return {"type": self.type.name, "attrs": self.attrs}
+    def to_json(self) -> MutableJSONDict:
+        result: MutableJSONDict = {"type": self.type.name}
+        if self.attrs:
+            result["attrs"] = cast(MutableJSONDict, copy.deepcopy(self.attrs))
+        return result
 
     @classmethod
     def from_json(
