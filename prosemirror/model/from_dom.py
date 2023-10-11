@@ -1033,7 +1033,7 @@ class ParseContext:
 
 
 def normalize_list(dom_: DOMNode) -> None:
-    child = list(dom_)[0]
+    child = next(iter(dom_))
     prev_item = None
 
     while child is not None:
