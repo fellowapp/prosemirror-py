@@ -5,6 +5,7 @@ from prosemirror.model import Fragment, Mark, MarkType, Node, NodeType, Slice
 
 from . import replace, structure
 from .attr_step import AttrStep
+from .doc_attr_step import DocAttrStep
 from .map import Mapping
 from .mark_step import AddMarkStep, AddNodeMarkStep, RemoveMarkStep, RemoveNodeMarkStep
 from .replace import close_fragment, covered_depths, fits_trivially, replace_step
@@ -481,6 +482,9 @@ class Transform:
 
     def set_node_attribute(self, pos, attr, value):
         return self.step(AttrStep(pos, attr, value))
+
+    def set_doc_attribute(self, attr, value):
+        return self.step(DocAttrStep(attr, value))
 
     def add_node_mark(self, pos, mark):
         return self.step(AddNodeMarkStep(pos, mark))
