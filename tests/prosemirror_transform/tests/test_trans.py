@@ -502,6 +502,18 @@ def test_wrap(doc, expect, type, attrs, test_transform):
             "code_block",
             None,
         ),
+        (
+            doc(p("<a>one", img(), "two", img(), "three")),
+            doc(pre("onetwothree")),
+            "code_block",
+            None,
+        ),
+        (
+            doc(pre("<a>one\ntwo\nthree")),
+            doc(p("one two three")),
+            "paragraph",
+            None,
+        ),
     ],
 )
 def test_set_block_type(doc, expect, node_type, attrs, test_transform):

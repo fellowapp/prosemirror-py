@@ -1,3 +1,4 @@
+import re
 from typing import Union
 
 from prosemirror.model import Fragment, Mark, MarkType, Node, NodeType, Slice
@@ -156,24 +157,43 @@ class Transform:
         if match is None:
             match = parent_type.content_match
         node = self.doc.node_at(pos)
-        del_steps = []
+        repl_steps = []
         cur = pos + 1
         for i in range(node.child_count):
             child = node.child(i)
             end = cur + child.node_size
             allowed = match.match_type(child.type, child.attrs)
             if not allowed:
-                del_steps.append(ReplaceStep(cur, end, Slice.empty))
+                repl_steps.append(ReplaceStep(cur, end, Slice.empty))
             else:
                 match = allowed
                 for j in range(len(child.marks)):
                     if not parent_type.allows_mark_type(child.marks[j].type):
                         self.step(RemoveMarkStep(cur, end, child.marks[j]))
+                if child.is_text and not parent_type.spec.get("code"):
+                    newline = re.compile(r"\r?\n|\r")
+                    slice = None
+                    m = newline.search(child.text)
+                    while m:
+                        if slice is None:
+                            slice = Slice(
+                                Fragment.from_(
+                                    parent_type.schema.text(
+                                        " ", parent_type.allowed_marks(child.marks)
+                                    )
+                                ),
+                                0,
+                                0,
+                            )
+                        repl_steps.append(
+                            ReplaceStep(cur + m.start(), cur + m.end(), slice)
+                        )
+                        m = newline.search(child.text, m.end())
             cur = end
         if not match.valid_end:
             fill = match.fill_before(Fragment.empty, True)
             self.replace(cur, cur, Slice(fill, 0, 0))
-        for item in reversed(del_steps):
+        for item in reversed(repl_steps):
             self.step(item)
         return self
 
