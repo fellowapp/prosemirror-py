@@ -730,6 +730,16 @@ def test_set_node_attribute(doc, expect, attr, value, test_transform):
             doc(blockquote(blockquote(blockquote(p("hi"))))).slice(3, 6, True),
             doc(p("hi")),
         ),
+        (
+            doc(ul(li(p("list1"), blockquote(p("<a>"))))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(ul(li(p("list1"), blockquote(p("one"))))),
+        ),
+        (
+            doc(ul(li(p("list1"), ul(li(p("list2"), blockquote(p("<a>"))))))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(ul(li(p("list1"), ul(li(p("list2"), blockquote(p("one"))))))),
+        ),
     ],
 )
 def test_replace(doc, source, expect, test_transform):

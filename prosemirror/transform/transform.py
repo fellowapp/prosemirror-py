@@ -260,11 +260,13 @@ class Transform:
 
         d = preferred_depth - 1
         while d >= 0:
-            type = left_nodes[d].type
-            def_ = defines_content(type)
-            if def_ and from__.node(preferred_target_index).type.name != type.name:
+            left_node = left_nodes[d]
+            def_ = defines_content(left_node.type)
+            if def_ and not left_node.same_markup(
+                from__.node(abs(preferred_target) - 1)
+            ):
                 preferred_depth = d
-            elif def_ or not type.is_text_block:
+            elif def_ or not left_node.type.is_text_block:
                 break
             d -= 1
 
