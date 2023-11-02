@@ -8,8 +8,7 @@ nodes = add_list_nodes(_schema.spec["nodes"], "paragraph block*", "block")
 
 nodes.update(
     {
-        "doc":
-        {
+        "doc": {
             "content": "block+",
             "attrs": {"meta": {"default": None}},
         }

@@ -582,6 +582,7 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
     tr = Transform(doc).set_doc_attribute(attr, value)
     test_transform(tr, expect)
 
+
 @pytest.mark.parametrize(
     "doc,source,expect",
     [

@@ -1,5 +1,3 @@
-from prosemirror.model import Fragment, Slice
-
 from .step import Step, StepMap, StepResult
 
 
@@ -41,9 +39,7 @@ class DocAttrStep(Step):
             import json
 
             json_data = json.loads(json_data)
-        if not isinstance(
-            json_data["attr"], str
-        ):
+        if not isinstance(json_data["attr"], str):
             raise ValueError("Invalid input for DocAttrStep.from_json")
         return DocAttrStep(json_data["attr"], json_data["value"])
 
