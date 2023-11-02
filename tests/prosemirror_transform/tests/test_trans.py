@@ -502,6 +502,18 @@ def test_wrap(doc, expect, type, attrs, test_transform):
             "code_block",
             None,
         ),
+        (
+            doc(p("<a>one", img(), "two", img(), "three")),
+            doc(pre("onetwothree")),
+            "code_block",
+            None,
+        ),
+        (
+            doc(pre("<a>one\ntwo\nthree")),
+            doc(p("one two three")),
+            "paragraph",
+            None,
+        ),
     ],
 )
 def test_set_block_type(doc, expect, node_type, attrs, test_transform):
@@ -717,6 +729,16 @@ def test_set_node_attribute(doc, expect, attr, value, test_transform):
             doc("<a>", p(), "<b>"),
             doc(blockquote(blockquote(blockquote(p("hi"))))).slice(3, 6, True),
             doc(p("hi")),
+        ),
+        (
+            doc(ul(li(p("list1"), blockquote(p("<a>"))))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(ul(li(p("list1"), blockquote(p("one"))))),
+        ),
+        (
+            doc(ul(li(p("list1"), ul(li(p("list2"), blockquote(p("<a>"))))))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(ul(li(p("list1"), ul(li(p("list2"), blockquote(p("one"))))))),
         ),
     ],
 )
