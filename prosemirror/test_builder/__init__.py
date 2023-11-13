@@ -1,4 +1,6 @@
-from prosemirror.model import Schema
+# type: ignore
+
+from prosemirror.model import Node, Schema
 from prosemirror.schema.basic import schema as _schema
 from prosemirror.schema.list import add_list_nodes
 
@@ -31,5 +33,5 @@ out = builders(
 )
 
 
-def eq(a, b):
+def eq(a: Node, b: Node) -> bool:
     return a.eq(b)

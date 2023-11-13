@@ -1,38 +1,42 @@
-from prosemirror.model import Slice
+from typing import cast
 
-from .map import StepMap
-from .step import Step, StepResult
+from prosemirror.model import Node, Schema, Slice
+from prosemirror.transform.map import Mappable, StepMap
+from prosemirror.transform.step import Step, StepResult, step_json_id
+from prosemirror.utils import JSONDict
 
 
 class ReplaceStep(Step):
-    def __init__(self, from_: int, to: int, slice: Slice, structure=None):
+    def __init__(
+        self, from_: int, to: int, slice: Slice, structure: bool | None = None
+    ) -> None:
         super().__init__()
         self.from_ = from_
         self.to = to
         self.slice = slice
         self.structure = bool(structure)
 
-    def apply(self, doc):
+    def apply(self, doc: Node) -> StepResult:
         if self.structure and content_between(doc, self.from_, self.to):
             return StepResult.fail("Structure replace would overrite content")
         return StepResult.from_replace(doc, self.from_, self.to, self.slice)
 
-    def get_map(self):
+    def get_map(self) -> StepMap:
         return StepMap([self.from_, self.to - self.from_, self.slice.size])
 
-    def invert(self, doc):
+    def invert(self, doc: Node) -> "ReplaceStep":
         return ReplaceStep(
             self.from_, self.from_ + self.slice.size, doc.slice(self.from_, self.to)
         )
 
-    def map(self, mapping):
+    def map(self, mapping: Mappable) -> "ReplaceStep | None":
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if from_.deleted and to.deleted:
             return None
         return ReplaceStep(from_.pos, max(from_.pos, to.pos), self.slice)
 
-    def merge(self, other: "ReplaceStep"):
+    def merge(self, other: "Step") -> "ReplaceStep | None":
         if not isinstance(other, ReplaceStep) or other.structure or self.structure:
             return None
         if (
@@ -67,20 +71,27 @@ class ReplaceStep(Step):
             return ReplaceStep(other.from_, self.to, slice, self.structure)
         return None
 
-    def to_json(self):
-        json_data = {"stepType": "replace", "from": self.from_, "to": self.to}
+    def to_json(self) -> JSONDict:
+        json_data: JSONDict = {"stepType": "replace", "from": self.from_, "to": self.to}
         if self.slice.size:
-            json_data["slice"] = self.slice.to_json()
+            json_data = {
+                **json_data,
+                "slice": self.slice.to_json(),
+            }
         if self.structure:
-            json_data["structure"] = True
+            json_data = {
+                **json_data,
+                "structure": True,
+            }
         return json_data
 
     @staticmethod
-    def from_json(schema, json_data):
+    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "ReplaceStep":
         if isinstance(json_data, str):
             import json
 
-            json_data = json.loads(json_data)
+            json_data = cast(JSONDict, json.loads(json_data))
+
         if not isinstance(json_data["from"], int) or not isinstance(
             json_data["to"], int
         ):
@@ -88,12 +99,12 @@ class ReplaceStep(Step):
         return ReplaceStep(
             json_data["from"],
             json_data["to"],
-            Slice.from_json(schema, json_data.get("slice")),
+            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
             bool(json_data.get("structure")),
         )
 
 
-Step.json_id("replace", ReplaceStep)
+step_json_id("replace", ReplaceStep)
 
 
 class ReplaceAroundStep(Step):
@@ -105,8 +116,8 @@ class ReplaceAroundStep(Step):
         gap_to: int,
         slice: Slice,
         insert: int,
-        structure=None,
-    ):
+        structure: bool | None = None,
+    ) -> None:
         super().__init__()
         self.from_ = from_
         self.to = to
@@ -116,7 +127,7 @@ class ReplaceAroundStep(Step):
         self.insert = insert
         self.structure = bool(structure)
 
-    def apply(self, doc):
+    def apply(self, doc: Node) -> StepResult:
         if self.structure and (
             content_between(doc, self.from_, self.gap_from)
             or content_between(doc, self.gap_to, self.to)
@@ -130,7 +141,7 @@ class ReplaceAroundStep(Step):
             return StepResult.fail("Content does not fit in gap")
         return StepResult.from_replace(doc, self.from_, self.to, inserted)
 
-    def get_map(self):
+    def get_map(self) -> StepMap:
         return StepMap(
             [
                 self.from_,
@@ -142,7 +153,7 @@ class ReplaceAroundStep(Step):
             ]
         )
 
-    def invert(self, doc):
+    def invert(self, doc: Node) -> "ReplaceAroundStep":
         gap = self.gap_to - self.gap_from
         return ReplaceAroundStep(
             self.from_,
@@ -156,7 +167,7 @@ class ReplaceAroundStep(Step):
             self.structure,
         )
 
-    def map(self, mapping):
+    def map(self, mapping: Mappable) -> "ReplaceAroundStep | None":
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         gap_from = mapping.map(self.gap_from, -1)
@@ -167,8 +178,8 @@ class ReplaceAroundStep(Step):
             from_.pos, to.pos, gap_from, gap_to, self.slice, self.insert, self.structure
         )
 
-    def to_json(self):
-        json_data = {
+    def to_json(self) -> JSONDict:
+        json_data: JSONDict = {
             "stepType": "replaceAround",
             "from": self.from_,
             "to": self.to,
@@ -177,17 +188,26 @@ class ReplaceAroundStep(Step):
             "insert": self.insert,
         }
         if self.slice.size:
-            json_data["slice"] = self.slice.to_json()
+            json_data = {
+                **json_data,
+                "slice": self.slice.to_json(),
+            }
         if self.structure:
-            json_data["structure"] = True
+            json_data = {
+                **json_data,
+                "structure": True,
+            }
         return json_data
 
     @staticmethod
-    def from_json(schema, json_data):
+    def from_json(
+        schema: Schema[str, str], json_data: JSONDict | str
+    ) -> "ReplaceAroundStep":
         if isinstance(json_data, str):
             import json
 
-            json_data = json.loads(json_data)
+            json_data = cast(JSONDict, json.loads(json_data))
+
         if (
             not isinstance(json_data["from"], int)
             or not isinstance(json_data["to"], int)
@@ -201,16 +221,16 @@ class ReplaceAroundStep(Step):
             json_data["to"],
             json_data["gapFrom"],
             json_data["gapTo"],
-            Slice.from_json(schema, json_data.get("slice")),
+            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
             json_data["insert"],
             bool(json_data.get("structure")),
         )
 
 
-Step.json_id("replaceAround", ReplaceAroundStep)
+step_json_id("replaceAround", ReplaceAroundStep)
 
 
-def content_between(doc, from_, to):
+def content_between(doc: Node, from_: int, to: int) -> bool:
     from__ = doc.resolve(from_)
     dist = to - from_
     depth = from__.depth

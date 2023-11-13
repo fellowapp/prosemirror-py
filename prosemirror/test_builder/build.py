@@ -1,11 +1,19 @@
+# type: ignore
+
 import re
+from collections.abc import Callable
 
-from prosemirror.model import Node
+from prosemirror.model import Node, Schema
+from prosemirror.utils import JSONDict
 
-NO_TAG = Node.tag = {}  # type: ignore
+NO_TAG = Node.tag = {}
 
 
-def flatten(schema, children, f):
+def flatten(
+    schema: Schema[str, str],
+    children: list[Node | JSONDict | str],
+    f: Callable[[Node], Node],
+) -> tuple[list[Node], dict[str, int]]:
     result, pos, tag = [], 0, NO_TAG
 
     for child in children:
@@ -47,7 +55,7 @@ def flatten(schema, children, f):
             node = f(child)
             pos += node.node_size
             result.append(node)
-    return {"nodes": result, "tag": tag}
+    return result, tag
 
 
 def id(x):
@@ -66,9 +74,7 @@ def block(type, attrs):
         ):
             my_attrs.update(args[0])
             args = args[1:]
-        flatten_res = flatten(type.schema, args, id)
-        nodes = flatten_res["nodes"]
-        tag = flatten_res["tag"]
+        nodes, tag = flatten(type.schema, args, id)
         node = type.create(my_attrs, nodes)
         if tag != NO_TAG:
             node.tag = tag
@@ -102,8 +108,8 @@ def mark(type, attrs):
                 n if mark.type.is_in_set(n.marks) else n.mark(mark.add_to_set(n.marks))
             )
 
-        flatten_res = flatten(type.schema, args, f)
-        return {"flat": flatten_res["nodes"], "tag": flatten_res["tag"]}
+        nodes, tag = flatten(type.schema, args, f)
+        return {"flat": nodes, "tag": tag}
 
     return result
 

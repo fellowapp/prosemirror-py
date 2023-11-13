@@ -1,16 +1,19 @@
-from prosemirror.model import Fragment, Slice
+from typing import cast
 
-from .step import Step, StepMap, StepResult
+from prosemirror.model import Fragment, Node, Schema, Slice
+from prosemirror.transform.map import Mappable, StepMap
+from prosemirror.transform.step import Step, StepResult
+from prosemirror.utils import JSON, JSONDict
 
 
 class AttrStep(Step):
-    def __init__(self, pos, attr, value):
+    def __init__(self, pos: int, attr: str, value: JSON) -> None:
         super().__init__()
         self.pos = pos
         self.attr = attr
         self.value = value
 
-    def apply(self, doc):
+    def apply(self, doc: Node) -> StepResult:
         node = doc.node_at(self.pos)
         if not node:
             return StepResult.fail("No node at attribute step's position")
@@ -26,32 +29,33 @@ class AttrStep(Step):
             Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
         )
 
-    def get_map(self):
+    def get_map(self) -> StepMap:
         return StepMap.empty
 
-    def invert(self, doc):
-        return AttrStep(self.pos, self.attr, doc.node_at(self.pos).attrs[self.attr])
+    def invert(self, doc: Node) -> "AttrStep":
+        node_at_pos = doc.node_at(self.pos)
+        assert node_at_pos is not None
+        return AttrStep(self.pos, self.attr, node_at_pos.attrs[self.attr])
 
-    def map(self, mapping):
+    def map(self, mapping: Mappable) -> Step | None:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else AttrStep(pos.pos, self.attr, self.value)
 
-    def to_json(self):
-        json_data = {
+    def to_json(self) -> JSONDict:
+        return {
             "stepType": "attr",
             "pos": self.pos,
             "attr": self.attr,
             "value": self.value,
         }
 
-        return json_data
-
     @staticmethod
-    def from_json(schema, json_data):
+    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "AttrStep":
         if isinstance(json_data, str):
             import json
 
-            json_data = json.loads(json_data)
+            json_data = cast(JSONDict, json.loads(json_data))
+
         if not isinstance(json_data["pos"], int) or not isinstance(
             json_data["attr"], str
         ):
@@ -59,4 +63,4 @@ class AttrStep(Step):
         return AttrStep(json_data["pos"], json_data["attr"], json_data["value"])
 
 
-Step.json_id("attr", AttrStep)
+# Step.json_id("attr", AttrStep)

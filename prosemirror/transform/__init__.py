@@ -1,6 +1,11 @@
+from .attr_step import AttrStep
 from .map import Mapping, MapResult, StepMap
-from .mark_step import AddMarkStep, RemoveMarkStep
-from .replace import replace_step
+from .mark_step import AddMarkStep, AddNodeMarkStep, RemoveMarkStep, RemoveNodeMarkStep
+from .replace import (
+    close_fragment,
+    covered_depths,
+    fits_trivially,
+)
 from .replace_step import ReplaceAroundStep, ReplaceStep
 from .step import Step, StepResult
 from .structure import (
@@ -26,12 +31,19 @@ __all__ = [
     "drop_point",
     "lift_target",
     "find_wrapping",
+    "close_fragment",
+    "covered_depths",
+    "fits_trivially",
+    "replace_step",
     "StepMap",
     "MapResult",
     "Mapping",
+    "AttrStep",
     "AddMarkStep",
+    "AddNodeMarkStep",
     "RemoveMarkStep",
     "ReplaceAroundStep",
+    "RemoveNodeMarkStep",
     "ReplaceStep",
     "replace_step",
 ]
