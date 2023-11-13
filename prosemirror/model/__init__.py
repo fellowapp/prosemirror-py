@@ -5,7 +5,7 @@ from .mark import Mark
 from .node import Node
 from .replace import ReplaceError, Slice
 from .resolvedpos import NodeRange, ResolvedPos
-from .schema import MarkType, NodeType, Schema
+from .schema import Attrs, MarkType, NodeType, Schema
 from .to_dom import DOMSerializer
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "Slice",
     "ReplaceError",
     "Mark",
+    "Attrs",
     "Schema",
     "NodeType",
     "MarkType",

@@ -1,9 +1,9 @@
 import copy
-from typing import TYPE_CHECKING, Any, Callable, List, Optional, TypedDict, Union, cast
+from typing import TYPE_CHECKING, Callable, TypedDict, cast
 
 from typing_extensions import TypeGuard
 
-from prosemirror.utils import JSONDict, MutableJSONDict, text_length
+from prosemirror.utils import JSONDict, text_length
 
 from .comparedeep import compare_deep
 from .fragment import Fragment
@@ -13,14 +13,14 @@ from .resolvedpos import ResolvedPos
 
 if TYPE_CHECKING:
     from .content import ContentMatch
-    from .schema import MarkType, NodeType, Schema
+    from .schema import Attrs, MarkType, NodeType, Schema
 
 
 empty_attrs: JSONDict = {}
 
 
 class ChildInfo(TypedDict):
-    node: Optional["Node"]
+    node: "Node | None"
     index: int
     offset: int
 
@@ -29,9 +29,9 @@ class Node:
     def __init__(
         self,
         type: "NodeType",
-        attrs: JSONDict,
-        content: Optional[Fragment],
-        marks: List[Mark],
+        attrs: "Attrs",
+        content: Fragment | None,
+        marks: list[Mark],
     ) -> None:
         self.type = type
         self.attrs = attrs
@@ -49,7 +49,7 @@ class Node:
     def child(self, index: int) -> "Node":
         return self.content.child(index)
 
-    def maybe_child(self, index: int) -> Optional["Node"]:
+    def maybe_child(self, index: int) -> "Node | None":
         return self.content.maybe_child(index)
 
     def for_each(self, f: Callable[["Node", int, int], None]) -> None:
@@ -59,13 +59,13 @@ class Node:
         self,
         from_: int,
         to: int,
-        f: Callable[["Node", int, Optional["Node"], int], Optional[bool]],
+        f: Callable[["Node", int, "Node | None", int], bool | None],
         start_pos: int = 0,
     ) -> None:
         self.content.nodes_between(from_, to, f, start_pos, self)
 
     def descendants(
-        self, f: Callable[["Node", int, Optional["Node"], int], Optional[bool]]
+        self, f: Callable[["Node", int, "Node | None", int], bool | None]
     ) -> None:
         self.nodes_between(0, self.content.size, f)
 
@@ -80,16 +80,16 @@ class Node:
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Union[Callable[["Node"], str], str] = "",
+        leaf_text: Callable[["Node"], str] | str = "",
     ) -> str:
         return self.content.text_between(from_, to, block_separator, leaf_text)
 
     @property
-    def first_child(self) -> Optional["Node"]:
+    def first_child(self) -> "Node | None":
         return self.content.first_child
 
     @property
-    def last_child(self) -> Optional["Node"]:
+    def last_child(self) -> "Node | None":
         return self.content.last_child
 
     def eq(self, other: "Node") -> bool:
@@ -103,8 +103,8 @@ class Node:
     def has_markup(
         self,
         type: "NodeType",
-        attrs: Optional[JSONDict] = None,
-        marks: Optional[List[Mark]] = None,
+        attrs: "Attrs | None" = None,
+        marks: list[Mark] | None = None,
     ) -> bool:
         return (
             self.type.name == type.name
@@ -112,23 +112,23 @@ class Node:
             and (Mark.same_set(self.marks, marks or Mark.none))
         )
 
-    def copy(self, content: Optional[Fragment] = None) -> "Node":
+    def copy(self, content: Fragment | None = None) -> "Node":
         if content == self.content:
             return self
         return self.__class__(self.type, self.attrs, content, self.marks)
 
-    def mark(self, marks: List[Mark]) -> "Node":
+    def mark(self, marks: list[Mark]) -> "Node":
         if marks == self.marks:
             return self
         return self.__class__(self.type, self.attrs, self.content, marks)
 
-    def cut(self, from_: int, to: Optional[int] = None) -> "Node":
+    def cut(self, from_: int, to: int | None = None) -> "Node":
         if from_ == 0 and to == self.content.size:
             return self
         return self.copy(self.content.cut(from_, to))
 
     def slice(
-        self, from_: int, to: Optional[int] = None, include_parents: bool = False
+        self, from_: int, to: int | None = None, include_parents: bool = False
     ) -> Slice:
         if to is None:
             to = self.content.size
@@ -145,7 +145,7 @@ class Node:
     def replace(self, from_: int, to: int, slice: Slice) -> "Node":
         return replace(self.resolve(from_), self.resolve(to), slice)
 
-    def node_at(self, pos: int) -> Optional["Node"]:
+    def node_at(self, pos: int) -> "Node | None":
         node = self
         while True:
             index_info = node.content.find_index(pos)
@@ -183,14 +183,12 @@ class Node:
     def resolve_no_cache(self, pos: int) -> ResolvedPos:
         return ResolvedPos.resolve(self, pos)
 
-    def range_has_mark(
-        self, from_: int, to: int, type: Union[Mark, "MarkType"]
-    ) -> bool:
+    def range_has_mark(self, from_: int, to: int, type: "Mark | MarkType") -> bool:
         found = False
         if to > from_:
 
             def iteratee(
-                node: "Node", pos: int, parent: Optional["Node"], index: int
+                node: "Node", pos: int, parent: "Node | None", index: int
             ) -> bool:
                 nonlocal found
                 if type.is_in_set(node.marks):
@@ -256,12 +254,12 @@ class Node:
         to: int,
         replacement: Fragment = Fragment.empty,
         start: int = 0,
-        end: Optional[int] = None,
+        end: int | None = None,
     ) -> bool:
         if end is None:
             end = replacement.child_count
         one = self.content_match_at(from_).match_fragment(replacement, start, end)
-        two: Optional["ContentMatch"] = None
+        two: "ContentMatch | None" = None
         if one:
             two = one.match_fragment(self.content, to)
         if not two or not two.valid_end:
@@ -272,12 +270,12 @@ class Node:
         return True
 
     def can_replace_with(
-        self, from_: int, to: int, type: "NodeType", marks: Optional[List[Mark]] = None
+        self, from_: int, to: int, type: "NodeType", marks: list[Mark] | None = None
     ) -> bool:
         if marks and not self.type.allows_marks(marks):
             return False
         start = self.content_match_at(from_).match_type(type)
-        end: Optional["ContentMatch"] = None
+        end: "ContentMatch | None" = None
         if start:
             end = start.match_fragment(self.content, to)
         return end.valid_end if end else False
@@ -307,22 +305,32 @@ class Node:
 
         return self.content.for_each(iteratee)
 
-    def to_json(self) -> MutableJSONDict:
-        obj: MutableJSONDict = {"type": self.type.name}
+    def to_json(self) -> JSONDict:
+        obj: JSONDict = {"type": self.type.name}
         if self.attrs:
-            obj["attrs"] = cast(MutableJSONDict, copy.deepcopy(self.attrs))
+            obj = {
+                **obj,
+                "attrs": copy.deepcopy(self.attrs),
+            }
         if getattr(self.content, "size", None):
-            obj["content"] = self.content.to_json()
+            obj = {
+                **obj,
+                "content": self.content.to_json(),
+            }
         if len(self.marks):
-            obj["marks"] = [n.to_json() for n in self.marks]
+            obj = {
+                **obj,
+                "marks": [n.to_json() for n in self.marks],
+            }
         return obj
 
     @classmethod
-    def from_json(cls, schema: "Schema[str, str]", json_data: Any) -> "Node":
+    def from_json(cls, schema: "Schema[str, str]", json_data: JSONDict | str) -> "Node":
         if isinstance(json_data, str):
             import json
 
-            json_data = json.loads(json_data)
+            json_data = cast(JSONDict, json.loads(json_data))
+
         if not json_data:
             raise ValueError("Invalid input for Node.from_json")
         marks = None
@@ -331,10 +339,10 @@ class Node:
                 raise ValueError("Invalid mark data for Node.fromJSON")
             marks = [schema.mark_from_json(item) for item in json_data["marks"]]
         if json_data["type"] == "text":
-            return schema.text(json_data["text"], marks)
+            return schema.text(str(json_data["text"]), marks)
         content = Fragment.from_json(schema, json_data.get("content"))
-        return schema.node_type(json_data["type"]).create(
-            json_data.get("attrs"), content, marks
+        return schema.node_type(str(json_data["type"])).create(
+            cast("Attrs", json_data.get("attrs")), content, marks
         )
 
 
@@ -342,9 +350,9 @@ class TextNode(Node):
     def __init__(
         self,
         type: "NodeType",
-        attrs: JSONDict,
+        attrs: "Attrs",
         content: str,
-        marks: List[Mark],
+        marks: list[Mark],
     ) -> None:
         super().__init__(type, attrs, None, marks)
         if not content:
@@ -372,7 +380,7 @@ class TextNode(Node):
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Union[Callable[["Node"], str], str] = "",
+        leaf_text: Callable[["Node"], str] | str = "",
     ) -> str:
         return self.text[from_:to]
 
@@ -380,7 +388,7 @@ class TextNode(Node):
     def node_size(self) -> int:
         return text_length(self.text)
 
-    def mark(self, marks: List[Mark]) -> "TextNode":
+    def mark(self, marks: list[Mark]) -> "TextNode":
         return (
             self
             if marks == self.marks
@@ -392,7 +400,7 @@ class TextNode(Node):
             return self
         return TextNode(self.type, self.attrs, text, self.marks)
 
-    def cut(self, from_: int = 0, to: Optional[int] = None) -> "TextNode":
+    def cut(self, from_: int = 0, to: int | None = None) -> "TextNode":
         if to is None:
             to = text_length(self.text)
         if from_ == 0 and to == text_length(self.text):
@@ -407,11 +415,11 @@ class TextNode(Node):
 
     def to_json(
         self,
-    ) -> MutableJSONDict:
+    ) -> JSONDict:
         return {**super().to_json(), "text": self.text}
 
 
-def wrap_marks(marks: List[Mark], str: str) -> str:
+def wrap_marks(marks: list[Mark], str: str) -> str:
     i = len(marks) - 1
     while i >= 0:
         str = marks[i].type.name + "(" + str + ")"

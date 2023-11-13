@@ -1,21 +1,23 @@
 import copy
-from typing import TYPE_CHECKING, Any, Final, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
-from prosemirror.utils import JSONDict, MutableJSONDict
+from prosemirror.utils import JSONDict
+
+from .schema import Attrs
 
 if TYPE_CHECKING:
     from .schema import MarkType, Schema
 
 
 class Mark:
-    none: Final[List["Mark"]] = []
+    none: Final[list["Mark"]] = []
 
-    def __init__(self, type: "MarkType", attrs: JSONDict) -> None:
+    def __init__(self, type: "MarkType", attrs: Attrs) -> None:
         self.type = type
         self.attrs = attrs
 
-    def add_to_set(self, set: List["Mark"]) -> List["Mark"]:
-        copy: Optional[List["Mark"]] = None
+    def add_to_set(self, set: list["Mark"]) -> list["Mark"]:
+        copy: list["Mark"] | None | None = None
         placed = False
         for i in range(len(set)):
             other = set[i]
@@ -40,10 +42,10 @@ class Mark:
             copy.append(self)
         return copy
 
-    def remove_from_set(self, set: List["Mark"]) -> List["Mark"]:
+    def remove_from_set(self, set: list["Mark"]) -> list["Mark"]:
         return [item for item in set if not item.eq(self)]
 
-    def is_in_set(self, set: List["Mark"]) -> bool:
+    def is_in_set(self, set: list["Mark"]) -> bool:
         return any(item.eq(self) for item in set)
 
     def eq(self, other: "Mark") -> bool:
@@ -51,10 +53,13 @@ class Mark:
             return True
         return self.type.name == other.type.name and self.attrs == other.attrs
 
-    def to_json(self) -> MutableJSONDict:
-        result: MutableJSONDict = {"type": self.type.name}
+    def to_json(self) -> JSONDict:
+        result: JSONDict = {"type": self.type.name}
         if self.attrs:
-            result["attrs"] = cast(MutableJSONDict, copy.deepcopy(self.attrs))
+            result = {
+                **result,
+                "attrs": copy.deepcopy(self.attrs),
+            }
         return result
 
     @classmethod
@@ -69,10 +74,10 @@ class Mark:
         type = schema.marks.get(name)
         if not type:
             raise ValueError(f"There is no mark type {name} in this schema")
-        return type.create(cast(Optional[JSONDict], json_data.get("attrs")))
+        return type.create(cast(JSONDict | None, json_data.get("attrs")))
 
     @classmethod
-    def same_set(cls, a: List["Mark"], b: List["Mark"]) -> bool:
+    def same_set(cls, a: list["Mark"], b: list["Mark"]) -> bool:
         if a == b:
             return True
         if len(a) != len(b):
@@ -80,10 +85,10 @@ class Mark:
         return all(item_a.eq(item_b) for (item_a, item_b) in zip(a, b))
 
     @classmethod
-    def set_from(cls, marks: Optional[List["Mark"]]) -> List["Mark"]:
+    def set_from(cls, marks: "list[Mark] | Mark | None") -> list["Mark"]:
         if not marks:
             return cls.none
-        if isinstance(marks, cls):
+        if isinstance(marks, Mark):
             return [marks]
         copy = marks[:]
         return sorted(copy, key=lambda item: item.type.rank)
