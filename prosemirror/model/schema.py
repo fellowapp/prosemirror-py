@@ -293,7 +293,6 @@ class MarkType:
         return any(other.name == e.name for e in self.excluded)
 
 
-# XXX I don't get these...
 Nodes = TypeVar("Nodes", bound=str, covariant=True)
 Marks = TypeVar("Marks", bound=str, covariant=True)
 
