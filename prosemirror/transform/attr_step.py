@@ -2,7 +2,7 @@ from typing import Any, cast
 
 from prosemirror.model import Fragment, Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
-from prosemirror.transform.step import Step, StepResult
+from prosemirror.transform.step import Step, StepResult, step_json_id
 from prosemirror.utils import JSON, JSONDict
 
 
@@ -63,4 +63,4 @@ class AttrStep(Step):
         return AttrStep(json_data["pos"], json_data["attr"], json_data["value"])
 
 
-# Step.json_id("attr", AttrStep)
+step_json_id("attr", AttrStep)
