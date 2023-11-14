@@ -13,9 +13,7 @@ from prosemirror.model.content import ContentMatch
 from prosemirror.model.fragment import Fragment
 from prosemirror.model.mark import Mark
 from prosemirror.model.node import Node, TextNode
-from prosemirror.utils import JSON, JSONDict
-
-Attrs: TypeAlias = JSONDict
+from prosemirror.utils import JSON, Attrs, JSONDict
 
 
 def default_attrs(attrs: "Attributes") -> Attrs | None:
