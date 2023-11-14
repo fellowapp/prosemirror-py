@@ -293,11 +293,11 @@ class Transform:
         i = 0
         while True:
             node = content.first_child
+            left_nodes.append(node)
 
             if i == slice.open_start or node is None:
                 break
 
-            left_nodes.append(node)
             content = node.content
             i += 1
 
