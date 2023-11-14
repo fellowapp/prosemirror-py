@@ -52,13 +52,7 @@ class Mark:
         return self.type.name == other.type.name and self.attrs == other.attrs
 
     def to_json(self) -> JSONDict:
-        result: JSONDict = {"type": self.type.name}
-        if self.attrs:
-            result = {
-                **result,
-                "attrs": copy.deepcopy(self.attrs),
-            }
-        return result
+        return {"type": self.type.name, "attrs": copy.deepcopy(self.attrs)}
 
     @classmethod
     def from_json(
