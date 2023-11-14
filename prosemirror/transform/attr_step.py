@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Any, cast
 
 from prosemirror.model import Fragment, Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -50,7 +50,7 @@ class AttrStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "AttrStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "AttrStep":
         if isinstance(json_data, str):
             import json
 

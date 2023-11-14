@@ -1,7 +1,6 @@
 from typing import TypedDict
 
 from prosemirror.model import (
-    Attrs,
     ContentMatch,
     Fragment,
     Mark,
@@ -28,6 +27,7 @@ from prosemirror.transform import (
     structure,
 )
 from prosemirror.transform.replace import replace_step
+from prosemirror.utils import Attrs
 
 
 def defines_content(type: NodeType | MarkType) -> bool | None:

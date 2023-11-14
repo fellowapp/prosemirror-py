@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Any, cast
 
 from prosemirror.model import Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -86,7 +86,7 @@ class ReplaceStep(Step):
         return json_data
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "ReplaceStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "ReplaceStep":
         if isinstance(json_data, str):
             import json
 
@@ -201,7 +201,7 @@ class ReplaceAroundStep(Step):
 
     @staticmethod
     def from_json(
-        schema: Schema[str, str], json_data: JSONDict | str
+        schema: Schema[Any, Any], json_data: JSONDict | str
     ) -> "ReplaceAroundStep":
         if isinstance(json_data, str):
             import json

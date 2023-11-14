@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from prosemirror.utils import JSONDict
 
@@ -104,7 +104,7 @@ class Slice:
     @classmethod
     def from_json(
         cls,
-        schema: "Schema[str, str]",
+        schema: "Schema[Any, Any]",
         json_data: JSONDict | None,
     ) -> "Slice":
         if not json_data:

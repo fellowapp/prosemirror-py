@@ -1,9 +1,7 @@
 import copy
 from typing import TYPE_CHECKING, Any, Final, cast
 
-from prosemirror.utils import JSONDict
-
-from .schema import Attrs
+from prosemirror.utils import Attrs, JSONDict
 
 if TYPE_CHECKING:
     from .schema import MarkType, Schema

@@ -244,7 +244,7 @@ class Fragment:
         return None
 
     @classmethod
-    def from_json(cls, schema: "Schema[str, str]", value: Any) -> "Fragment":
+    def from_json(cls, schema: "Schema[Any, Any]", value: Any) -> "Fragment":
         if not value:
             return cls.empty
 

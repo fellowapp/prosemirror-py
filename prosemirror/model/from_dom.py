@@ -7,7 +7,7 @@ import lxml
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement as DOMNode
 
-from prosemirror.utils import JSONDict
+from prosemirror.utils import Attrs, JSONDict
 
 from .content import ContentMatch
 from .fragment import Fragment
@@ -15,7 +15,7 @@ from .mark import Mark
 from .node import Node, TextNode
 from .replace import Slice
 from .resolvedpos import ResolvedPos
-from .schema import Attrs, MarkType, NodeType, Schema
+from .schema import MarkType, NodeType, Schema
 
 WSType = bool | Literal["full"] | None
 
@@ -57,7 +57,7 @@ class ParseRule:
     attrs: Attrs | None
     get_attrs: Callable[[DOMNode], None | Attrs | Literal[False]] | None
     content_element: str | DOMNode | Callable[[DOMNode], DOMNode] | None
-    get_content: Callable[[DOMNode, Schema[str, str]], Fragment] | None
+    get_content: Callable[[DOMNode, Schema[Any, Any]], Fragment] | None
     preserve_whitespace: WSType
 
     @classmethod
@@ -88,10 +88,10 @@ class DOMParser:
     _styles: list[ParseRule]
     _normalize_lists: bool
 
-    schema: Schema[str, str]
+    schema: Schema[Any, Any]
     rules: list[ParseRule]
 
-    def __init__(self, schema: Schema[str, str], rules: list[ParseRule]) -> None:
+    def __init__(self, schema: Schema[Any, Any], rules: list[ParseRule]) -> None:
         self.schema = schema
         self.rules = rules
         self._tags = [rule for rule in rules if rule.tag is not None]
@@ -207,7 +207,7 @@ class DOMParser:
         return None
 
     @classmethod
-    def schema_rules(cls, schema: Schema[str, str]) -> list[ParseRule]:
+    def schema_rules(cls, schema: Schema[Any, Any]) -> list[ParseRule]:
         result: list[ParseRule] = []
 
         def insert(rule: ParseRule) -> None:
@@ -251,7 +251,7 @@ class DOMParser:
         return result
 
     @classmethod
-    def from_schema(cls, schema: Schema[str, str]) -> "DOMParser":
+    def from_schema(cls, schema: Schema[Any, Any]) -> "DOMParser":
         if "dom_parser" not in schema.cached:
             schema.cached["dom_parser"] = DOMParser(
                 schema, DOMParser.schema_rules(schema)
@@ -1166,7 +1166,7 @@ def get_node_type(element: DOMNode) -> int:
     return 8
 
 
-def from_html(schema: Schema[str, str], html: str) -> JSONDict:
+def from_html(schema: Schema[Any, Any], html: str) -> JSONDict:
     fragment = lxml.html.fragment_fromstring(html, create_parent="document-fragment")
 
     prose_doc = DOMParser.from_schema(schema).parse(fragment)

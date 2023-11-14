@@ -1,7 +1,6 @@
 from typing import cast
 
 from prosemirror.model import (
-    Attrs,
     ContentMatch,
     Fragment,
     Node,
@@ -11,6 +10,7 @@ from prosemirror.model import (
 )
 from prosemirror.transform.replace_step import ReplaceAroundStep, ReplaceStep
 from prosemirror.transform.step import Step
+from prosemirror.utils import Attrs
 
 
 def replace_step(

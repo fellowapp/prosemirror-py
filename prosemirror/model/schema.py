@@ -251,7 +251,7 @@ class MarkType:
     instance: Mark | None
 
     def __init__(
-        self, name: str, rank: int, schema: "Schema[str, str]", spec: "MarkSpec"
+        self, name: str, rank: int, schema: "Schema[Any, Any]", spec: "MarkSpec"
     ) -> None:
         self.name = name
         self.schema = schema
@@ -455,7 +455,7 @@ class Schema(Generic[Nodes, Marks]):
         return found
 
 
-def gather_marks(schema: Schema[str, str], marks: list[str]) -> list[MarkType]:
+def gather_marks(schema: Schema[Any, Any], marks: list[str]) -> list[MarkType]:
     found = []
     for name in marks:
         mark = schema.marks.get(name)

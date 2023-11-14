@@ -1,4 +1,4 @@
-from typing import Callable, cast
+from typing import Any, Callable, cast
 
 from prosemirror.model import Fragment, Mark, Node, Schema, Slice
 from prosemirror.transform.map import Mappable
@@ -79,7 +79,7 @@ class AddMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "AddMarkStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "AddMarkStep":
         if isinstance(json_data, str):
             import json
 
@@ -150,7 +150,7 @@ class RemoveMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
         if isinstance(json_data, str):
             import json
 
@@ -211,7 +211,7 @@ class AddNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
         if isinstance(json_data, str):
             import json
 
@@ -265,7 +265,7 @@ class RemoveNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
         if isinstance(json_data, str):
             import json
 

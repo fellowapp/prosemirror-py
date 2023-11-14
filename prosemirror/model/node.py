@@ -1,9 +1,9 @@
 import copy
-from typing import TYPE_CHECKING, Callable, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Callable, TypedDict, cast
 
 from typing_extensions import TypeGuard
 
-from prosemirror.utils import JSONDict, text_length
+from prosemirror.utils import Attrs, JSONDict, text_length
 
 from .comparedeep import compare_deep
 from .fragment import Fragment
@@ -13,7 +13,7 @@ from .resolvedpos import ResolvedPos
 
 if TYPE_CHECKING:
     from .content import ContentMatch
-    from .schema import Attrs, MarkType, NodeType, Schema
+    from .schema import MarkType, NodeType, Schema
 
 
 empty_attrs: JSONDict = {}
@@ -325,7 +325,7 @@ class Node:
         return obj
 
     @classmethod
-    def from_json(cls, schema: "Schema[str, str]", json_data: JSONDict | str) -> "Node":
+    def from_json(cls, schema: "Schema[Any, Any]", json_data: JSONDict | str) -> "Node":
         if isinstance(json_data, str):
             import json
 

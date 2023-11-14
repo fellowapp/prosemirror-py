@@ -181,12 +181,12 @@ class DOMSerializer:
         return dom, content_dom
 
     @classmethod
-    def from_schema(cls, schema: Schema[str, str]) -> "DOMSerializer":
+    def from_schema(cls, schema: Schema[Any, Any]) -> "DOMSerializer":
         return cls(cls.nodes_from_schema(schema), cls.marks_from_schema(schema))
 
     @classmethod
     def nodes_from_schema(
-        cls, schema: Schema[str, str]
+        cls, schema: Schema[Any, Any]
     ) -> dict[str, Callable[["Node"], HTMLOutputSpec]]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
@@ -195,7 +195,7 @@ class DOMSerializer:
 
     @classmethod
     def marks_from_schema(
-        cls, schema: Schema[str, str]
+        cls, schema: Schema[Any, Any]
     ) -> dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
         return gather_to_dom(schema.marks)
 

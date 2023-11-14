@@ -1,5 +1,5 @@
 import abc
-from typing import Literal, Type, TypeVar, cast, overload
+from typing import Any, Literal, Type, TypeVar, cast, overload
 
 from prosemirror.model import Node, ReplaceError, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -36,7 +36,7 @@ class Step(metaclass=abc.ABCMeta):
         ...
 
     @staticmethod
-    def from_json(schema: Schema[str, str], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
         if isinstance(json_data, str):
             import json
 

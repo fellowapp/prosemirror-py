@@ -1,3 +1,5 @@
+from typing import Any
+
 from prosemirror.model import Schema
 from prosemirror.model.schema import MarkSpec, NodeSpec
 
@@ -111,4 +113,4 @@ marks: dict[str, MarkSpec] = {
 }
 
 
-schema: Schema[str, str] = Schema({"nodes": nodes, "marks": marks})
+schema: Schema[Any, Any] = Schema({"nodes": nodes, "marks": marks})

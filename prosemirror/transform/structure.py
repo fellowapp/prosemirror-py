@@ -1,6 +1,7 @@
 from typing import TypedDict
 
-from prosemirror.model import Attrs, ContentMatch, Node, NodeRange, NodeType, Slice
+from prosemirror.model import ContentMatch, Node, NodeRange, NodeType, Slice
+from prosemirror.utils import Attrs
 
 
 def can_cut(node: Node, start: int, end: int) -> bool:

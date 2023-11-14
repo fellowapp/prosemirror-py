@@ -1,12 +1,14 @@
 # type: ignore
 
+from typing import Any
+
 from prosemirror.model import Node, Schema
 from prosemirror.schema.basic import schema as _schema
 from prosemirror.schema.list import add_list_nodes
 
 from .build import builders
 
-test_schema: Schema[str, str] = Schema(
+test_schema: Schema[Any, Any] = Schema(
     {
         "nodes": add_list_nodes(_schema.spec["nodes"], "paragraph block*", "block"),
         "marks": _schema.spec["marks"],
