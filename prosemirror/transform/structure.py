@@ -157,8 +157,13 @@ def can_split(
         if node.type.spec.get("isolating"):
             return False
         rest = node.content.cut_by_index(index, node.child_count)
-        after: dict[str, NodeType] | Node | None = None
 
+        if types_after and len(types_after) > i:
+            override_child = types_after[i + 1]
+            rest = rest.replace_child(
+                0, override_child["type"].create(override_child.get("attrs"))
+            )
+        after: dict[str, NodeType] | Node | None = None
         if types_after and len(types_after) > i:
             after = types_after[i]
         if not after:

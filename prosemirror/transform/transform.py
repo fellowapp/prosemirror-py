@@ -1,3 +1,4 @@
+import re
 from typing import TypedDict
 
 from prosemirror.model import (
@@ -28,6 +29,8 @@ from prosemirror.transform import (
 )
 from prosemirror.transform.replace import replace_step
 from prosemirror.utils import Attrs
+
+from .doc_attr_step import DocAttrStep
 
 
 def defines_content(type: NodeType | MarkType) -> bool | None:
@@ -201,7 +204,7 @@ class Transform:
         node = self.doc.node_at(pos)
         assert match is not None
         assert node is not None
-        del_steps = []
+        repl_steps = []
         cur = pos + 1
         for i in range(node.child_count):
             child = node.child(i)
@@ -209,18 +212,37 @@ class Transform:
             assert match is not None
             allowed = match.match_type(child.type)
             if not allowed:
-                del_steps.append(ReplaceStep(cur, end, Slice.empty))
+                repl_steps.append(ReplaceStep(cur, end, Slice.empty))
             else:
                 match = allowed
                 for j in range(len(child.marks)):
                     if not parent_type.allows_mark_type(child.marks[j].type):
                         self.step(RemoveMarkStep(cur, end, child.marks[j]))
+                if child.is_text and not parent_type.spec.get("code"):
+                    newline = re.compile(r"\r?\n|\r")
+                    slice = None
+                    m = newline.search(child.text)
+                    while m:
+                        if slice is None:
+                            slice = Slice(
+                                Fragment.from_(
+                                    parent_type.schema.text(
+                                        " ", parent_type.allowed_marks(child.marks)
+                                    )
+                                ),
+                                0,
+                                0,
+                            )
+                        repl_steps.append(
+                            ReplaceStep(cur + m.start(), cur + m.end(), slice)
+                        )
+                        m = newline.search(child.text, m.end())
             cur = end
         if not match.valid_end:
             fill = match.fill_before(Fragment.empty, True)
             assert fill is not None
             self.replace(cur, cur, Slice(fill, 0, 0))
-        for item in reversed(del_steps):
+        for item in reversed(repl_steps):
             self.step(item)
         return self
 
@@ -303,11 +325,13 @@ class Transform:
 
         d = preferred_depth - 1
         while d >= 0:
-            type = left_nodes[d].type
-            def_ = defines_content(type)
-            if def_ and from__.node(preferred_target_index).type.name != type.name:
+            left_node = left_nodes[d]
+            def_ = defines_content(left_node.type)
+            if def_ and not left_node.same_markup(
+                from__.node(abs(preferred_target) - 1)
+            ):
                 preferred_depth = d
-            elif def_ or not type.is_text_block:
+            elif def_ or not left_node.type.is_text_block:
                 break
             d -= 1
 
@@ -546,6 +570,9 @@ class Transform:
 
     def set_node_attribute(self, pos: int, attr: str, value: str | int) -> "Transform":
         return self.step(AttrStep(pos, attr, value))
+
+    def set_doc_attribute(self, attr: str, value):
+        return self.step(DocAttrStep(attr, value))
 
     def add_node_mark(self, pos: int, mark: Mark) -> "Transform":
         return self.step(AddNodeMarkStep(pos, mark))

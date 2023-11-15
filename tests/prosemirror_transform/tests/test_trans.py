@@ -6,6 +6,8 @@ from prosemirror.test_builder import test_schema as schema
 from prosemirror.transform import Transform, TransformError, find_wrapping, lift_target
 
 doc = out["doc"]
+docMetaOne = out["docMetaOne"]
+docMetaTwo = out["docMetaTwo"]
 blockquote = out["blockquote"]
 pre = out["pre"]
 h1 = out["h1"]
@@ -502,6 +504,18 @@ def test_wrap(doc, expect, type, attrs, test_transform):
             "code_block",
             None,
         ),
+        (
+            doc(p("<a>one", img(), "two", img(), "three")),
+            doc(pre("onetwothree")),
+            "code_block",
+            None,
+        ),
+        (
+            doc(pre("<a>one\ntwo\nthree")),
+            doc(p("one two three")),
+            "paragraph",
+            None,
+        ),
     ],
 )
 def test_set_block_type(doc, expect, node_type, attrs, test_transform):
@@ -553,6 +567,19 @@ def test_set_node_markup(doc, expect, type, attrs, test_transform):
 )
 def test_set_node_attribute(doc, expect, attr, value, test_transform):
     tr = Transform(doc).set_node_attribute(doc.tag.get("a"), attr, value)
+    test_transform(tr, expect)
+
+
+@pytest.mark.parametrize(
+    "doc,expect,attr,value",
+    [
+        (doc(h1("foo")), docMetaOne(h1("foo")), "meta", 1),
+        (docMetaOne(h1("foo")), docMetaTwo(h1("foo")), "meta", 2),
+        (docMetaTwo(h1("foo")), doc(h1("foo")), "meta", None),
+    ],
+)
+def test_set_doc_attribute(doc, expect, attr, value, test_transform):
+    tr = Transform(doc).set_doc_attribute(attr, value)
     test_transform(tr, expect)
 
 
@@ -717,6 +744,16 @@ def test_set_node_attribute(doc, expect, attr, value, test_transform):
             doc("<a>", p(), "<b>"),
             doc(blockquote(blockquote(blockquote(p("hi"))))).slice(3, 6, True),
             doc(p("hi")),
+        ),
+        (
+            doc(ul(li(p("list1"), blockquote(p("<a>"))))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(ul(li(p("list1"), blockquote(p("one"))))),
+        ),
+        (
+            doc(ul(li(p("list1"), ul(li(p("list2"), blockquote(p("<a>"))))))),
+            doc(blockquote(p("<a>one<b>"))),
+            doc(ul(li(p("list1"), ul(li(p("list2"), blockquote(p("one"))))))),
         ),
     ],
 )
