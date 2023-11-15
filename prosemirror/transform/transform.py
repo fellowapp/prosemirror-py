@@ -317,10 +317,9 @@ class Transform:
         i = 0
         while True:
             node = content.first_child
-            assert node is not None
             left_nodes.append(node)
 
-            if i == slice.open_start:
+            if i == slice.open_start or node is None:
                 break
 
             content = node.content
@@ -329,6 +328,7 @@ class Transform:
         d = preferred_depth - 1
         while d >= 0:
             left_node = left_nodes[d]
+            assert left_node is not None
             def_ = defines_content(left_node.type)
             if def_ and not left_node.same_markup(
                 from__.node(abs(preferred_target) - 1)
@@ -340,9 +340,8 @@ class Transform:
 
         for j in range(slice.open_start, -1, -1):
             open_depth = (j + preferred_depth + 1) % (slice.open_start + 1)
-            if len(left_nodes) > open_depth:
-                insert = left_nodes[open_depth]
-            else:
+            insert = left_nodes[open_depth] if open_depth < len(left_nodes) else None
+            if insert is None:
                 continue
             for i in range(len(target_depths)):
                 target_depth = target_depths[
