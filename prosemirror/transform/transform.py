@@ -268,7 +268,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        content: list[Node] | Node,
+        content: list[Node] | Node | Fragment,
     ) -> "Transform":
         return self.replace(from_, to, Slice(Fragment.from_(content), 0, 0))
 
@@ -278,7 +278,7 @@ class Transform:
     def insert(
         self,
         pos: int,
-        content: list[Node] | Node,
+        content: list[Node] | Node | Fragment,
     ) -> "Transform":
         return self.replace_with(pos, pos, content)
 
@@ -544,9 +544,9 @@ class Transform:
     def set_node_markup(
         self,
         pos: int,
-        type: NodeType,
-        attrs: Attrs,
-        marks: None = None,
+        type: NodeType | None,
+        attrs: Attrs | None,
+        marks: list[Mark] | None = None,
     ) -> "Transform":
         node = self.doc.node_at(pos)
         if not node:

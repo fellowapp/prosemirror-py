@@ -5,6 +5,7 @@ from typing import (
     ClassVar,
     Iterable,
     cast,
+	Sequence,
 )
 
 from prosemirror.utils import JSONList, text_length
@@ -278,7 +279,7 @@ class Fragment:
         return cls(joined or array, size)
 
     @classmethod
-    def from_(cls, nodes: "Fragment | Node | list[Node] | None") -> "Fragment":
+    def from_(cls, nodes: "Fragment | Node | Sequence[Node] | None") -> "Fragment":
         if not nodes:
             return cls.empty
         if isinstance(nodes, Fragment):
