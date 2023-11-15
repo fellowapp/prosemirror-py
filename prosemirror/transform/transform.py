@@ -11,6 +11,7 @@ from prosemirror.model import (
     NodeType,
     Slice,
 )
+from prosemirror.model.node import TextNode
 from prosemirror.transform import (
     AddMarkStep,
     AddNodeMarkStep,
@@ -28,7 +29,7 @@ from prosemirror.transform import (
     structure,
 )
 from prosemirror.transform.replace import replace_step
-from prosemirror.utils import Attrs
+from prosemirror.utils import JSON, Attrs
 
 from .doc_attr_step import DocAttrStep
 
@@ -219,6 +220,7 @@ class Transform:
                     if not parent_type.allows_mark_type(child.marks[j].type):
                         self.step(RemoveMarkStep(cur, end, child.marks[j]))
                 if child.is_text and not parent_type.spec.get("code"):
+                    assert isinstance(child, TextNode)
                     newline = re.compile(r"\r?\n|\r")
                     slice = None
                     m = newline.search(child.text)
@@ -315,9 +317,10 @@ class Transform:
         i = 0
         while True:
             node = content.first_child
+            assert node is not None
             left_nodes.append(node)
 
-            if i == slice.open_start or node is None:
+            if i == slice.open_start:
                 break
 
             content = node.content
@@ -571,7 +574,7 @@ class Transform:
     def set_node_attribute(self, pos: int, attr: str, value: str | int) -> "Transform":
         return self.step(AttrStep(pos, attr, value))
 
-    def set_doc_attribute(self, attr: str, value):
+    def set_doc_attribute(self, attr: str, value: JSON) -> "Transform":
         return self.step(DocAttrStep(attr, value))
 
     def add_node_mark(self, pos: int, mark: Mark) -> "Transform":

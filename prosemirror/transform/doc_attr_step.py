@@ -1,10 +1,9 @@
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from prosemirror.model import Node, Schema
-from prosemirror.transform.map import Mappable
+from prosemirror.transform.map import Mappable, StepMap
+from prosemirror.transform.step import Step, StepResult, step_json_id
 from prosemirror.utils import JSON, JSONDict
-
-from .step import Step, StepMap, StepResult, step_json_id
 
 
 class DocAttrStep(Step):
@@ -44,7 +43,8 @@ class DocAttrStep(Step):
         if isinstance(json_data, str):
             import json
 
-            json_data = json.loads(json_data)
+            json_data = cast(JSONDict, json.loads(json_data))
+
         if not isinstance(json_data["attr"], str):
             raise ValueError("Invalid input for DocAttrStep.from_json")
         return DocAttrStep(json_data["attr"], json_data["value"])

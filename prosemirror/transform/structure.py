@@ -112,13 +112,13 @@ def can_split(
     doc: Node,
     pos: int,
     depth: int | None = None,
-    types_after: list[dict[str, NodeType]] | None = None,
+    types_after: list[NodeTypeWithAttrs] | None = None,
 ) -> bool:
     if depth is None:
         depth = 1
     pos_ = doc.resolve(pos)
     base = pos_.depth - depth
-    inner_type: dict[str, NodeType] | Node | None = None
+    inner_type: NodeTypeWithAttrs | Node | None = None
 
     if types_after:
         inner_type = types_after[-1]
@@ -163,7 +163,7 @@ def can_split(
             rest = rest.replace_child(
                 0, override_child["type"].create(override_child.get("attrs"))
             )
-        after: dict[str, NodeType] | Node | None = None
+        after: NodeTypeWithAttrs | Node | None = None
         if types_after and len(types_after) > i:
             after = types_after[i]
         if not after:
