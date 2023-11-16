@@ -32,6 +32,6 @@ jobs:
       - run: poetry install --no-interaction --no-root
         if: steps.cache-deps.outputs.cache-hit != 'true'
       - run: poetry install --no-interaction
-      - run: poetry run black --check prosemirror tests
+      - run: poetry run ruff format --check prosemirror tests
       - run: poetry run ruff prosemirror tests
       - run: poetry run mypy prosemirror
