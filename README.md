@@ -31,8 +31,8 @@ directly via a native Python API.
 ## Status
 
 The full ProseMirror test suite has been translated and passes. This project
-only supports Python 3. There are no type annotations at the moment, although
-the original has annotations available in doc comments.
+only supports Python 3. The code has type annotations to support mypy or other
+typechecking tools.
 
 ## Usage
 
