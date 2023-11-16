@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "prosemirror"
-version = "0.3.7"
+version = "0.4.0"
 description = "Python implementation of core ProseMirror modules for collaborative editing"
 readme = "README.md"
 authors = ["Shen Li <shen@fellow.co>"]
