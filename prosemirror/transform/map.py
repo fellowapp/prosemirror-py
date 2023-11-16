@@ -1,6 +1,5 @@
 import abc
-from collections.abc import Callable
-from typing import ClassVar, List, Literal, Optional, Union, overload
+from typing import Callable, ClassVar, List, Literal, Optional, Union, overload
 
 lower16 = 0xFFFF
 factor16 = 2**16

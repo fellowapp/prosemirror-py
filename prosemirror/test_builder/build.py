@@ -1,8 +1,7 @@
 # type: ignore
 
 import re
-from collections.abc import Callable
-from typing import Any, Union
+from typing import Any, Callable, Union
 
 from prosemirror.model import Node, Schema
 from prosemirror.utils import JSONDict
