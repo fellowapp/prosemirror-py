@@ -17,7 +17,6 @@ lxml = "^4.9.2"
 cssselect = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
 codecov = "^2.1.13"
 coverage = "^7.0.5"
 flake8 = "^6.0.0"
@@ -26,9 +25,9 @@ lxml-stubs = "^0.4.0"
 mypy = "1.7.0"
 pandoc = "^2.3"
 pydash = "^7.0.3"
-pytest = "^7.2.1"
+pytest = "^7.4.3"
 pytest-cov = "^4.0.0"
-ruff = ">=0.0.271,<0.0.288"
+ruff = "^0.1.5"
 
 [tool.black]
 max-line-length = 88

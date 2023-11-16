@@ -1,7 +1,7 @@
 # type: ignore
 
 import re
-from typing import Any, Callable, Union
+from typing import Any, Callable, List, Union
 
 from prosemirror.model import Node, Schema
 from prosemirror.utils import JSONDict
@@ -11,9 +11,9 @@ NO_TAG = Node.tag = {}
 
 def flatten(
     schema: Schema[Any, Any],
-    children: list[Union[Node, JSONDict, str]],
+    children: List[Union[Node, JSONDict, str]],
     f: Callable[[Node], Node],
-) -> tuple[list[Node], dict[str, int]]:
+) -> tuple[List[Node], dict[str, int]]:
     result, pos, tag = [], 0, NO_TAG
 
     for child in children:
