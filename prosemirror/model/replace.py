@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, cast
 
 from prosemirror.utils import JSONDict
 
@@ -34,8 +34,8 @@ def remove_range(content: Fragment, from_: int, to: int) -> Fragment:
 
 
 def insert_into(
-    content: Fragment, dist: int, insert: Fragment, parent: "Node | None"
-) -> Fragment | None:
+    content: Fragment, dist: int, insert: Fragment, parent: Optional["Node"]
+) -> Optional[Fragment]:
     a = content.find_index(dist)
     index, offset = a["index"], a["offset"]
     child = content.maybe_child(index)
@@ -62,7 +62,7 @@ class Slice:
     def size(self) -> int:
         return self.content.size - self.open_start - self.open_end
 
-    def insert_at(self, pos: int, fragment: Fragment) -> "Slice | None":
+    def insert_at(self, pos: int, fragment: Fragment) -> Optional["Slice"]:
         content = insert_into(self.content, pos + self.open_start, fragment, None)
         if content:
             return Slice(content, self.open_start, self.open_end)
@@ -85,7 +85,7 @@ class Slice:
     def __str__(self) -> str:
         return f"{self.content}({self.open_start},{self.open_end})"
 
-    def to_json(self) -> JSONDict | None:
+    def to_json(self) -> Optional[JSONDict]:
         if not self.content.size:
             return None
         json: JSONDict = {"content": self.content.to_json()}
@@ -105,7 +105,7 @@ class Slice:
     def from_json(
         cls,
         schema: "Schema[Any, Any]",
-        json_data: JSONDict | None,
+        json_data: Optional[JSONDict],
     ) -> "Slice":
         if not json_data:
             return cls.empty
@@ -195,8 +195,8 @@ def add_node(child: "Node", target: list["Node"]) -> None:
 
 
 def add_range(
-    start: "ResolvedPos | None",
-    end: "ResolvedPos | None",
+    start: Optional["ResolvedPos"],
+    end: Optional["ResolvedPos"],
     depth: int,
     target: list["Node"],
 ) -> None:

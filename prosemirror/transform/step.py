@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Literal, Type, TypeVar, cast, overload
+from typing import Any, Literal, Optional, Type, TypeVar, Union, cast, overload
 
 from prosemirror.model import Node, ReplaceError, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -25,10 +25,10 @@ class Step(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def map(self, _mapping: Mappable) -> "Step | None":
+    def map(self, _mapping: Mappable) -> Optional["Step"]:
         ...
 
-    def merge(self, _other: "Step") -> "Step | None":
+    def merge(self, _other: "Step") -> Optional["Step"]:
         return None
 
     @abc.abstractmethod
@@ -36,7 +36,7 @@ class Step(metaclass=abc.ABCMeta):
         ...
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
         if isinstance(json_data, str):
             import json
 
@@ -69,7 +69,7 @@ class StepResult:
     def __init__(self, doc: None, failed: str) -> None:
         ...
 
-    def __init__(self, doc: Node | None, failed: str | None) -> None:
+    def __init__(self, doc: Optional[Node], failed: Optional[str]) -> None:
         self.doc = doc
         self.failed = failed
 

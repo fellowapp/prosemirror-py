@@ -1,7 +1,7 @@
 import itertools
 import re
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, cast
+from typing import Any, Callable, Literal, Optional, Union, cast
 
 import lxml
 from lxml.cssselect import CSSSelector
@@ -17,47 +17,47 @@ from .replace import Slice
 from .resolvedpos import ResolvedPos
 from .schema import MarkType, NodeType, Schema
 
-WSType = bool | Literal["full"] | None
+WSType = Union[bool, Literal["full"], None]
 
 
 @dataclass
 class DOMPosition:
     node: DOMNode
     offset: int
-    pos: int | None = None
+    pos: Optional[int] = None
 
 
 @dataclass(frozen=True)
 class ParseOptions:
     preserve_whitespace: WSType = None
-    find_positions: list[DOMPosition] | None = None
-    from_: int | None = None
-    to_: int | None = None
-    top_node: Node | None = None
-    top_match: ContentMatch | None = None
-    context: ResolvedPos | None = None
-    rule_from_node: Callable[[DOMNode], "ParseRule"] | None = None
-    top_open: bool | None = None
+    find_positions: Optional[list[DOMPosition]] = None
+    from_: Optional[int] = None
+    to_: Optional[int] = None
+    top_node: Optional[Node] = None
+    top_match: Optional[ContentMatch] = None
+    context: Optional[ResolvedPos] = None
+    rule_from_node: Optional[Callable[[DOMNode], "ParseRule"]] = None
+    top_open: Optional[bool] = None
 
 
 @dataclass
 class ParseRule:
-    tag: str | None
-    namespace: str | None
-    style: str | None
-    priority: int | None
-    consuming: bool | None
-    context: str | None
-    node: str | None
-    mark: str | None
-    clear_mark: Callable[[Mark], bool] | None
-    ignore: bool | None
-    close_parent: bool | None
-    skip: bool | None
-    attrs: Attrs | None
-    get_attrs: Callable[[DOMNode], None | Attrs | Literal[False]] | None
-    content_element: str | DOMNode | Callable[[DOMNode], DOMNode] | None
-    get_content: Callable[[DOMNode, Schema[Any, Any]], Fragment] | None
+    tag: Optional[str]
+    namespace: Optional[str]
+    style: Optional[str]
+    priority: Optional[int]
+    consuming: Optional[bool]
+    context: Optional[str]
+    node: Optional[str]
+    mark: Optional[str]
+    clear_mark: Optional[Callable[[Mark], bool]]
+    ignore: Optional[bool]
+    close_parent: Optional[bool]
+    skip: Optional[bool]
+    attrs: Optional[Attrs]
+    get_attrs: Optional[Callable[[DOMNode], Union[Attrs, Literal[False], None]]]
+    content_element: Union[str, DOMNode, Callable[[DOMNode], DOMNode], None]
+    get_content: Optional[Callable[[DOMNode, Schema[Any, Any]], Fragment]]
     preserve_whitespace: WSType
 
     @classmethod
@@ -109,7 +109,7 @@ class DOMParser:
         )
 
     def parse(
-        self, dom_: lxml.html.HtmlElement, options: ParseOptions | None = None
+        self, dom_: lxml.html.HtmlElement, options: Optional[ParseOptions] = None
     ) -> Node:
         if options is None:
             options = ParseOptions()
@@ -134,7 +134,9 @@ class DOMParser:
 
         return cast(Node, context.finish())
 
-    def parse_slice(self, dom_: DOMNode, options: ParseOptions | None = None) -> Slice:
+    def parse_slice(
+        self, dom_: DOMNode, options: Optional[ParseOptions] = None
+    ) -> Slice:
         if options is None:
             options = ParseOptions(preserve_whitespace=True)
 
@@ -145,8 +147,8 @@ class DOMParser:
         return Slice.max_open(cast(Fragment, context.finish()))
 
     def match_tag(
-        self, dom_: DOMNode, context: "ParseContext", after: ParseRule | None = None
-    ) -> ParseRule | None:
+        self, dom_: DOMNode, context: "ParseContext", after: Optional[ParseRule] = None
+    ) -> Optional[ParseRule]:
         try:
             i = self._tags.index(after) + 1 if after is not None else 0
         except ValueError:
@@ -177,8 +179,8 @@ class DOMParser:
         prop: str,
         value: str,
         context: "ParseContext",
-        after: ParseRule | None = None,
-    ) -> ParseRule | None:
+        after: Optional[ParseRule] = None,
+    ) -> Optional[ParseRule]:
         i = self._styles.index(after) + 1 if after is not None else 0
 
         for rule in self._styles[i:]:
@@ -313,7 +315,7 @@ OPT_OPEN_LEFT = 4
 
 
 def ws_options_for(
-    _type: NodeType | None, preserve_whitespace: WSType, base: int
+    _type: Optional[NodeType], preserve_whitespace: WSType, base: int
 ) -> int:
     if preserve_whitespace is not None:
         return (OPT_PRESERVE_WS if preserve_whitespace else 0) | (
@@ -328,16 +330,16 @@ def ws_options_for(
 
 
 class NodeContext:
-    match: ContentMatch | None
+    match: Optional[ContentMatch]
     content: list[Node]
 
     active_marks: list[Mark]
     stash_marks: list[Mark]
 
-    type: NodeType | None
+    type: Optional[NodeType]
     options: int
 
-    attrs: Attrs | None
+    attrs: Optional[Attrs]
     marks: list[Mark]
     pending_marks: list[Mark]
 
@@ -345,12 +347,12 @@ class NodeContext:
 
     def __init__(
         self,
-        _type: NodeType | None,
-        attrs: Attrs | None,
+        _type: Optional[NodeType],
+        attrs: Optional[Attrs],
         marks: list[Mark],
         pending_marks: list[Mark],
         solid: bool,
-        match: ContentMatch | None,
+        match: Optional[ContentMatch],
         options: int,
     ) -> None:
         self.type = _type
@@ -374,7 +376,7 @@ class NodeContext:
         self.active_marks = Mark.none
         self.stash_marks = []
 
-    def find_wrapping(self, node: Node) -> list[NodeType] | None:
+    def find_wrapping(self, node: Node) -> Optional[list[NodeType]]:
         if not self.match:
             if not self.type:
                 return []
@@ -398,10 +400,10 @@ class NodeContext:
 
         return self.match.find_wrapping(node.type)
 
-    def finish(self, open_end: bool) -> Node | Fragment:
+    def finish(self, open_end: bool) -> Union[Node, Fragment]:
         if not self.options & OPT_PRESERVE_WS:
             try:
-                last: Node | None = self.content[-1]
+                last: Optional[Node] = self.content[-1]
             except IndexError:
                 last = None
 
@@ -425,8 +427,8 @@ class NodeContext:
             self.type.create(self.attrs, content, self.marks) if self.type else content
         )
 
-    def pop_from_stash_mark(self, mark: Mark) -> Mark | None:
-        found_mark: Mark | None = None
+    def pop_from_stash_mark(self, mark: Mark) -> Optional[Mark]:
+        found_mark: Optional[Mark] = None
         for stash_mark in self.stash_marks[::-1]:
             if mark.eq(stash_mark):
                 found_mark = stash_mark
@@ -457,7 +459,7 @@ class NodeContext:
 
 class ParseContext:
     open: int = 0
-    find: list[DOMPosition] | None
+    find: Optional[list[DOMPosition]]
     needs_block: bool
     nodes: list[NodeContext]
     options: ParseOptions
@@ -584,7 +586,9 @@ class ParseContext:
         else:
             self.find_inside(dom_)
 
-    def add_element(self, dom_: DOMNode, match_after: ParseRule | None = None) -> None:
+    def add_element(
+        self, dom_: DOMNode, match_after: Optional[ParseRule] = None
+    ) -> None:
         name = dom_.tag.lower()
 
         if name in LIST_TAGS and self.parser.normalize_lists:
@@ -647,12 +651,12 @@ class ParseContext:
         ):
             self.find_place(self.parser.schema.text("-"))
 
-    def read_styles(self, styles: list[str]) -> tuple[list[Mark], list[Mark]] | None:
+    def read_styles(self, styles: list[str]) -> Optional[tuple[list[Mark], list[Mark]]]:
         add: list[Mark] = Mark.none
         remove: list[Mark] = Mark.none
 
         for i in range(0, len(styles), 2):
-            after: ParseRule | None = None
+            after: Optional[ParseRule] = None
             while True:
                 rule = self.parser.match_style(styles[i], styles[i + 1], self, after)
                 if not rule:
@@ -678,11 +682,11 @@ class ParseContext:
         return add, remove
 
     def add_element_by_rule(
-        self, dom_: DOMNode, rule: ParseRule, continue_after: ParseRule | None = None
+        self, dom_: DOMNode, rule: ParseRule, continue_after: Optional[ParseRule] = None
     ) -> None:
         sync: bool = False
-        mark: Mark | None = None
-        node_type: NodeType | None = None
+        mark: Optional[Mark] = None
+        node_type: Optional[NodeType] = None
 
         if rule.node is not None:
             node_type = self.parser.schema.nodes[rule.node]
@@ -728,8 +732,8 @@ class ParseContext:
     def add_all(
         self,
         parent: DOMNode,
-        start_index: int | None = None,
-        end_index: int | None = None,
+        start_index: Optional[int] = None,
+        end_index: Optional[int] = None,
     ) -> None:
         index = start_index if start_index is not None else 0
 
@@ -750,8 +754,8 @@ class ParseContext:
         self.find_at_point(parent, index)
 
     def find_place(self, node: Node) -> bool:
-        route: list[NodeType] | None = None
-        sync: NodeContext | None = None
+        route: Optional[list[NodeType]] = None
+        sync: Optional[NodeContext] = None
 
         depth = self.open
         while depth >= 0:
@@ -807,7 +811,7 @@ class ParseContext:
         return False
 
     def enter(
-        self, type_: NodeType, attrs: Attrs | None = None, preserve_ws: WSType = None
+        self, type_: NodeType, attrs: Optional[Attrs] = None, preserve_ws: WSType = None
     ) -> bool:
         ok = self.find_place(type_.create(attrs))
         if ok:
@@ -818,7 +822,7 @@ class ParseContext:
     def enter_inner(
         self,
         type_: NodeType,
-        attrs: Attrs | None = None,
+        attrs: Optional[Attrs] = None,
         solid: bool = False,
         preserve_ws: WSType = None,
     ) -> None:
@@ -855,7 +859,7 @@ class ParseContext:
 
             self.nodes = self.nodes[: self.open + 1]
 
-    def finish(self) -> Node | Fragment:
+    def finish(self) -> Union[Node, Fragment]:
         self.open = 0
         self.close_extra(self.is_open)
         return self.nodes[0].finish(self.is_open or bool(self.options.top_open))
@@ -950,7 +954,7 @@ class ParseContext:
                     return False
                 else:
                     if depth > 0 or (depth == 0 and use_root):
-                        next: NodeType | None = self.nodes[depth].type
+                        next: Optional[NodeType] = self.nodes[depth].type
                     elif option is not None and depth >= min_depth:
                         next = option.node(depth - min_depth).type
                     else:
@@ -971,7 +975,7 @@ class ParseContext:
 
         return match(len(parts) - 1, self.open)
 
-    def textblock_from_context(self) -> NodeType | None:
+    def textblock_from_context(self) -> Optional[NodeType]:
         context = self.options.context
 
         if context:
@@ -1033,7 +1037,7 @@ class ParseContext:
 
 def normalize_list(dom_: DOMNode) -> None:
     child = next(iter(dom_))
-    prev_item: DOMNode | None = None
+    prev_item: Optional[DOMNode] = None
 
     while child is not None:
         name = child.tag.lower() if get_node_type(child) == 1 else None
@@ -1097,7 +1101,7 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
     return False
 
 
-def find_same_mark_in_set(mark: Mark, mark_set: list[Mark]) -> Mark | None:
+def find_same_mark_in_set(mark: Mark, mark_set: list[Mark]) -> Optional[Mark]:
     for comp in mark_set:
         if mark.eq(comp):
             return comp

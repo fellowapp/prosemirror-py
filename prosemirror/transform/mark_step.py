@@ -1,4 +1,4 @@
-from typing import Any, Callable, cast
+from typing import Any, Callable, Optional, Union, cast
 
 from prosemirror.model import Fragment, Mark, Node, Schema, Slice
 from prosemirror.transform.map import Mappable
@@ -8,8 +8,8 @@ from prosemirror.utils import JSONDict
 
 def map_fragment(
     fragment: Fragment,
-    f: Callable[[Node, Node | None, int], Node],
-    parent: Node | None = None,
+    f: Callable[[Node, Optional[Node], int], Node],
+    parent: Optional[Node] = None,
 ) -> Fragment:
     mapped = []
     for i in range(fragment.child_count):
@@ -34,7 +34,7 @@ class AddMarkStep(Step):
         from__ = doc.resolve(self.from_)
         parent = from__.node(from__.shared_depth(self.to))
 
-        def iteratee(node: Node, parent: Node | None, i: int) -> Node:
+        def iteratee(node: Node, parent: Optional[Node], i: int) -> Node:
             if parent and (
                 not node.is_atom or not parent.type.allows_mark_type(self.mark.type)
             ):
@@ -48,17 +48,17 @@ class AddMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Node | None = None) -> "RemoveMarkStep":
+    def invert(self, doc: Optional[Node] = None) -> "RemoveMarkStep":
         return RemoveMarkStep(self.from_, self.to, self.mark)
 
-    def map(self, mapping: Mappable) -> "AddMarkStep | None":
+    def map(self, mapping: Mappable) -> Optional["AddMarkStep"]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if from_.deleted and to.deleted or from_.pos > to.pos:
             return None
         return AddMarkStep(from_.pos, to.pos, self.mark)
 
-    def merge(self, other: "Step") -> "AddMarkStep | None":
+    def merge(self, other: "Step") -> Optional["AddMarkStep"]:
         if (
             isinstance(other, AddMarkStep)
             and other.mark.eq(self.mark)
@@ -79,7 +79,9 @@ class AddMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "AddMarkStep":
+    def from_json(
+        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
+    ) -> "AddMarkStep":
         if isinstance(json_data, str):
             import json
 
@@ -109,7 +111,7 @@ class RemoveMarkStep(Step):
     def apply(self, doc: Node) -> StepResult:
         old_slice = doc.slice(self.from_, self.to)
 
-        def iteratee(node: Node, parent: Node | None, i: int) -> Node:
+        def iteratee(node: Node, parent: Optional[Node], i: int) -> Node:
             return node.mark(self.mark.remove_from_set(node.marks))
 
         slice = Slice(
@@ -119,17 +121,17 @@ class RemoveMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Node | None = None) -> AddMarkStep:
+    def invert(self, doc: Optional[Node] = None) -> AddMarkStep:
         return AddMarkStep(self.from_, self.to, self.mark)
 
-    def map(self, mapping: Mappable) -> "RemoveMarkStep | None":
+    def map(self, mapping: Mappable) -> Optional["RemoveMarkStep"]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if (from_.deleted and to.deleted) or (from_.pos > to.pos):
             return None
         return RemoveMarkStep(from_.pos, to.pos, self.mark)
 
-    def merge(self, other: "Step") -> "RemoveMarkStep | None":
+    def merge(self, other: "Step") -> Optional["RemoveMarkStep"]:
         if (
             isinstance(other, RemoveMarkStep)
             and (other.mark.eq(self.mark))
@@ -150,7 +152,7 @@ class RemoveMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
         if isinstance(json_data, str):
             import json
 
@@ -188,7 +190,7 @@ class AddNodeMarkStep(Step):
             Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
         )
 
-    def invert(self, doc: Node) -> "RemoveNodeMarkStep | AddNodeMarkStep":
+    def invert(self, doc: Node) -> Union["RemoveNodeMarkStep", "AddNodeMarkStep"]:
         node = doc.node_at(self.pos)
         if node:
             new_set = self.mark.add_to_set(node.marks)
@@ -199,7 +201,7 @@ class AddNodeMarkStep(Step):
                 return AddNodeMarkStep(self.pos, self.mark)
         return RemoveNodeMarkStep(self.pos, self.mark)
 
-    def map(self, mapping: Mappable) -> "AddNodeMarkStep | None":
+    def map(self, mapping: Mappable) -> Optional["AddNodeMarkStep"]:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else AddNodeMarkStep(pos.pos, self.mark)
 
@@ -211,7 +213,7 @@ class AddNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
         if isinstance(json_data, str):
             import json
 
@@ -247,13 +249,13 @@ class RemoveNodeMarkStep(Step):
             Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
         )
 
-    def invert(self, doc: Node) -> "RemoveNodeMarkStep | AddNodeMarkStep":
+    def invert(self, doc: Node) -> Union["RemoveNodeMarkStep", "AddNodeMarkStep"]:
         node = doc.node_at(self.pos)
         if not node or not self.mark.is_in_set(node.marks):
             return self
         return AddNodeMarkStep(self.pos, self.mark)
 
-    def map(self, mapping: Mappable) -> "RemoveNodeMarkStep | None":
+    def map(self, mapping: Mappable) -> Optional["RemoveNodeMarkStep"]:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else RemoveNodeMarkStep(pos.pos, self.mark)
 
@@ -265,7 +267,7 @@ class RemoveNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
         if isinstance(json_data, str):
             import json
 

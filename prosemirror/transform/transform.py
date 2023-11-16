@@ -1,5 +1,5 @@
 import re
-from typing import TypedDict
+from typing import Optional, TypedDict, Union
 
 from prosemirror.model import (
     ContentMatch,
@@ -34,7 +34,7 @@ from prosemirror.utils import JSON, Attrs
 from .doc_attr_step import DocAttrStep
 
 
-def defines_content(type: NodeType | MarkType) -> bool | None:
+def defines_content(type: Union[NodeType, MarkType]) -> Optional[bool]:
     if isinstance(type, NodeType):
         return type.spec.get("defining") or type.spec.get("definingForContent")
     return False
@@ -90,10 +90,10 @@ class Transform:
     def add_mark(self, from_: int, to: int, mark: Mark) -> "Transform":
         removed = []
         added = []
-        removing: RemoveMarkStep | None = None
-        adding: AddMarkStep | None = None
+        removing: Optional[RemoveMarkStep] = None
+        adding: Optional[AddMarkStep] = None
 
-        def iteratee(node: Node, pos: int, parent: Node | None, i: int) -> None:
+        def iteratee(node: Node, pos: int, parent: Optional[Node], i: int) -> None:
             nonlocal removing
             nonlocal adding
             if not node.is_inline:
@@ -136,7 +136,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        mark: Mark | MarkType | None = None,
+        mark: Union[Mark, MarkType, None] = None,
     ) -> "Transform":
         class MatchedTypedDict(TypedDict):
             style: Mark
@@ -147,7 +147,9 @@ class Transform:
         matched: list[MatchedTypedDict] = []
         step = 0
 
-        def iteratee(node: Node, pos: int, parent: Node | None, i: int) -> bool | None:
+        def iteratee(
+            node: Node, pos: int, parent: Optional[Node], i: int
+        ) -> Optional[bool]:
             nonlocal step
             if not node.is_inline:
                 return None
@@ -198,7 +200,7 @@ class Transform:
         self,
         pos: int,
         parent_type: NodeType,
-        match: ContentMatch | None = None,
+        match: Optional[ContentMatch] = None,
     ) -> "Transform":
         if match is None:
             match = parent_type.content_match
@@ -252,8 +254,8 @@ class Transform:
     def replace(
         self,
         from_: int,
-        to: int | None = None,
-        slice: Slice | None = None,
+        to: Optional[int] = None,
+        slice: Optional[Slice] = None,
     ) -> "Transform":
         if to is None:
             to = from_
@@ -268,7 +270,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        content: list[Node] | Node | Fragment,
+        content: Union[list[Node], Node, Fragment],
     ) -> "Transform":
         return self.replace(from_, to, Slice(Fragment.from_(content), 0, 0))
 
@@ -278,7 +280,7 @@ class Transform:
     def insert(
         self,
         pos: int,
-        content: list[Node] | Node | Fragment,
+        content: Union[list[Node], Node, Fragment],
     ) -> "Transform":
         return self.replace_with(pos, pos, content)
 
@@ -498,9 +500,9 @@ class Transform:
     def set_block_type(
         self,
         from_: int,
-        to: int | None,
+        to: Optional[int],
         type: NodeType,
-        attrs: Attrs | None,
+        attrs: Optional[Attrs],
     ) -> "Transform":
         if to is None:
             to = from_
@@ -509,8 +511,8 @@ class Transform:
         map_from = len(self.steps)
 
         def iteratee(
-            node: "Node", pos: int, parent: "Node | None", i: int
-        ) -> bool | None:
+            node: "Node", pos: int, parent: Optional["Node"], i: int
+        ) -> Optional[bool]:
             if (
                 node.is_text_block
                 and not node.has_markup(type, attrs)
@@ -544,9 +546,9 @@ class Transform:
     def set_node_markup(
         self,
         pos: int,
-        type: NodeType | None,
-        attrs: Attrs | None,
-        marks: list[Mark] | None = None,
+        type: Optional[NodeType],
+        attrs: Optional[Attrs],
+        marks: Optional[list[Mark]] = None,
     ) -> "Transform":
         node = self.doc.node_at(pos)
         if not node:
@@ -570,7 +572,9 @@ class Transform:
             )
         )
 
-    def set_node_attribute(self, pos: int, attr: str, value: str | int) -> "Transform":
+    def set_node_attribute(
+        self, pos: int, attr: str, value: Union[str, int]
+    ) -> "Transform":
         return self.step(AttrStep(pos, attr, value))
 
     def set_doc_attribute(self, attr: str, value: JSON) -> "Transform":
@@ -579,7 +583,7 @@ class Transform:
     def add_node_mark(self, pos: int, mark: Mark) -> "Transform":
         return self.step(AddNodeMarkStep(pos, mark))
 
-    def remove_node_mark(self, pos: int, mark: Mark | MarkType) -> "Transform":
+    def remove_node_mark(self, pos: int, mark: Union[Mark, MarkType]) -> "Transform":
         if isinstance(mark, MarkType):
             node = self.doc.node_at(pos)
 
@@ -597,8 +601,8 @@ class Transform:
     def split(
         self,
         pos: int,
-        depth: int | None = None,
-        types_after: list[structure.NodeTypeWithAttrs] | None = None,
+        depth: Optional[int] = None,
+        types_after: Optional[list[structure.NodeTypeWithAttrs]] = None,
     ) -> "Transform":
         if depth is None:
             depth = 1

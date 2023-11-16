@@ -1,5 +1,5 @@
 import copy
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, Optional, Union, cast
 
 from prosemirror.utils import Attrs, JSONDict
 
@@ -15,7 +15,7 @@ class Mark:
         self.attrs = attrs
 
     def add_to_set(self, set: list["Mark"]) -> list["Mark"]:
-        copy: list["Mark"] | None | None = None
+        copy: Optional[list["Mark"]] = None
         placed = False
         for i in range(len(set)):
             other = set[i]
@@ -66,7 +66,7 @@ class Mark:
         type = schema.marks.get(name)
         if not type:
             raise ValueError(f"There is no mark type {name} in this schema")
-        return type.create(cast(JSONDict | None, json_data.get("attrs")))
+        return type.create(cast(Optional[JSONDict], json_data.get("attrs")))
 
     @classmethod
     def same_set(cls, a: list["Mark"], b: list["Mark"]) -> bool:
@@ -77,7 +77,7 @@ class Mark:
         return all(item_a.eq(item_b) for (item_a, item_b) in zip(a, b))
 
     @classmethod
-    def set_from(cls, marks: "list[Mark] | Mark | None") -> list["Mark"]:
+    def set_from(cls, marks: Union[list["Mark"], "Mark", None]) -> list["Mark"]:
         if not marks:
             return cls.none
         if isinstance(marks, Mark):

@@ -4,8 +4,10 @@ from typing import (
     Callable,
     ClassVar,
     Iterable,
+    Optional,
+    Sequence,
+    Union,
     cast,
-	Sequence,
 )
 
 from prosemirror.utils import JSONList, text_length
@@ -26,7 +28,7 @@ class Fragment:
     content: list["Node"]
     size: int
 
-    def __init__(self, content: list["Node"], size: int | None = None) -> None:
+    def __init__(self, content: list["Node"], size: Optional[int] = None) -> None:
         self.content = content
         self.size = size if size is not None else sum(c.node_size for c in content)
 
@@ -34,9 +36,9 @@ class Fragment:
         self,
         from_: int,
         to: int,
-        f: Callable[["Node", int, "Node | None", int], bool | None],
+        f: Callable[["Node", int, Optional["Node"], int], Optional[bool]],
         node_start: int = 0,
-        parent: "Node | None" = None,
+        parent: Optional["Node"] = None,
     ) -> None:
         i = 0
         pos = 0
@@ -59,7 +61,7 @@ class Fragment:
             i += 1
 
     def descendants(
-        self, f: Callable[["Node", int, "Node | None", int], bool | None]
+        self, f: Callable[["Node", int, Optional["Node"], int], Optional[bool]]
     ) -> None:
         self.nodes_between(0, self.size, f)
 
@@ -68,12 +70,14 @@ class Fragment:
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Callable[["Node"], str] | str = "",
+        leaf_text: Union[Callable[["Node"], str], str] = "",
     ) -> str:
         text = []
         separated = True
 
-        def iteratee(node: "Node", pos: int, _parent: "Node | None", _to: int) -> None:
+        def iteratee(
+            node: "Node", pos: int, _parent: Optional["Node"], _to: int
+        ) -> None:
             nonlocal text
             nonlocal separated
             if node.is_text:
@@ -114,7 +118,7 @@ class Fragment:
             i += 1
         return Fragment(content, self.size + other.size)
 
-    def cut(self, from_: int, to: int | None = None) -> "Fragment":
+    def cut(self, from_: int, to: Optional[int] = None) -> "Fragment":
         if to is None:
             to = self.size
         if from_ == 0 and to == self.size:
@@ -144,7 +148,7 @@ class Fragment:
             i += 1
         return Fragment(result, size)
 
-    def cut_by_index(self, from_: int, to: int | None = None) -> "Fragment":
+    def cut_by_index(self, from_: int, to: Optional[int] = None) -> "Fragment":
         if from_ == to:
             return Fragment.empty
         if from_ == 0 and to == len(self.content):
@@ -172,11 +176,11 @@ class Fragment:
         return all(a.eq(b) for (a, b) in zip(self.content, other.content))
 
     @property
-    def first_child(self) -> "Node | None":
+    def first_child(self) -> Optional["Node"]:
         return self.content[0] if self.content else None
 
     @property
-    def last_child(self) -> "Node | None":
+    def last_child(self) -> Optional["Node"]:
         return self.content[-1] if self.content else None
 
     @property
@@ -186,7 +190,7 @@ class Fragment:
     def child(self, index: int) -> "Node":
         return self.content[index]
 
-    def maybe_child(self, index: int) -> "Node | None":
+    def maybe_child(self, index: int) -> Optional["Node"]:
         try:
             return self.content[index]
         except IndexError:
@@ -201,7 +205,7 @@ class Fragment:
             p += child.node_size
             i += 1
 
-    def find_diff_start(self, other: "Fragment", pos: int = 0) -> int | None:
+    def find_diff_start(self, other: "Fragment", pos: int = 0) -> Optional[int]:
         from .diff import find_diff_start
 
         return find_diff_start(self, other, pos)
@@ -209,9 +213,9 @@ class Fragment:
     def find_diff_end(
         self,
         other: "Fragment",
-        pos: int | None = None,
-        other_pos: int | None = None,
-    ) -> "Diff | None":
+        pos: Optional[int] = None,
+        other_pos: Optional[int] = None,
+    ) -> Optional["Diff"]:
         from .diff import find_diff_end
 
         if pos is None:
@@ -239,7 +243,7 @@ class Fragment:
             i += 1
             cur_pos = end
 
-    def to_json(self) -> JSONList | None:
+    def to_json(self) -> Optional[JSONList]:
         if self.content:
             return [item.to_json() for item in self.content]
         return None
@@ -263,7 +267,7 @@ class Fragment:
     def from_array(cls, array: list["Node"]) -> "Fragment":
         if not array:
             return cls.empty
-        joined: list["Node"] | None = None
+        joined: Optional[list["Node"]] = None
         size = 0
         for i in range(len(array)):
             node = array[i]
@@ -279,7 +283,9 @@ class Fragment:
         return cls(joined or array, size)
 
     @classmethod
-    def from_(cls, nodes: "Fragment | Node | Sequence[Node] | None") -> "Fragment":
+    def from_(
+        cls, nodes: Union["Fragment", "Node", Sequence["Node"], None]
+    ) -> "Fragment":
         if not nodes:
             return cls.empty
         if isinstance(nodes, Fragment):

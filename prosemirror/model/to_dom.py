@@ -2,8 +2,9 @@ import html
 from typing import (
     Any,
     Callable,
+    Optional,
     Sequence,
-    TypeAlias,
+    Union,
     cast,
 )
 
@@ -12,7 +13,7 @@ from .mark import Mark
 from .node import Node
 from .schema import Schema
 
-HTMLNode: TypeAlias = "Element | str"
+HTMLNode = Union["Element", "str"]
 
 
 class DocumentFragment:
@@ -62,7 +63,7 @@ class Element(DocumentFragment):
         return f"<{open_tag_str}>{children_str}</{self.name}>"
 
 
-HTMLOutputSpec = str | Sequence[Any] | Element
+HTMLOutputSpec = Union[str, Sequence[Any], Element]
 
 
 class DOMSerializer:
@@ -75,12 +76,12 @@ class DOMSerializer:
         self.marks = marks
 
     def serialize_fragment(
-        self, fragment: Fragment, target: Element | None = None
+        self, fragment: Fragment, target: Optional[Element] = None
     ) -> DocumentFragment:
         tgt: DocumentFragment = target or DocumentFragment(children=[])
 
         top = tgt
-        active: list[tuple[Mark, DocumentFragment]] | None = None
+        active: Optional[list[tuple[Mark, DocumentFragment]]] = None
 
         def each(node: Node, offset: int, index: int) -> None:
             nonlocal top, active
@@ -137,14 +138,16 @@ class DOMSerializer:
 
     def serialize_mark(
         self, mark: Mark, inline: bool
-    ) -> tuple[HTMLNode, Element | None] | None:
+    ) -> Optional[tuple[HTMLNode, Optional[Element]]]:
         to_dom = self.marks.get(mark.type.name)
         if to_dom:
             return type(self).render_spec(to_dom(mark, inline))
         return None
 
     @classmethod
-    def render_spec(cls, structure: HTMLOutputSpec) -> tuple[HTMLNode, Element | None]:
+    def render_spec(
+        cls, structure: HTMLOutputSpec
+    ) -> tuple[HTMLNode, Optional[Element]]:
         if isinstance(structure, str):
             return html.escape(structure), None
         if isinstance(structure, Element):
@@ -152,7 +155,7 @@ class DOMSerializer:
         tag_name = structure[0]
         if " " in tag_name[1:]:
             raise NotImplementedError("XML namespaces are not supported")
-        content_dom: Element | None = None
+        content_dom: Optional[Element] = None
         dom = Element(name=tag_name, attrs={}, children=[])
         attrs = structure[1] if len(structure) > 1 else None
         start = 1

@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any, Optional, Union, cast
 
 from prosemirror.model import Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -8,7 +8,7 @@ from prosemirror.utils import JSONDict
 
 class ReplaceStep(Step):
     def __init__(
-        self, from_: int, to: int, slice: Slice, structure: bool | None = None
+        self, from_: int, to: int, slice: Slice, structure: Optional[bool] = None
     ) -> None:
         super().__init__()
         self.from_ = from_
@@ -29,14 +29,14 @@ class ReplaceStep(Step):
             self.from_, self.from_ + self.slice.size, doc.slice(self.from_, self.to)
         )
 
-    def map(self, mapping: Mappable) -> "ReplaceStep | None":
+    def map(self, mapping: Mappable) -> Optional["ReplaceStep"]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if from_.deleted and to.deleted:
             return None
         return ReplaceStep(from_.pos, max(from_.pos, to.pos), self.slice)
 
-    def merge(self, other: "Step") -> "ReplaceStep | None":
+    def merge(self, other: "Step") -> Optional["ReplaceStep"]:
         if not isinstance(other, ReplaceStep) or other.structure or self.structure:
             return None
         if (
@@ -86,7 +86,9 @@ class ReplaceStep(Step):
         return json_data
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "ReplaceStep":
+    def from_json(
+        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
+    ) -> "ReplaceStep":
         if isinstance(json_data, str):
             import json
 
@@ -99,7 +101,7 @@ class ReplaceStep(Step):
         return ReplaceStep(
             json_data["from"],
             json_data["to"],
-            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
+            Slice.from_json(schema, cast(Optional[JSONDict], json_data.get("slice"))),
             bool(json_data.get("structure")),
         )
 
@@ -116,7 +118,7 @@ class ReplaceAroundStep(Step):
         gap_to: int,
         slice: Slice,
         insert: int,
-        structure: bool | None = None,
+        structure: Optional[bool] = None,
     ) -> None:
         super().__init__()
         self.from_ = from_
@@ -167,7 +169,7 @@ class ReplaceAroundStep(Step):
             self.structure,
         )
 
-    def map(self, mapping: Mappable) -> "ReplaceAroundStep | None":
+    def map(self, mapping: Mappable) -> Optional["ReplaceAroundStep"]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         gap_from = mapping.map(self.gap_from, -1)
@@ -201,7 +203,7 @@ class ReplaceAroundStep(Step):
 
     @staticmethod
     def from_json(
-        schema: Schema[Any, Any], json_data: JSONDict | str
+        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
     ) -> "ReplaceAroundStep":
         if isinstance(json_data, str):
             import json
@@ -221,7 +223,7 @@ class ReplaceAroundStep(Step):
             json_data["to"],
             json_data["gapFrom"],
             json_data["gapTo"],
-            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
+            Slice.from_json(schema, cast(Optional[JSONDict], json_data.get("slice"))),
             json_data["insert"],
             bool(json_data.get("structure")),
         )

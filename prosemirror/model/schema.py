@@ -3,7 +3,9 @@ from typing import (
     Callable,
     Generic,
     Literal,
+    Optional,
     TypeVar,
+    Union,
     cast,
 )
 
@@ -16,7 +18,7 @@ from prosemirror.model.node import Node, TextNode
 from prosemirror.utils import JSON, Attrs, JSONDict
 
 
-def default_attrs(attrs: "Attributes") -> Attrs | None:
+def default_attrs(attrs: "Attributes") -> Optional[Attrs]:
     defaults = {}
     for attr_name, attr in attrs.items():
         if not attr.has_default:
@@ -25,7 +27,7 @@ def default_attrs(attrs: "Attributes") -> Attrs | None:
     return defaults
 
 
-def compute_attrs(attrs: "Attributes", value: Attrs | None) -> Attrs:
+def compute_attrs(attrs: "Attributes", value: Optional[Attrs]) -> Attrs:
     built = {}
     for name in attrs:
         given = None
@@ -41,7 +43,7 @@ def compute_attrs(attrs: "Attributes", value: Attrs | None) -> Attrs:
     return built
 
 
-def init_attrs(attrs: "AttributeSpecs | None") -> "Attributes":
+def init_attrs(attrs: Optional["AttributeSpecs"]) -> "Attributes":
     result = {}
     if attrs:
         for name in attrs:
@@ -65,7 +67,7 @@ class NodeType:
 
     inline_content: bool
 
-    mark_set: list["MarkType"] | None
+    mark_set: Optional[list["MarkType"]]
 
     def __init__(self, name: str, schema: "Schema[Any, Any]", spec: "NodeSpec") -> None:
         self.name = name
@@ -74,7 +76,7 @@ class NodeType:
         self.groups = spec["group"].split(" ") if "group" in spec else []
         self.attrs = init_attrs(spec.get("attrs"))
         self.default_attrs = default_attrs(self.attrs)
-        self._content_match: ContentMatch | None = None
+        self._content_match: Optional[ContentMatch] = None
         self.mark_set = None
         self.inline_content = False
         self.is_block = not (spec.get("inline") or name == "text")
@@ -120,16 +122,16 @@ class NodeType:
     def compatible_content(self, other: "NodeType") -> bool:
         return self == other or (self.content_match.compatible(other.content_match))
 
-    def compute_attrs(self, attrs: Attrs | None) -> Attrs:
+    def compute_attrs(self, attrs: Optional[Attrs]) -> Attrs:
         if attrs is None and self.default_attrs is not None:
             return self.default_attrs
         return compute_attrs(self.attrs, attrs)
 
     def create(
         self,
-        attrs: Attrs | None = None,
-        content: Fragment | Node | list[Node] | None = None,
-        marks: list[Mark] | None = None,
+        attrs: Optional[Attrs] = None,
+        content: Union[Fragment, Node, list[Node], None] = None,
+        marks: Optional[list[Mark]] = None,
     ) -> Node:
         if self.is_text:
             raise ValueError("NodeType.create cannot construct text nodes")
@@ -142,9 +144,9 @@ class NodeType:
 
     def create_checked(
         self,
-        attrs: Attrs | None = None,
-        content: Fragment | Node | list[Node] | None = None,
-        marks: list[Mark] | None = None,
+        attrs: Optional[Attrs] = None,
+        content: Union[Fragment, Node, list[Node], None] = None,
+        marks: Optional[list[Mark]] = None,
     ) -> Node:
         content = Fragment.from_(content)
         if not self.valid_content(content):
@@ -153,10 +155,10 @@ class NodeType:
 
     def create_and_fill(
         self,
-        attrs: Attrs | None = None,
-        content: Fragment | Node | list[Node] | None = None,
-        marks: list[Mark] | None = None,
-    ) -> Node | None:
+        attrs: Optional[Attrs] = None,
+        content: Union[Fragment, Node, list[Node], None] = None,
+        marks: Optional[list[Mark]] = None,
+    ) -> Optional[Node]:
         attrs = self.compute_attrs(attrs)
         frag = Fragment.from_(content)
         if frag.size:
@@ -192,7 +194,7 @@ class NodeType:
     def allowed_marks(self, marks: list[Mark]) -> list[Mark]:
         if self.mark_set is None:
             return marks
-        copy: list[Mark] | None = None
+        copy: Optional[list[Mark]] = None
         for i, mark in enumerate(marks):
             if not self.allows_mark_type(mark.type):
                 if not copy:
@@ -246,7 +248,7 @@ class Attribute:
 
 class MarkType:
     excluded: list["MarkType"]
-    instance: Mark | None
+    instance: Optional[Mark]
 
     def __init__(
         self, name: str, rank: int, schema: "Schema[Any, Any]", spec: "MarkSpec"
@@ -264,7 +266,7 @@ class MarkType:
 
     def create(
         self,
-        attrs: Attrs | None = None,
+        attrs: Optional[Attrs] = None,
     ) -> Mark:
         if not attrs and self.instance:
             return self.instance
@@ -284,7 +286,7 @@ class MarkType:
     def remove_from_set(self, set_: list["Mark"]) -> list["Mark"]:
         return [item for item in set_ if item.type != self]
 
-    def is_in_set(self, set: list[Mark]) -> Mark | None:
+    def is_in_set(self, set: list[Mark]) -> Optional[Mark]:
         return next((item for item in set if item.type == self), None)
 
     def excludes(self, other: "MarkType") -> bool:
@@ -409,10 +411,10 @@ class Schema(Generic[Nodes, Marks]):
 
     def node(
         self,
-        type: str | NodeType,
-        attrs: Attrs | None = None,
-        content: Fragment | Node | list[Node] | None = None,
-        marks: list[Mark] | None = None,
+        type: Union[str, NodeType],
+        attrs: Optional[Attrs] = None,
+        content: Union[Fragment, Node, list[Node], None] = None,
+        marks: Optional[list[Mark]] = None,
     ) -> Node:
         if isinstance(type, str):
             type = self.node_type(type)
@@ -422,7 +424,7 @@ class Schema(Generic[Nodes, Marks]):
             raise ValueError(f"Node type from different schema used ({type.name})")
         return type.create_checked(attrs, content, marks)
 
-    def text(self, text: str, marks: list[Mark] | None = None) -> TextNode:
+    def text(self, text: str, marks: Optional[list[Mark]] = None) -> TextNode:
         type = self.nodes[cast(Nodes, "text")]
         return TextNode(
             type, cast(Attrs, type.default_attrs), text, Mark.set_from(marks)
@@ -430,14 +432,14 @@ class Schema(Generic[Nodes, Marks]):
 
     def mark(
         self,
-        type: str | MarkType,
-        attrs: Attrs | None = None,
+        type: Union[str, MarkType],
+        attrs: Optional[Attrs] = None,
     ) -> Mark:
         if isinstance(type, str):
             type = self.marks[cast(Marks, type)]
         return type.create(attrs)
 
-    def node_from_json(self, json_data: JSONDict) -> Node | TextNode:
+    def node_from_json(self, json_data: JSONDict) -> Union[Node, TextNode]:
         return Node.from_json(self, json_data)
 
     def mark_from_json(

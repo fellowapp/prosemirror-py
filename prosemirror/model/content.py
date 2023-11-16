@@ -6,7 +6,9 @@ from typing import (
     Literal,
     NamedTuple,
     NoReturn,
+    Optional,
     TypedDict,
+    Union,
     cast,
 )
 
@@ -28,17 +30,19 @@ class MatchEdge:
 
 class WrapCacheEntry:
     target: "NodeType"
-    computed: list["NodeType"] | None
+    computed: Optional[list["NodeType"]]
 
-    def __init__(self, target: "NodeType", computed: list["NodeType"] | None) -> None:
+    def __init__(
+        self, target: "NodeType", computed: Optional[list["NodeType"]]
+    ) -> None:
         self.target = target
         self.computed = computed
 
 
 class Active(TypedDict):
     match: "ContentMatch"
-    type: "NodeType | None"
-    via: "Active | None"
+    type: Optional["NodeType"]
+    via: Optional["Active"]
 
 
 class ContentMatch:
@@ -71,18 +75,18 @@ class ContentMatch:
         check_for_dead_ends(match, stream)
         return match
 
-    def match_type(self, type: "NodeType") -> "ContentMatch | None":
+    def match_type(self, type: "NodeType") -> Optional["ContentMatch"]:
         for next in self.next:
             if next.type.name == type.name:
                 return next.next
         return None
 
     def match_fragment(
-        self, frag: Fragment, start: int = 0, end: int | None = None
-    ) -> "ContentMatch | None":
+        self, frag: Fragment, start: int = 0, end: Optional[int] = None
+    ) -> Optional["ContentMatch"]:
         if end is None:
             end = frag.child_count
-        cur: "ContentMatch | None" = self
+        cur: Optional["ContentMatch"] = self
         i = start
         while cur and i < end:
             cur = cur.match_type(frag.child(i).type)
@@ -94,7 +98,7 @@ class ContentMatch:
         return bool(self.next) and self.next[0].type.is_inline
 
     @property
-    def default_type(self) -> "NodeType | None":
+    def default_type(self) -> Optional["NodeType"]:
         for next in self.next:
             type = next.type
             if not (type.is_text or type.has_required_attrs()):
@@ -110,10 +114,10 @@ class ContentMatch:
 
     def fill_before(
         self, after: Fragment, to_end: bool = False, start_index: int = 0
-    ) -> Fragment | None:
+    ) -> Optional[Fragment]:
         seen = [self]
 
-        def search(match: ContentMatch, types: list["NodeType"]) -> Fragment | None:
+        def search(match: ContentMatch, types: list["NodeType"]) -> Optional[Fragment]:
             nonlocal seen
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
@@ -132,7 +136,7 @@ class ContentMatch:
 
         return search(self, [])
 
-    def find_wrapping(self, target: "NodeType") -> list["NodeType"] | None:
+    def find_wrapping(self, target: "NodeType") -> Optional[list["NodeType"]]:
         for entry in self.wrap_cache:
             if entry.target.name == target.name:
                 return entry.computed
@@ -140,7 +144,7 @@ class ContentMatch:
         self.wrap_cache.append(WrapCacheEntry(target, computed))
         return computed
 
-    def compute_wrapping(self, target: "NodeType") -> list["NodeType"] | None:
+    def compute_wrapping(self, target: "NodeType") -> Optional[list["NodeType"]]:
         seen = {}
         active: list[Active] = [{"match": self, "type": None, "via": None}]
         while len(active):
@@ -213,7 +217,7 @@ TOKEN_REGEX = re.compile(r"\w+|\W")
 
 
 class TokenStream:
-    inline: bool | None
+    inline: Optional[bool]
     tokens: list[str]
 
     def __init__(self, string: str, node_types: dict[str, "NodeType"]) -> None:
@@ -223,13 +227,13 @@ class TokenStream:
         self.pos = 0
         self.tokens = [i for i in TOKEN_REGEX.findall(string) if i.strip()]
 
-    def next(self) -> str | None:
+    def next(self) -> Optional[str]:
         try:
             return self.tokens[self.pos]
         except IndexError:
             return None
 
-    def eat(self, tok: str) -> int | bool:
+    def eat(self, tok: str) -> Union[int, bool]:
         if self.next() == tok:
             pos = self.pos
             self.pos += 1
@@ -278,7 +282,7 @@ class NameExpr(TypedDict):
     value: "NodeType"
 
 
-Expr = ChoiceExpr | SeqExpr | PlusExpr | StarExpr | OptExpr | RangeExpr | NameExpr
+Expr = Union[ChoiceExpr, SeqExpr, PlusExpr, StarExpr, OptExpr, RangeExpr, NameExpr]
 
 
 def parse_expr(stream: TokenStream) -> Expr:
@@ -390,8 +394,8 @@ def parse_expr_atom(
 
 
 class Edge(TypedDict):
-    term: "NodeType | None"
-    to: int | None
+    term: Optional["NodeType"]
+    to: Optional[int]
 
 
 def nfa(
@@ -404,7 +408,9 @@ def nfa(
         nfa_.append([])
         return len(nfa_) - 1
 
-    def edge(from_: int, to: int | None = None, term: "NodeType | None" = None) -> Edge:
+    def edge(
+        from_: int, to: Optional[int] = None, term: Optional["NodeType"] = None
+    ) -> Edge:
         nonlocal nfa_
         edge: Edge = {"term": term, "to": to}
         nfa_[from_].append(edge)
@@ -507,7 +513,7 @@ def dfa(nfa: list[list[Edge]]) -> ContentMatch:
                 term, to = item.get("term"), item.get("to")
                 if not term:
                     continue
-                set: list[int] | None = None
+                set: Optional[list[int]] = None
                 for t in out:
                     if t[0] == term:
                         set = t[1]

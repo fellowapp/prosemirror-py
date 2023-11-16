@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Optional, cast
 
 from prosemirror.model import (
     ContentMatch,
@@ -16,9 +16,9 @@ from prosemirror.utils import Attrs
 def replace_step(
     doc: Node,
     from_: int,
-    to: int | None = None,
-    slice: Slice | None = None,
-) -> Step | None:
+    to: Optional[int] = None,
+    slice: Optional[Slice] = None,
+) -> Optional[Step]:
     if to is None:
         to = from_
     if slice is None:
@@ -58,9 +58,9 @@ class _Fittable:
         self,
         slice_depth: int,
         frontier_depth: int,
-        parent: Node | None,
-        inject: Fragment | None = None,
-        wrap: list[NodeType] | None = None,
+        parent: Optional[Node],
+        inject: Optional[Fragment] = None,
+        wrap: Optional[list[NodeType]] = None,
     ) -> None:
         self.slice_depth = slice_depth
         self.frontier_depth = frontier_depth
@@ -106,7 +106,7 @@ class Fitter:
     def depth(self) -> int:
         return len(self.frontier) - 1
 
-    def fit(self) -> Step | None:
+    def fit(self) -> Optional[Step]:
         while self.unplaced.size:
             fit = self.find_fittable()
             if fit:
@@ -147,7 +147,7 @@ class Fitter:
             return ReplaceStep(from__.pos, to_.pos, slice)
         return None
 
-    def find_fittable(self) -> _Fittable | None:
+    def find_fittable(self) -> Optional[_Fittable]:
         start_depth = self.unplaced.open_start
         cur = self.unplaced.content
         open_end = self.unplaced.open_end
@@ -182,18 +182,18 @@ class Fitter:
                     inject = _nothing
                     wrap = _nothing
 
-                    def _lazy_inject() -> Fragment | None:
+                    def _lazy_inject() -> Optional[Fragment]:
                         nonlocal inject
                         if inject is _nothing:
                             inject = match.fill_before(Fragment.from_(first), False)
-                        return cast(Fragment | None, inject)
+                        return cast(Optional[Fragment], inject)
 
-                    def _lazy_wrap() -> list[NodeType] | None:
+                    def _lazy_wrap() -> Optional[list[NodeType]]:
                         nonlocal wrap
                         assert first is not None
                         if wrap is _nothing:
                             wrap = match.find_wrapping(first.type)
-                        return cast(list[NodeType] | None, wrap)
+                        return cast(Optional[list[NodeType]], wrap)
 
                     if pass_ == 1 and (
                         (match.match_type(first.type) or _lazy_inject())
@@ -355,11 +355,11 @@ class Fitter:
         _nothing = object()
         level = _nothing
 
-        def _lazy_level() -> _CloseLevel | None:
+        def _lazy_level() -> Optional[_CloseLevel]:
             nonlocal level
             if level is _nothing:
                 level = self.find_close_level(self.to_)
-            return cast(_CloseLevel | None, level)
+            return cast(Optional[_CloseLevel], level)
 
         if (
             not top.type.is_text_block
@@ -383,7 +383,7 @@ class Fitter:
             after += 1
         return after
 
-    def find_close_level(self, to_: ResolvedPos) -> _CloseLevel | None:
+    def find_close_level(self, to_: ResolvedPos) -> Optional[_CloseLevel]:
         for i in range(min(self.depth, to_.depth), -1, -1):
             match = self.frontier[i].match
             type_ = self.frontier[i].type
@@ -406,7 +406,7 @@ class Fitter:
                 )
         return None
 
-    def close(self, to_: ResolvedPos) -> ResolvedPos | None:
+    def close(self, to_: ResolvedPos) -> Optional[ResolvedPos]:
         close = self.find_close_level(to_)
         if not close:
             return None
@@ -425,8 +425,8 @@ class Fitter:
     def open_frontier_node(
         self,
         type_: NodeType,
-        attrs: Attrs | None = None,
-        content: Fragment | None = None,
+        attrs: Optional[Attrs] = None,
+        content: Optional[Fragment] = None,
     ) -> None:
         top = self.frontier[self.depth]
         top_match = top.match.match_type(type_)
@@ -505,7 +505,7 @@ def content_after_fits(
     type_: NodeType,
     match: ContentMatch,
     open_: bool,
-) -> Fragment | None:
+) -> Optional[Fragment]:
     node = to_.node(depth)
     index = to_.index_after(depth) if open_ else to_.index(depth)
     if index == node.child_count and not type_.compatible_content(node.type):
@@ -526,7 +526,7 @@ def close_fragment(
     depth: int,
     old_open: int,
     new_open: int,
-    parent: Node | None,
+    parent: Optional[Node],
 ) -> Fragment:
     if depth < old_open:
         first = fragment.first_child
