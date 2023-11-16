@@ -8,8 +8,8 @@ from prosemirror.utils import JSONDict
 
 def map_fragment(
     fragment: Fragment,
-    f: Callable[[Node, Optional[Node], int], Node],
-    parent: Optional[Node] = None,
+    f: Callable[[Node, Node, int], Node],
+    parent: Node,
 ) -> Fragment:
     mapped = []
     for i in range(fragment.child_count):
@@ -48,17 +48,17 @@ class AddMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Optional[Node] = None) -> "RemoveMarkStep":
+    def invert(self, doc: Optional[Node] = None) -> Step:
         return RemoveMarkStep(self.from_, self.to, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional["AddMarkStep"]:
+    def map(self, mapping: Mappable) -> Optional[Step]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if from_.deleted and to.deleted or from_.pos > to.pos:
             return None
         return AddMarkStep(from_.pos, to.pos, self.mark)
 
-    def merge(self, other: "Step") -> Optional["AddMarkStep"]:
+    def merge(self, other: Step) -> Optional[Step]:
         if (
             isinstance(other, AddMarkStep)
             and other.mark.eq(self.mark)
@@ -115,23 +115,23 @@ class RemoveMarkStep(Step):
             return node.mark(self.mark.remove_from_set(node.marks))
 
         slice = Slice(
-            map_fragment(old_slice.content, iteratee),
+            map_fragment(old_slice.content, iteratee, doc),
             old_slice.open_start,
             old_slice.open_end,
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Optional[Node] = None) -> AddMarkStep:
+    def invert(self, doc: Optional[Node] = None) -> Step:
         return AddMarkStep(self.from_, self.to, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional["RemoveMarkStep"]:
+    def map(self, mapping: Mappable) -> Optional[Step]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if (from_.deleted and to.deleted) or (from_.pos > to.pos):
             return None
         return RemoveMarkStep(from_.pos, to.pos, self.mark)
 
-    def merge(self, other: "Step") -> Optional["RemoveMarkStep"]:
+    def merge(self, other: Step) -> Optional[Step]:
         if (
             isinstance(other, RemoveMarkStep)
             and (other.mark.eq(self.mark))
@@ -152,7 +152,7 @@ class RemoveMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> Step:
         if isinstance(json_data, str):
             import json
 
@@ -190,7 +190,7 @@ class AddNodeMarkStep(Step):
             Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
         )
 
-    def invert(self, doc: Node) -> Union["RemoveNodeMarkStep", "AddNodeMarkStep"]:
+    def invert(self, doc: Node) -> Step:
         node = doc.node_at(self.pos)
         if node:
             new_set = self.mark.add_to_set(node.marks)
@@ -201,7 +201,7 @@ class AddNodeMarkStep(Step):
                 return AddNodeMarkStep(self.pos, self.mark)
         return RemoveNodeMarkStep(self.pos, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional["AddNodeMarkStep"]:
+    def map(self, mapping: Mappable) -> Optional[Step]:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else AddNodeMarkStep(pos.pos, self.mark)
 
@@ -213,7 +213,7 @@ class AddNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> Step:
         if isinstance(json_data, str):
             import json
 
@@ -249,13 +249,13 @@ class RemoveNodeMarkStep(Step):
             Slice(Fragment.from_(updated), 0, 0 if node.is_leaf else 1),
         )
 
-    def invert(self, doc: Node) -> Union["RemoveNodeMarkStep", "AddNodeMarkStep"]:
+    def invert(self, doc: Node) -> Step:
         node = doc.node_at(self.pos)
         if not node or not self.mark.is_in_set(node.marks):
             return self
         return AddNodeMarkStep(self.pos, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional["RemoveNodeMarkStep"]:
+    def map(self, mapping: Mappable) -> Optional[Step]:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else RemoveNodeMarkStep(pos.pos, self.mark)
 
@@ -267,7 +267,7 @@ class RemoveNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> Step:
         if isinstance(json_data, str):
             import json
 

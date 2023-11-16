@@ -2,6 +2,7 @@ import html
 from typing import (
     Any,
     Callable,
+    Mapping,
     Optional,
     Sequence,
     Union,
@@ -11,7 +12,7 @@ from typing import (
 from .fragment import Fragment
 from .mark import Mark
 from .node import Node
-from .schema import Schema
+from .schema import MarkType, NodeType, Schema
 
 HTMLNode = Union["Element", "str"]
 
@@ -76,7 +77,7 @@ class DOMSerializer:
         self.marks = marks
 
     def serialize_fragment(
-        self, fragment: Fragment, target: Optional[Element] = None
+        self, fragment: Fragment, target: Union[Element, DocumentFragment, None] = None
     ) -> DocumentFragment:
         tgt: DocumentFragment = target or DocumentFragment(children=[])
 
@@ -189,7 +190,7 @@ class DOMSerializer:
 
     @classmethod
     def nodes_from_schema(
-        cls, schema: Schema[Any, Any]
+        cls, schema: Schema[str, Any]
     ) -> dict[str, Callable[["Node"], HTMLOutputSpec]]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
@@ -203,7 +204,9 @@ class DOMSerializer:
         return gather_to_dom(schema.marks)
 
 
-def gather_to_dom(obj: dict[str, Any]) -> dict[str, Callable[..., Any]]:
+def gather_to_dom(
+    obj: Mapping[str, Union[NodeType, MarkType]]
+) -> dict[str, Callable[..., Any]]:
     result = {}
     for name in obj:
         to_dom = obj[name].spec.get("toDOM")

@@ -23,7 +23,7 @@ class DocAttrStep(Step):
     def get_map(self) -> StepMap:
         return StepMap.empty
 
-    def invert(self, doc: Node) -> "DocAttrStep":
+    def invert(self, doc: Node) -> Step:
         return DocAttrStep(self.attr, doc.attrs[self.attr])
 
     def map(self, mapping: Mappable) -> Optional[Step]:

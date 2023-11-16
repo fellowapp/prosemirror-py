@@ -32,7 +32,7 @@ class AttrStep(Step):
     def get_map(self) -> StepMap:
         return StepMap.empty
 
-    def invert(self, doc: Node) -> "AttrStep":
+    def invert(self, doc: Node) -> Step:
         node_at_pos = doc.node_at(self.pos)
         assert node_at_pos is not None
         return AttrStep(self.pos, self.attr, node_at_pos.attrs[self.attr])

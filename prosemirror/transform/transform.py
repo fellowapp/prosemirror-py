@@ -270,7 +270,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        content: Union[list[Node], Node, Fragment],
+        content: Union[Fragment, Node, list[Node]],
     ) -> "Transform":
         return self.replace(from_, to, Slice(Fragment.from_(content), 0, 0))
 
@@ -280,7 +280,7 @@ class Transform:
     def insert(
         self,
         pos: int,
-        content: Union[list[Node], Node, Fragment],
+        content: Union[Fragment, Node, list[Node]],
     ) -> "Transform":
         return self.replace_with(pos, pos, content)
 
@@ -572,9 +572,7 @@ class Transform:
             )
         )
 
-    def set_node_attribute(
-        self, pos: int, attr: str, value: Union[str, int]
-    ) -> "Transform":
+    def set_node_attribute(self, pos: int, attr: str, value: JSON) -> "Transform":
         return self.step(AttrStep(pos, attr, value))
 
     def set_doc_attribute(self, attr: str, value: JSON) -> "Transform":
