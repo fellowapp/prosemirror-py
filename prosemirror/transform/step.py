@@ -1,12 +1,12 @@
 import abc
-from typing import Any, Literal, Optional, Type, TypeVar, Union, cast, overload
+from typing import Any, Dict, Literal, Optional, Type, TypeVar, Union, cast, overload
 
 from prosemirror.model import Node, ReplaceError, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
 from prosemirror.utils import JSONDict
 
 # like a registry
-STEPS_BY_ID: dict[str, Type["Step"]] = {}
+STEPS_BY_ID: Dict[str, Type["Step"]] = {}
 StepSubclass = TypeVar("StepSubclass", bound="Step")
 
 
@@ -50,7 +50,7 @@ class Step(metaclass=abc.ABCMeta):
         return type.from_json(schema, json_data)
 
 
-def step_json_id(id: str, step_class: type[StepSubclass]) -> type[StepSubclass]:
+def step_json_id(id: str, step_class: Type[StepSubclass]) -> Type[StepSubclass]:
     if id in STEPS_BY_ID:
         raise ValueError(f"Duplicated JSON ID for step type: {id}")
 

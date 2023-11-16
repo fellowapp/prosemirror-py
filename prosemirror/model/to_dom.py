@@ -2,9 +2,12 @@ import html
 from typing import (
     Any,
     Callable,
+    Dict,
+    List,
     Mapping,
     Optional,
     Sequence,
+    Tuple,
     Union,
     cast,
 )
@@ -18,7 +21,7 @@ HTMLNode = Union["Element", "str"]
 
 
 class DocumentFragment:
-    def __init__(self, children: list[HTMLNode]) -> None:
+    def __init__(self, children: List[HTMLNode]) -> None:
         self.children = children
 
     def __str__(self) -> str:
@@ -48,7 +51,7 @@ SELF_CLOSING_ELEMENTS = frozenset(
 
 class Element(DocumentFragment):
     def __init__(
-        self, name: str, attrs: dict[str, str], children: list[HTMLNode]
+        self, name: str, attrs: Dict[str, str], children: List[HTMLNode]
     ) -> None:
         self.name = name
         self.attrs = attrs
@@ -70,8 +73,8 @@ HTMLOutputSpec = Union[str, Sequence[Any], Element]
 class DOMSerializer:
     def __init__(
         self,
-        nodes: dict[str, Callable[[Node], HTMLOutputSpec]],
-        marks: dict[str, Callable[[Mark, bool], HTMLOutputSpec]],
+        nodes: Dict[str, Callable[[Node], HTMLOutputSpec]],
+        marks: Dict[str, Callable[[Mark, bool], HTMLOutputSpec]],
     ) -> None:
         self.nodes = nodes
         self.marks = marks
@@ -82,7 +85,7 @@ class DOMSerializer:
         tgt: DocumentFragment = target or DocumentFragment(children=[])
 
         top = tgt
-        active: Optional[list[tuple[Mark, DocumentFragment]]] = None
+        active: Optional[List[Tuple[Mark, DocumentFragment]]] = None
 
         def each(node: Node, offset: int, index: int) -> None:
             nonlocal top, active
@@ -139,7 +142,7 @@ class DOMSerializer:
 
     def serialize_mark(
         self, mark: Mark, inline: bool
-    ) -> Optional[tuple[HTMLNode, Optional[Element]]]:
+    ) -> Optional[Tuple[HTMLNode, Optional[Element]]]:
         to_dom = self.marks.get(mark.type.name)
         if to_dom:
             return type(self).render_spec(to_dom(mark, inline))
@@ -148,7 +151,7 @@ class DOMSerializer:
     @classmethod
     def render_spec(
         cls, structure: HTMLOutputSpec
-    ) -> tuple[HTMLNode, Optional[Element]]:
+    ) -> Tuple[HTMLNode, Optional[Element]]:
         if isinstance(structure, str):
             return html.escape(structure), None
         if isinstance(structure, Element):
@@ -191,7 +194,7 @@ class DOMSerializer:
     @classmethod
     def nodes_from_schema(
         cls, schema: Schema[str, Any]
-    ) -> dict[str, Callable[["Node"], HTMLOutputSpec]]:
+    ) -> Dict[str, Callable[["Node"], HTMLOutputSpec]]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
             result["text"] = lambda node: node.text
@@ -200,13 +203,13 @@ class DOMSerializer:
     @classmethod
     def marks_from_schema(
         cls, schema: Schema[Any, Any]
-    ) -> dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
+    ) -> Dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
         return gather_to_dom(schema.marks)
 
 
 def gather_to_dom(
     obj: Mapping[str, Union[NodeType, MarkType]]
-) -> dict[str, Callable[..., Any]]:
+) -> Dict[str, Callable[..., Any]]:
     result = {}
     for name in obj:
         to_dom = obj[name].spec.get("toDOM")

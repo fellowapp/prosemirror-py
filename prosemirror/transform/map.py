@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Callable
-from typing import ClassVar, Literal, Optional, Union, overload
+from typing import ClassVar, List, Literal, Optional, Union, overload
 
 lower16 = 0xFFFF
 factor16 = 2**16
@@ -70,7 +70,7 @@ class Mappable(metaclass=abc.ABCMeta):
 class StepMap(Mappable):
     empty: ClassVar["StepMap"]
 
-    def __init__(self, ranges: list[int], inverted: bool = False) -> None:
+    def __init__(self, ranges: List[int], inverted: bool = False) -> None:
         # prosemirror-transform overrides the constructor to return the
         # StepMap.empty singleton when ranges are empty.
         # It is not easy to do in Python, and the intent of that is to make sure
@@ -182,8 +182,8 @@ StepMap.empty = StepMap([])
 class Mapping(Mappable):
     def __init__(
         self,
-        maps: Optional[list[StepMap]] = None,
-        mirror: Optional[list[int]] = None,
+        maps: Optional[List[StepMap]] = None,
+        mirror: Optional[List[int]] = None,
         from_: Optional[int] = None,
         to: Optional[int] = None,
     ) -> None:

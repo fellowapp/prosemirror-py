@@ -1,5 +1,5 @@
 import re
-from typing import Optional, TypedDict, Union
+from typing import List, Optional, TypedDict, Union
 
 from prosemirror.model import (
     ContentMatch,
@@ -57,8 +57,8 @@ class Transform:
 
     def __init__(self, doc: Node) -> None:
         self.doc = doc
-        self.steps: list[Step] = []
-        self.docs: list[Node] = []
+        self.steps: List[Step] = []
+        self.docs: List[Node] = []
         self.mapping = Mapping()
 
     @property
@@ -144,7 +144,7 @@ class Transform:
             to: int
             step: int
 
-        matched: list[MatchedTypedDict] = []
+        matched: List[MatchedTypedDict] = []
         step = 0
 
         def iteratee(
@@ -270,7 +270,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        content: Union[Fragment, Node, list[Node]],
+        content: Union[Fragment, Node, List[Node]],
     ) -> "Transform":
         return self.replace(from_, to, Slice(Fragment.from_(content), 0, 0))
 
@@ -280,7 +280,7 @@ class Transform:
     def insert(
         self,
         pos: int,
-        content: Union[Fragment, Node, list[Node]],
+        content: Union[Fragment, Node, List[Node]],
     ) -> "Transform":
         return self.replace_with(pos, pos, content)
 
@@ -473,7 +473,7 @@ class Transform:
         )
 
     def wrap(
-        self, range_: NodeRange, wrappers: list[structure.NodeTypeWithAttrs]
+        self, range_: NodeRange, wrappers: List[structure.NodeTypeWithAttrs]
     ) -> "Transform":
         content = Fragment.empty
         i = len(wrappers) - 1
@@ -548,7 +548,7 @@ class Transform:
         pos: int,
         type: Optional[NodeType],
         attrs: Optional[Attrs],
-        marks: Optional[list[Mark]] = None,
+        marks: Optional[List[Mark]] = None,
     ) -> "Transform":
         node = self.doc.node_at(pos)
         if not node:
@@ -600,7 +600,7 @@ class Transform:
         self,
         pos: int,
         depth: Optional[int] = None,
-        types_after: Optional[list[structure.NodeTypeWithAttrs]] = None,
+        types_after: Optional[List[structure.NodeTypeWithAttrs]] = None,
     ) -> "Transform":
         if depth is None:
             depth = 1

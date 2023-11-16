@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Dict, cast
 
 from prosemirror.model.schema import Nodes, NodeSpec
 
@@ -27,8 +27,8 @@ def add(obj: "NodeSpec", props: "NodeSpec") -> "NodeSpec":
 
 
 def add_list_nodes(
-    nodes: dict["Nodes", "NodeSpec"], item_content: str, list_group: str
-) -> dict["Nodes", "NodeSpec"]:
+    nodes: Dict["Nodes", "NodeSpec"], item_content: str, list_group: str
+) -> Dict["Nodes", "NodeSpec"]:
     copy = nodes.copy()
     copy.update(
         {

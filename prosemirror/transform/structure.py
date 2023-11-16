@@ -1,4 +1,4 @@
-from typing import Optional, TypedDict, Union
+from typing import List, Optional, TypedDict, Union
 
 from prosemirror.model import ContentMatch, Node, NodeRange, NodeType, Slice
 from prosemirror.utils import Attrs
@@ -41,7 +41,7 @@ def find_wrapping(
     node_type: NodeType,
     attrs: Optional[Attrs] = None,
     inner_range: Optional[NodeRange] = None,
-) -> Optional[list[NodeTypeWithAttrs]]:
+) -> Optional[List[NodeTypeWithAttrs]]:
     if inner_range is None:
         inner_range = range_
 
@@ -69,7 +69,7 @@ def with_attrs(type: NodeType) -> NodeTypeWithAttrs:
 
 def find_wrapping_outside(
     range_: NodeRange, type: NodeType
-) -> Optional[list[NodeType]]:
+) -> Optional[List[NodeType]]:
     parent = range_.parent
     start_index = range_.start_index
     end_index = range_.end_index
@@ -80,7 +80,7 @@ def find_wrapping_outside(
     return around if parent.can_replace_with(start_index, end_index, outer) else None
 
 
-def find_wrapping_inside(range_: NodeRange, type: NodeType) -> Optional[list[NodeType]]:
+def find_wrapping_inside(range_: NodeRange, type: NodeType) -> Optional[List[NodeType]]:
     parent = range_.parent
     start_index = range_.start_index
     end_index = range_.end_index
@@ -114,7 +114,7 @@ def can_split(
     doc: Node,
     pos: int,
     depth: Optional[int] = None,
-    types_after: Optional[list[NodeTypeWithAttrs]] = None,
+    types_after: Optional[List[NodeTypeWithAttrs]] = None,
 ) -> bool:
     if depth is None:
         depth = 1

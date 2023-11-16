@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 from prosemirror.model import (
     ContentMatch,
@@ -60,7 +60,7 @@ class _Fittable:
         frontier_depth: int,
         parent: Optional[Node],
         inject: Optional[Fragment] = None,
-        wrap: Optional[list[NodeType]] = None,
+        wrap: Optional[List[NodeType]] = None,
     ) -> None:
         self.slice_depth = slice_depth
         self.frontier_depth = frontier_depth
@@ -91,7 +91,7 @@ class Fitter:
         self.from__ = from__
         self.unplaced = slice
 
-        self.frontier: list[_FrontierItem] = []
+        self.frontier: List[_FrontierItem] = []
         for i in range(from__.depth + 1):
             node = from__.node(i)
             self.frontier.append(
@@ -188,12 +188,12 @@ class Fitter:
                             inject = match.fill_before(Fragment.from_(first), False)
                         return cast(Optional[Fragment], inject)
 
-                    def _lazy_wrap() -> Optional[list[NodeType]]:
+                    def _lazy_wrap() -> Optional[List[NodeType]]:
                         nonlocal wrap
                         assert first is not None
                         if wrap is _nothing:
                             wrap = match.find_wrapping(first.type)
-                        return cast(Optional[list[NodeType]], wrap)
+                        return cast(Optional[List[NodeType]], wrap)
 
                     if pass_ == 1 and (
                         (match.match_type(first.type) or _lazy_inject())
@@ -557,7 +557,7 @@ def close_fragment(
 def covered_depths(
     from__: ResolvedPos,
     to_: ResolvedPos,
-) -> list[int]:
+) -> List[int]:
     result = []
     min_depth = min(from__.depth, to_.depth)
     for d in range(min_depth, -1, -1):

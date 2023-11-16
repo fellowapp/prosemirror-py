@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, cast
 
 from prosemirror.utils import JSONDict
 
@@ -186,7 +186,7 @@ def joinable(before: "ResolvedPos", after: "ResolvedPos", depth: int) -> "Node":
     return node
 
 
-def add_node(child: "Node", target: list["Node"]) -> None:
+def add_node(child: "Node", target: List["Node"]) -> None:
     last = len(target) - 1
     if last >= 0 and pm_node.is_text(child) and child.same_markup(target[last]):
         target[last] = child.with_text(cast("TextNode", target[last]).text + child.text)
@@ -198,7 +198,7 @@ def add_range(
     start: Optional["ResolvedPos"],
     end: Optional["ResolvedPos"],
     depth: int,
-    target: list["Node"],
+    target: List["Node"],
 ) -> None:
     node = cast("ResolvedPos", end or start).node(depth)
     start_index = 0
@@ -233,7 +233,7 @@ def replace_three_way(
 ) -> Fragment:
     open_start = joinable(from_, start, depth + 1) if from_.depth > depth else None
     open_end = joinable(end, to, depth + 1) if to.depth > depth else None
-    content: list["Node"] = []
+    content: List["Node"] = []
     add_range(None, from_, depth, content)
     if open_start and open_end and start.index(depth) == end.index(depth):
         check_join(open_start, open_end)
@@ -254,7 +254,7 @@ def replace_three_way(
 
 
 def replace_two_way(from_: "ResolvedPos", to: "ResolvedPos", depth: int) -> Fragment:
-    content: list["Node"] = []
+    content: List["Node"] = []
     add_range(None, from_, depth, content)
     if from_.depth > depth:
         type = joinable(from_, to, depth + 1)
@@ -265,7 +265,7 @@ def replace_two_way(from_: "ResolvedPos", to: "ResolvedPos", depth: int) -> Frag
 
 def prepare_slice_for_replace(
     slice: Slice, along: "ResolvedPos"
-) -> dict[str, "ResolvedPos"]:
+) -> Dict[str, "ResolvedPos"]:
     extra = along.depth - slice.open_start
     parent = along.node(extra)
     node = parent.copy(slice.content)

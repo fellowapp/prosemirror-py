@@ -3,7 +3,9 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Dict,
     Iterable,
+    List,
     Optional,
     Sequence,
     Union,
@@ -19,16 +21,16 @@ if TYPE_CHECKING:
     from .node import Node, TextNode
 
 
-def retIndex(index: int, offset: int) -> dict[str, int]:
+def retIndex(index: int, offset: int) -> Dict[str, int]:
     return {"index": index, "offset": offset}
 
 
 class Fragment:
     empty: ClassVar["Fragment"]
-    content: list["Node"]
+    content: List["Node"]
     size: int
 
-    def __init__(self, content: list["Node"], size: Optional[int] = None) -> None:
+    def __init__(self, content: List["Node"], size: Optional[int] = None) -> None:
         self.content = content
         self.size = size if size is not None else sum(c.node_size for c in content)
 
@@ -123,7 +125,7 @@ class Fragment:
             to = self.size
         if from_ == 0 and to == self.size:
             return self
-        result: list["Node"] = []
+        result: List["Node"] = []
         size = 0
         if to <= from_:
             return Fragment(result, size)
@@ -224,7 +226,7 @@ class Fragment:
             other_pos = other.size
         return find_diff_end(self, other, pos, other_pos)
 
-    def find_index(self, pos: int, round: int = -1) -> dict[str, int]:
+    def find_index(self, pos: int, round: int = -1) -> Dict[str, int]:
         if pos == 0:
             return retIndex(0, pos)
         if pos == self.size:
@@ -264,10 +266,10 @@ class Fragment:
         return cls([schema.node_from_json(item) for item in value])
 
     @classmethod
-    def from_array(cls, array: list["Node"]) -> "Fragment":
+    def from_array(cls, array: List["Node"]) -> "Fragment":
         if not array:
             return cls.empty
-        joined: Optional[list["Node"]] = None
+        joined: Optional[List["Node"]] = None
         size = 0
         for i in range(len(array)):
             node = array[i]

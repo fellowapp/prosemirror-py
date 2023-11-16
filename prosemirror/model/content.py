@@ -3,6 +3,8 @@ from functools import cmp_to_key, reduce
 from typing import (
     TYPE_CHECKING,
     ClassVar,
+    Dict,
+    List,
     Literal,
     NamedTuple,
     NoReturn,
@@ -30,10 +32,10 @@ class MatchEdge:
 
 class WrapCacheEntry:
     target: "NodeType"
-    computed: Optional[list["NodeType"]]
+    computed: Optional[List["NodeType"]]
 
     def __init__(
-        self, target: "NodeType", computed: Optional[list["NodeType"]]
+        self, target: "NodeType", computed: Optional[List["NodeType"]]
     ) -> None:
         self.target = target
         self.computed = computed
@@ -55,8 +57,8 @@ class ContentMatch:
 
     empty: ClassVar["ContentMatch"]
     valid_end: bool
-    next: list[MatchEdge]
-    wrap_cache: list[WrapCacheEntry]
+    next: List[MatchEdge]
+    wrap_cache: List[WrapCacheEntry]
 
     def __init__(self, valid_end: bool) -> None:
         self.valid_end = valid_end
@@ -64,7 +66,7 @@ class ContentMatch:
         self.wrap_cache = []
 
     @classmethod
-    def parse(cls, string: str, node_types: dict[str, "NodeType"]) -> "ContentMatch":
+    def parse(cls, string: str, node_types: Dict[str, "NodeType"]) -> "ContentMatch":
         stream = TokenStream(string, node_types)
         if stream.next() is None:
             return ContentMatch.empty
@@ -117,7 +119,7 @@ class ContentMatch:
     ) -> Optional[Fragment]:
         seen = [self]
 
-        def search(match: ContentMatch, types: list["NodeType"]) -> Optional[Fragment]:
+        def search(match: ContentMatch, types: List["NodeType"]) -> Optional[Fragment]:
             nonlocal seen
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
@@ -136,7 +138,7 @@ class ContentMatch:
 
         return search(self, [])
 
-    def find_wrapping(self, target: "NodeType") -> Optional[list["NodeType"]]:
+    def find_wrapping(self, target: "NodeType") -> Optional[List["NodeType"]]:
         for entry in self.wrap_cache:
             if entry.target.name == target.name:
                 return entry.computed
@@ -144,9 +146,9 @@ class ContentMatch:
         self.wrap_cache.append(WrapCacheEntry(target, computed))
         return computed
 
-    def compute_wrapping(self, target: "NodeType") -> Optional[list["NodeType"]]:
+    def compute_wrapping(self, target: "NodeType") -> Optional[List["NodeType"]]:
         seen = {}
-        active: list[Active] = [{"match": self, "type": None, "via": None}]
+        active: List[Active] = [{"match": self, "type": None, "via": None}]
         while len(active):
             current = active.pop(0)
             match = current["match"]
@@ -218,9 +220,9 @@ TOKEN_REGEX = re.compile(r"\w+|\W")
 
 class TokenStream:
     inline: Optional[bool]
-    tokens: list[str]
+    tokens: List[str]
 
-    def __init__(self, string: str, node_types: dict[str, "NodeType"]) -> None:
+    def __init__(self, string: str, node_types: Dict[str, "NodeType"]) -> None:
         self.string = string
         self.node_types = node_types
         self.inline = None
@@ -247,12 +249,12 @@ class TokenStream:
 
 class ChoiceExpr(TypedDict):
     type: Literal["choice"]
-    exprs: list["Expr"]
+    exprs: List["Expr"]
 
 
 class SeqExpr(TypedDict):
     type: Literal["seq"]
-    exprs: list["Expr"]
+    exprs: List["Expr"]
 
 
 class PlusExpr(TypedDict):
@@ -350,7 +352,7 @@ def parse_expr_range(stream: TokenStream, expr: Expr) -> Expr:
     return {"type": "range", "min": min_, "max": max_, "expr": expr}
 
 
-def resolve_name(stream: TokenStream, name: str) -> list["NodeType"]:
+def resolve_name(stream: TokenStream, name: str) -> List["NodeType"]:
     types = stream.node_types
     type = types.get(name)
     if type:
@@ -400,8 +402,8 @@ class Edge(TypedDict):
 
 def nfa(
     expr: Expr,
-) -> list[list[Edge]]:
-    nfa_: list[list[Edge]] = [[]]
+) -> List[List[Edge]]:
+    nfa_: List[List[Edge]] = [[]]
 
     def node() -> int:
         nonlocal nfa_
@@ -416,17 +418,17 @@ def nfa(
         nfa_[from_].append(edge)
         return edge
 
-    def connect(edges: list[Edge], to: int) -> None:
+    def connect(edges: List[Edge], to: int) -> None:
         for edge in edges:
             edge["to"] = to
 
-    def compile(expr: Expr, from_: int) -> list[Edge]:
+    def compile(expr: Expr, from_: int) -> List[Edge]:
         if expr["type"] == "choice":
             return list(
                 reduce(
                     lambda out, expr: [*out, *compile(expr, from_)],
                     expr["exprs"],
-                    cast(list[Edge], []),
+                    cast(List[Edge], []),
                 )
             )
         elif expr["type"] == "seq":
@@ -477,9 +479,9 @@ def cmp(a: int, b: int) -> int:
 
 
 def null_from(
-    nfa: list[list[Edge]],
+    nfa: List[List[Edge]],
     node: int,
-) -> list[int]:
+) -> List[int]:
     result = []
 
     def scan(n: int) -> None:
@@ -499,21 +501,21 @@ def null_from(
 
 class DFAState(NamedTuple):
     state: "NodeType"
-    next: list[int]
+    next: List[int]
 
 
-def dfa(nfa: list[list[Edge]]) -> ContentMatch:
+def dfa(nfa: List[List[Edge]]) -> ContentMatch:
     labeled = {}
 
-    def explore(states: list[int]) -> ContentMatch:
+    def explore(states: List[int]) -> ContentMatch:
         nonlocal labeled
-        out: list[DFAState] = []
+        out: List[DFAState] = []
         for node in states:
             for item in nfa[node]:
                 term, to = item.get("term"), item.get("to")
                 if not term:
                     continue
-                set: Optional[list[int]] = None
+                set: Optional[List[int]] = None
                 for t in out:
                     if t[0] == term:
                         set = t[1]

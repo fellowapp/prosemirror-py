@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Optional, Union, cast
+from typing import TYPE_CHECKING, Callable, List, Optional, Union, cast
 
 from .mark import Mark
 
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 class ResolvedPos:
     def __init__(
-        self, pos: int, path: list[Union["Node", int]], parent_offset: int
+        self, pos: int, path: List[Union["Node", int]], parent_offset: int
     ) -> None:
         self.pos = pos
         self.path = path
@@ -97,7 +97,7 @@ class ResolvedPos:
             pos += node.child(i).node_size
         return pos
 
-    def marks(self) -> list["Mark"]:
+    def marks(self) -> List["Mark"]:
         parent = self.parent
         index = self.index()
         if parent.content.size == 0:
@@ -119,7 +119,7 @@ class ResolvedPos:
             i += 1
         return marks
 
-    def marks_across(self, end: "ResolvedPos") -> Optional[list["Mark"]]:
+    def marks_across(self, end: "ResolvedPos") -> Optional[List["Mark"]]:
         after = self.parent.maybe_child(self.index())
         if not after or not after.is_inline:
             return None
@@ -183,7 +183,7 @@ class ResolvedPos:
     def resolve(cls, doc: "Node", pos: int) -> "ResolvedPos":
         if not (pos >= 0 and pos <= doc.content.size):
             raise ValueError(f"Position {pos} out of range")
-        path: list[Union["Node", int]] = []
+        path: List[Union["Node", int]] = []
         start = 0
         parent_offset = pos
         node = doc

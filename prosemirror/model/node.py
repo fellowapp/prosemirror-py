@@ -1,5 +1,5 @@
 import copy
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypedDict, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, TypedDict, Union, cast
 
 from typing_extensions import TypeGuard
 
@@ -31,7 +31,7 @@ class Node:
         type: "NodeType",
         attrs: "Attrs",
         content: Optional[Fragment],
-        marks: list[Mark],
+        marks: List[Mark],
     ) -> None:
         self.type = type
         self.attrs = attrs
@@ -104,7 +104,7 @@ class Node:
         self,
         type: "NodeType",
         attrs: Optional["Attrs"] = None,
-        marks: Optional[list[Mark]] = None,
+        marks: Optional[List[Mark]] = None,
     ) -> bool:
         return (
             self.type.name == type.name
@@ -117,7 +117,7 @@ class Node:
             return self
         return self.__class__(self.type, self.attrs, content, self.marks)
 
-    def mark(self, marks: list[Mark]) -> "Node":
+    def mark(self, marks: List[Mark]) -> "Node":
         if marks == self.marks:
             return self
         return self.__class__(self.type, self.attrs, self.content, marks)
@@ -272,7 +272,7 @@ class Node:
         return True
 
     def can_replace_with(
-        self, from_: int, to: int, type: "NodeType", marks: Optional[list[Mark]] = None
+        self, from_: int, to: int, type: "NodeType", marks: Optional[List[Mark]] = None
     ) -> bool:
         if marks and not self.type.allows_marks(marks):
             return False
@@ -356,7 +356,7 @@ class TextNode(Node):
         type: "NodeType",
         attrs: "Attrs",
         content: str,
-        marks: list[Mark],
+        marks: List[Mark],
     ) -> None:
         super().__init__(type, attrs, None, marks)
         if not content:
@@ -392,7 +392,7 @@ class TextNode(Node):
     def node_size(self) -> int:
         return text_length(self.text)
 
-    def mark(self, marks: list[Mark]) -> "TextNode":
+    def mark(self, marks: List[Mark]) -> "TextNode":
         return (
             self
             if marks == self.marks
@@ -423,7 +423,7 @@ class TextNode(Node):
         return {**super().to_json(), "text": self.text}
 
 
-def wrap_marks(marks: list[Mark], str: str) -> str:
+def wrap_marks(marks: List[Mark], str: str) -> str:
     i = len(marks) - 1
     while i >= 0:
         str = marks[i].type.name + "(" + str + ")"
