@@ -1,3 +1,5 @@
+from typing import Literal
+
 from prosemirror.model import Fragment, Schema
 from prosemirror.test_builder import eq, out
 from prosemirror.test_builder import test_schema as schema
@@ -15,7 +17,9 @@ br = out["br"]
 hr = out["hr"]
 img = out["img"]
 
-custom_schema = Schema(
+custom_schema: Schema[
+    Literal["doc", "paragraph", "text", "contact", "hard_break"], str
+] = Schema(
     {
         "nodes": {
             "doc": {"content": "paragraph+"},

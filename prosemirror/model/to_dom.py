@@ -1,49 +1,66 @@
 import html
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+)
 
-from . import Fragment, Mark, Node, Schema
+from .fragment import Fragment
+from .mark import Mark
+from .node import Node
+from .schema import MarkType, NodeType, Schema
 
-HTMLNode = Union["Element", str]
+HTMLNode = Union["Element", "str"]
 
 
 class DocumentFragment:
-    def __init__(self, children: List[HTMLNode]):
+    def __init__(self, children: List[HTMLNode]) -> None:
         self.children = children
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "".join([str(c) for c in self.children])
 
 
-class Element(DocumentFragment):
-    self_closing_elements = frozenset(
-        [
-            "area",
-            "base",
-            "br",
-            "col",
-            "embed",
-            "hr",
-            "img",
-            "input",
-            "keygen",
-            "link",
-            "meta",
-            "param",
-            "source",
-            "track",
-            "wbr",
-        ]
-    )
+SELF_CLOSING_ELEMENTS = frozenset(
+    {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "keygen",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    }
+)
 
-    def __init__(self, name: str, attrs: Dict[str, str], children: List[HTMLNode]):
+
+class Element(DocumentFragment):
+    def __init__(
+        self, name: str, attrs: Dict[str, str], children: List[HTMLNode]
+    ) -> None:
         self.name = name
         self.attrs = attrs
         super().__init__(children)
 
-    def __str__(self):
+    def __str__(self) -> str:
         attrs_str = " ".join([f'{k}="{html.escape(v)}"' for k, v in self.attrs.items()])
         open_tag_str = " ".join([s for s in [self.name, attrs_str] if s])
-        if self.name in self.self_closing_elements:
+        if self.name in SELF_CLOSING_ELEMENTS:
             assert not self.children, "self-closing elements should not have children"
             return f"<{open_tag_str}>"
         children_str = "".join([str(c) for c in self.children])
@@ -58,19 +75,19 @@ class DOMSerializer:
         self,
         nodes: Dict[str, Callable[[Node], HTMLOutputSpec]],
         marks: Dict[str, Callable[[Mark, bool], HTMLOutputSpec]],
-    ):
+    ) -> None:
         self.nodes = nodes
         self.marks = marks
 
     def serialize_fragment(
-        self, fragment: Fragment, target: Optional[Element] = None
+        self, fragment: Fragment, target: Union[Element, DocumentFragment, None] = None
     ) -> DocumentFragment:
         tgt: DocumentFragment = target or DocumentFragment(children=[])
 
         top = tgt
-        active: Optional[List[DocumentFragment]] = None
+        active: Optional[List[Tuple[Mark, DocumentFragment]]] = None
 
-        def each(node: Node, *_):
+        def each(node: Node, offset: int, index: int) -> None:
             nonlocal top, active
 
             if active or node.marks:
@@ -84,22 +101,20 @@ class DOMSerializer:
                         rendered += 1
                         continue
                     if (
-                        not next.eq(active[keep])
+                        not next.eq(active[keep][0])
                         or next.type.spec.get("spanning") is False
                     ):
                         break
-                    keep += 2
+                    keep += 1
                     rendered += 1
                 while keep < len(active):
-                    top = active.pop()
-                    active.pop()
+                    top = active.pop()[1]
                 while rendered < len(node.marks):
                     add = node.marks[rendered]
                     rendered += 1
                     mark_dom = self.serialize_mark(add, node.is_inline)
                     if mark_dom:
-                        active.append(add)  # type: ignore
-                        active.append(top)
+                        active.append((add, top))
                         top.children.append(mark_dom[0])
                         top = cast(DocumentFragment, mark_dom[1] or mark_dom[0])
             top.children.append(self.serialize_node_inner(node))
@@ -144,7 +159,7 @@ class DOMSerializer:
         tag_name = structure[0]
         if " " in tag_name[1:]:
             raise NotImplementedError("XML namespaces are not supported")
-        content_dom = None
+        content_dom: Optional[Element] = None
         dom = Element(name=tag_name, attrs={}, children=[])
         attrs = structure[1] if len(structure) > 1 else None
         start = 1
@@ -173,22 +188,28 @@ class DOMSerializer:
         return dom, content_dom
 
     @classmethod
-    def from_schema(cls, schema: Schema) -> "DOMSerializer":
+    def from_schema(cls, schema: Schema[Any, Any]) -> "DOMSerializer":
         return cls(cls.nodes_from_schema(schema), cls.marks_from_schema(schema))
 
     @classmethod
-    def nodes_from_schema(cls, schema: Schema):
+    def nodes_from_schema(
+        cls, schema: Schema[str, Any]
+    ) -> Dict[str, Callable[["Node"], HTMLOutputSpec]]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
             result["text"] = lambda node: node.text
         return result
 
     @classmethod
-    def marks_from_schema(cls, schema: Schema):
+    def marks_from_schema(
+        cls, schema: Schema[Any, Any]
+    ) -> Dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
         return gather_to_dom(schema.marks)
 
 
-def gather_to_dom(obj: Dict[str, Any]):
+def gather_to_dom(
+    obj: Mapping[str, Union[NodeType, MarkType]]
+) -> Dict[str, Callable[..., Any]]:
     result = {}
     for name in obj:
         to_dom = obj[name].spec.get("toDOM")

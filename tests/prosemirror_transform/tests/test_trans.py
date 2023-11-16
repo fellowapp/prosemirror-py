@@ -883,7 +883,7 @@ class TestTopLevelMarkReplace:
         {
             "nodes": {
                 **schema.spec["nodes"],
-                **({"doc": {**schema.spec["nodes"].get("doc"), "marks": "_"}}),
+                "doc": {**schema.spec["nodes"]["doc"], "marks": "_"},  # type: ignore
             },
             "marks": schema.spec["marks"],
         }
@@ -926,7 +926,7 @@ class TestEnforcingHeadingAndBody:
     nodes_sepc = schema.spec["nodes"].copy()
     nodes_sepc.update(
         {
-            "doc": {**nodes_sepc["doc"], "content": "heading body"},
+            "doc": {**nodes_sepc["doc"], "content": "heading body"},  # type: ignore
             "body": {"content": "block+"},
         }
     )

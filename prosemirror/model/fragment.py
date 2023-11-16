@@ -1,27 +1,47 @@
-from typing import TYPE_CHECKING, ClassVar, Iterable, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+)
 
-from prosemirror.utils import text_length
-
-from .diff import find_diff_end, find_diff_start
+from prosemirror.utils import JSONList, text_length
 
 if TYPE_CHECKING:
+    from prosemirror.model.schema import Schema
+
+    from .diff import Diff
     from .node import Node, TextNode
 
 
-def retIndex(index, offset):
+def retIndex(index: int, offset: int) -> Dict[str, int]:
     return {"index": index, "offset": offset}
 
 
 class Fragment:
     empty: ClassVar["Fragment"]
+    content: List["Node"]
+    size: int
 
-    def __init__(self, content, size=None):
+    def __init__(self, content: List["Node"], size: Optional[int] = None) -> None:
         self.content = content
-        self.size = size
-        if size is None:
-            self.size = sum(c.node_size for c in content)
+        self.size = size if size is not None else sum(c.node_size for c in content)
 
-    def nodes_between(self, from_, to, f, node_start=0, parent=None):
+    def nodes_between(
+        self,
+        from_: int,
+        to: int,
+        f: Callable[["Node", int, Optional["Node"], int], Optional[bool]],
+        node_start: int = 0,
+        parent: Optional["Node"] = None,
+    ) -> None:
         i = 0
         pos = 0
         while pos < to:
@@ -42,14 +62,24 @@ class Fragment:
             pos = end
             i += 1
 
-    def descendants(self, f):
+    def descendants(
+        self, f: Callable[["Node", int, Optional["Node"], int], Optional[bool]]
+    ) -> None:
         self.nodes_between(0, self.size, f)
 
-    def text_between(self, from_, to, block_separator="", leaf_text=""):
+    def text_between(
+        self,
+        from_: int,
+        to: int,
+        block_separator: str = "",
+        leaf_text: Union[Callable[["Node"], str], str] = "",
+    ) -> str:
         text = []
         separated = True
 
-        def iteratee(node: "Node", pos, *args):
+        def iteratee(
+            node: "Node", pos: int, _parent: Optional["Node"], _to: int
+        ) -> None:
             nonlocal text
             nonlocal separated
             if node.is_text:
@@ -69,7 +99,7 @@ class Fragment:
         self.nodes_between(from_, to, iteratee, 0)
         return "".join(text)
 
-    def append(self, other):
+    def append(self, other: "Fragment") -> "Fragment":
         if not other.size:
             return self
         if not self.size:
@@ -80,7 +110,9 @@ class Fragment:
             self.content.copy(),
             0,
         )
-        if last.is_text and last.same_markup(first):
+        assert last is not None and first is not None
+        if pm_node.is_text(last) and last.same_markup(first):
+            assert isinstance(first, pm_node.TextNode)
             content[len(content) - 1] = last.with_text(last.text + first.text)
             i = 1
         while i < len(other.content):
@@ -88,12 +120,13 @@ class Fragment:
             i += 1
         return Fragment(content, self.size + other.size)
 
-    def cut(self, from_, to=None):
+    def cut(self, from_: int, to: Optional[int] = None) -> "Fragment":
         if to is None:
             to = self.size
         if from_ == 0 and to == self.size:
             return self
-        result, size = [], 0
+        result: List["Node"] = []
+        size = 0
         if to <= from_:
             return Fragment(result, size)
         i, pos = 0, 0
@@ -102,7 +135,7 @@ class Fragment:
             end = pos + child.node_size
             if end > from_:
                 if pos < from_ or end > to:
-                    if child.is_text:
+                    if pm_node.is_text(child):
                         child = child.cut(
                             max(0, from_ - pos), min(text_length(child.text), to - pos)
                         )
@@ -117,14 +150,14 @@ class Fragment:
             i += 1
         return Fragment(result, size)
 
-    def cut_by_index(self, from_, to=None):
+    def cut_by_index(self, from_: int, to: Optional[int] = None) -> "Fragment":
         if from_ == to:
             return Fragment.empty
         if from_ == 0 and to == len(self.content):
             return self
         return Fragment(self.content[from_:to])
 
-    def replace_child(self, index, node):
+    def replace_child(self, index: int, node: "Node") -> "Fragment":
         current = self.content[index]
         if current == node:
             return self
@@ -133,39 +166,39 @@ class Fragment:
         copy[index] = node
         return Fragment(copy, size)
 
-    def add_to_start(self, node):
+    def add_to_start(self, node: "Node") -> "Fragment":
         return Fragment([node, *self.content], self.size + node.node_size)
 
-    def add_to_end(self, node):
+    def add_to_end(self, node: "Node") -> "Fragment":
         return Fragment([*self.content, node], self.size + node.node_size)
 
-    def eq(self, other):
+    def eq(self, other: "Fragment") -> bool:
         if len(self.content) != len(other.content):
             return False
         return all(a.eq(b) for (a, b) in zip(self.content, other.content))
 
     @property
-    def first_child(self):
+    def first_child(self) -> Optional["Node"]:
         return self.content[0] if self.content else None
 
     @property
-    def last_child(self):
+    def last_child(self) -> Optional["Node"]:
         return self.content[-1] if self.content else None
 
     @property
-    def child_count(self):
+    def child_count(self) -> int:
         return len(self.content)
 
-    def child(self, index):
+    def child(self, index: int) -> "Node":
         return self.content[index]
 
-    def maybe_child(self, index):
+    def maybe_child(self, index: int) -> Optional["Node"]:
         try:
             return self.content[index]
         except IndexError:
             return None
 
-    def for_each(self, f):
+    def for_each(self, f: Callable[["Node", int, int], Any]) -> None:
         i = 0
         p = 0
         while i < len(self.content):
@@ -174,17 +207,26 @@ class Fragment:
             p += child.node_size
             i += 1
 
-    def find_diff_start(self, other, pos=0):
+    def find_diff_start(self, other: "Fragment", pos: int = 0) -> Optional[int]:
+        from .diff import find_diff_start
+
         return find_diff_start(self, other, pos)
 
-    def find_diff_end(self, other, pos=None, other_pos=None):
+    def find_diff_end(
+        self,
+        other: "Fragment",
+        pos: Optional[int] = None,
+        other_pos: Optional[int] = None,
+    ) -> Optional["Diff"]:
+        from .diff import find_diff_end
+
         if pos is None:
             pos = self.size
         if other_pos is None:
             other_pos = other.size
         return find_diff_end(self, other, pos, other_pos)
 
-    def find_index(self, pos, round=-1):
+    def find_index(self, pos: int, round: int = -1) -> Dict[str, int]:
         if pos == 0:
             return retIndex(0, pos)
         if pos == self.size:
@@ -203,43 +245,52 @@ class Fragment:
             i += 1
             cur_pos = end
 
-    def to_json(self):
+    def to_json(self) -> Optional[JSONList]:
         if self.content:
             return [item.to_json() for item in self.content]
+        return None
 
     @classmethod
-    def from_json(cls, schema, value):
+    def from_json(cls, schema: "Schema[Any, Any]", value: Any) -> "Fragment":
         if not value:
             return cls.empty
+
         if isinstance(value, str):
             import json
 
             value = json.loads(value)
+
         if not isinstance(value, list):
             raise ValueError("Invalid input for Fragment.from_json")
+
         return cls([schema.node_from_json(item) for item in value])
 
     @classmethod
-    def from_array(cls, array):
+    def from_array(cls, array: List["Node"]) -> "Fragment":
         if not array:
             return cls.empty
-        joined, size = None, 0
+        joined: Optional[List["Node"]] = None
+        size = 0
         for i in range(len(array)):
             node = array[i]
             size += node.node_size
-            if i and node.is_text and array[i - 1].same_markup(node):
+            if i and pm_node.is_text(node) and array[i - 1].same_markup(node):
                 if not joined:
                     joined = array[0:i]
-                joined[-1] = node.with_text(joined[-1].text + node.text)
+                last = joined[-1]
+                assert isinstance(last, pm_node.TextNode)
+                joined[-1] = node.with_text(last.text + node.text)
             elif joined:
                 joined.append(node)
         return cls(joined or array, size)
 
     @classmethod
-    def from_(cls, nodes):
+    def from_(
+        cls, nodes: Union["Fragment", "Node", Sequence["Node"], None]
+    ) -> "Fragment":
         if not nodes:
             return cls.empty
-        if isinstance(nodes, cls):
+        if isinstance(nodes, Fragment):
             return nodes
         if isinstance(nodes, Iterable):
             return cls.from_array(list(nodes))
@@ -247,14 +298,16 @@ class Fragment:
             return cls([nodes], nodes.node_size)
         raise ValueError(f"cannot convert {nodes!r} to a fragment")
 
-    def to_string_inner(self):
+    def to_string_inner(self) -> str:
         return ", ".join([str(i) for i in self.content])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<{self.to_string_inner()}>"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.__str__()}>"
 
 
 Fragment.empty = Fragment([], 0)
+
+from . import node as pm_node  # noqa: E402

@@ -7,13 +7,15 @@ import lxml
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement as DOMNode
 
+from prosemirror.utils import Attrs, JSONDict
+
 from .content import ContentMatch
 from .fragment import Fragment
 from .mark import Mark
 from .node import Node, TextNode
 from .replace import Slice
 from .resolvedpos import ResolvedPos
-from .schema import Attrs, MarkType, NodeType, Schema
+from .schema import MarkType, NodeType, Schema
 
 WSType = Union[bool, Literal["full"], None]
 
@@ -53,9 +55,9 @@ class ParseRule:
     close_parent: Optional[bool]
     skip: Optional[bool]
     attrs: Optional[Attrs]
-    get_attrs: Optional[Callable[[DOMNode], Union[None, Attrs, Literal[False]]]]
+    get_attrs: Optional[Callable[[DOMNode], Union[Attrs, Literal[False], None]]]
     content_element: Union[str, DOMNode, Callable[[DOMNode], DOMNode], None]
-    get_content: Optional[Callable[[DOMNode, Schema], Fragment]]
+    get_content: Optional[Callable[[DOMNode, Schema[Any, Any]], Fragment]]
     preserve_whitespace: WSType
 
     @classmethod
@@ -86,10 +88,10 @@ class DOMParser:
     _styles: List[ParseRule]
     _normalize_lists: bool
 
-    schema: Schema
+    schema: Schema[Any, Any]
     rules: List[ParseRule]
 
-    def __init__(self, schema: Schema, rules: List[ParseRule]) -> None:
+    def __init__(self, schema: Schema[Any, Any], rules: List[ParseRule]) -> None:
         self.schema = schema
         self.rules = rules
         self._tags = [rule for rule in rules if rule.tag is not None]
@@ -207,7 +209,7 @@ class DOMParser:
         return None
 
     @classmethod
-    def schema_rules(cls, schema: Schema) -> List[ParseRule]:
+    def schema_rules(cls, schema: Schema[Any, Any]) -> List[ParseRule]:
         result: List[ParseRule] = []
 
         def insert(rule: ParseRule) -> None:
@@ -225,7 +227,7 @@ class DOMParser:
             return
 
         for name in schema.marks:
-            rules = schema.marks[name].spec["parseDOM"]
+            rules = schema.marks[name].spec.get("parseDOM")
 
             if rules:
                 for rule in rules:
@@ -251,13 +253,13 @@ class DOMParser:
         return result
 
     @classmethod
-    def from_schema(cls, schema: Schema) -> "DOMParser":
+    def from_schema(cls, schema: Schema[Any, Any]) -> "DOMParser":
         if "dom_parser" not in schema.cached:
             schema.cached["dom_parser"] = DOMParser(
                 schema, DOMParser.schema_rules(schema)
             )
 
-        return schema.cached["dom_parser"]
+        return cast("DOMParser", schema.cached["dom_parser"])
 
 
 BLOCK_TAGS: Dict[str, bool] = {
@@ -410,15 +412,16 @@ class NodeContext:
                 m = re.findall(r"[ \t\r\n\u000c]+$", last.text)
 
                 if m:
-                    text = cast(TextNode, last)
                     if len(last.text) == len(m[0]):
                         self.content.pop()
                     else:
-                        self.content[-1] = text.with_text(text.text[0 : -len(m[0])])
+                        self.content[-1] = last.with_text(last.text[0 : -len(m[0])])
 
         content = Fragment.from_(self.content)
         if not open_end and self.match is not None:
-            content = content.append(self.match.fill_before(Fragment.empty, True))
+            content = content.append(
+                cast(Fragment, self.match.fill_before(Fragment.empty, True))
+            )
 
         return (
             self.type.create(self.attrs, content, self.marks) if self.type else content
@@ -543,7 +546,7 @@ class ParseContext:
 
         if (
             top.options & OPT_PRESERVE_WS_FULL
-            or top.inline_context(dom_)  # type: ignore
+            or top.inline_context(dom_)
             or re.search(r"[^ \t\r\n\u000c]", value) is not None
         ):
             if not (top.options & OPT_PRESERVE_WS):
@@ -581,7 +584,7 @@ class ParseContext:
 
             self.find_in_text(dom_)
         else:
-            self.find_inside(dom_)  # type: ignore
+            self.find_inside(dom_)
 
     def add_element(
         self, dom_: DOMNode, match_after: Optional[ParseRule] = None
@@ -666,7 +669,7 @@ class ParseContext:
                             remove = m.add_to_set(remove)
                 else:
                     add = (
-                        self.parser.schema.marks[rule.mark]
+                        self.parser.schema.marks[cast(str, rule.mark)]
                         .create(rule.attrs)
                         .add_to_set(add)
                     )
@@ -705,7 +708,7 @@ class ParseContext:
         elif rule.get_content is not None:
             self.find_inside(dom_)
             rule.get_content(dom_, self.parser.schema).for_each(
-                lambda node: self.insert_node(node)
+                lambda node, offset, index: self.insert_node(node)
             )
         else:
             content_dom = dom_
@@ -986,15 +989,15 @@ class ParseContext:
 
                 if (
                     default is not None
-                    and default.is_textblock
+                    and default.is_text_block
                     and default.default_attrs
                 ):
                     return default
 
                 d -= 1
 
-        for name, type_ in self.parser.schema.nodes.iteritems():
-            if type_.is_textblock and type_.default_attrs:
+        for name, type_ in self.parser.schema.nodes.items():
+            if type_.is_text_block and type_.default_attrs:
                 return type_
 
         return None
@@ -1034,10 +1037,10 @@ class ParseContext:
 
 def normalize_list(dom_: DOMNode) -> None:
     child = next(iter(dom_))
-    prev_item = None
+    prev_item: Optional[DOMNode] = None
 
     while child is not None:
-        name = child.tag.lower() if get_node_type(child) == 1 else None  # type: ignore
+        name = child.tag.lower() if get_node_type(child) == 1 else None
 
         if name and name in LIST_TAGS and prev_item:
             prev_item.append(child)
@@ -1053,7 +1056,7 @@ def normalize_list(dom_: DOMNode) -> None:
 def matches(dom_: DOMNode, selector_str: str) -> bool:
     selector = CSSSelector(selector_str)
 
-    return bool(dom_ in selector(dom_))  # type: ignore
+    return bool(dom_ in selector(dom_))  # type: ignore[operator]
 
 
 def parse_styles(style: str) -> List[str]:
@@ -1081,8 +1084,8 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
             i = 0
             while i < match.edge_count:
                 result = match.edge(i)
-                _type = result["type"]
-                _next = result["next"]
+                _type = result.type
+                _next = result.next
 
                 if _type == node_type:
                     return True
@@ -1167,7 +1170,7 @@ def get_node_type(element: DOMNode) -> int:
     return 8
 
 
-def from_html(schema: Schema, html: str) -> Dict[str, Any]:
+def from_html(schema: Schema[Any, Any], html: str) -> JSONDict:
     fragment = lxml.html.fragment_fromstring(html, create_parent="document-fragment")
 
     prose_doc = DOMParser.from_schema(schema).parse(fragment)

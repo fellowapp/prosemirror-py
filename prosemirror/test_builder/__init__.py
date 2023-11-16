@@ -1,4 +1,8 @@
-from prosemirror.model import Schema
+# type: ignore
+
+from typing import Any
+
+from prosemirror.model import Node, Schema
 from prosemirror.schema.basic import schema as _schema
 from prosemirror.schema.list import add_list_nodes
 
@@ -15,7 +19,7 @@ nodes.update(
     }
 )
 
-test_schema = Schema(
+test_schema: Schema[Any, Any] = Schema(
     {
         "nodes": nodes,
         "marks": _schema.spec["marks"],
@@ -44,5 +48,5 @@ out = builders(
 )
 
 
-def eq(a, b):
+def eq(a: Node, b: Node) -> bool:
     return a.eq(b)

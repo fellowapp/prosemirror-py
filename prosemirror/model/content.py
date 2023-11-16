@@ -1,40 +1,94 @@
 import re
 from functools import cmp_to_key, reduce
-from typing import ClassVar
+from typing import (
+    TYPE_CHECKING,
+    ClassVar,
+    Dict,
+    List,
+    Literal,
+    NamedTuple,
+    NoReturn,
+    Optional,
+    TypedDict,
+    Union,
+    cast,
+)
 
 from .fragment import Fragment
 
+if TYPE_CHECKING:
+    from .node import Node
+    from .schema import NodeType
+
+
+class MatchEdge:
+    type: "NodeType"
+    next: "ContentMatch"
+
+    def __init__(self, type: "NodeType", next: "ContentMatch") -> None:
+        self.type = type
+        self.next = next
+
+
+class WrapCacheEntry:
+    target: "NodeType"
+    computed: Optional[List["NodeType"]]
+
+    def __init__(
+        self, target: "NodeType", computed: Optional[List["NodeType"]]
+    ) -> None:
+        self.target = target
+        self.computed = computed
+
+
+class Active(TypedDict):
+    match: "ContentMatch"
+    type: Optional["NodeType"]
+    via: Optional["Active"]
+
 
 class ContentMatch:
-    empty: ClassVar["ContentMatch"]
+    """
+    Instances of this class represent a match state of a node type's
+    [content expression](#model.NodeSpec.content), and can be used to
+    find out whether further content matches here, and whether a given
+    position is a valid end of the node.
+    """
 
-    def __init__(self, valid_end):
+    empty: ClassVar["ContentMatch"]
+    valid_end: bool
+    next: List[MatchEdge]
+    wrap_cache: List[WrapCacheEntry]
+
+    def __init__(self, valid_end: bool) -> None:
         self.valid_end = valid_end
         self.next = []
         self.wrap_cache = []
 
     @classmethod
-    def parse(cls, string, node_types):
+    def parse(cls, string: str, node_types: Dict[str, "NodeType"]) -> "ContentMatch":
         stream = TokenStream(string, node_types)
-        if stream.next is None:
+        if stream.next() is None:
             return ContentMatch.empty
         expr = parse_expr(stream)
-        if stream.next:
+        if stream.next() is not None:
             stream.err("Unexpected trailing text")
         match = dfa(nfa(expr))
         check_for_dead_ends(match, stream)
         return match
 
-    def match_type(self, type, *args):
-        for i in range(0, len(self.next), 2):
-            if self.next[i].name == type.name:
-                return self.next[i + 1]
+    def match_type(self, type: "NodeType") -> Optional["ContentMatch"]:
+        for next in self.next:
+            if next.type.name == type.name:
+                return next.next
         return None
 
-    def match_fragment(self, frag, start=0, end=None):
+    def match_fragment(
+        self, frag: Fragment, start: int = 0, end: Optional[int] = None
+    ) -> Optional["ContentMatch"]:
         if end is None:
             end = frag.child_count
-        cur = self
+        cur: Optional["ContentMatch"] = self
         i = start
         while cur and i < end:
             cur = cur.match_type(frag.child(i).type)
@@ -42,56 +96,59 @@ class ContentMatch:
         return cur
 
     @property
-    def inline_content(self):
-        if not self.next:
-            return None
-        first = self.next[0]
-        return first.is_inline if first else False
+    def inline_content(self) -> bool:
+        return bool(self.next) and self.next[0].type.is_inline
 
     @property
-    def default_type(self):
-        for i in range(0, len(self.next), 2):
-            type = self.next[i]
+    def default_type(self) -> Optional["NodeType"]:
+        for next in self.next:
+            type = next.type
             if not (type.is_text or type.has_required_attrs()):
                 return type
+        return None
 
-    def compatible(self, other):
-        for i in range(0, len(self.next), 2):
-            for j in range(0, len(other.next), 2):
-                if self.next[i].name == other.next[j].name:
+    def compatible(self, other: "ContentMatch") -> bool:
+        for i in self.next:
+            for j in other.next:
+                if i.type.name == j.type.name:
                     return True
         return False
 
-    def fill_before(self, after, to_end=False, start_index=0):
+    def fill_before(
+        self, after: Fragment, to_end: bool = False, start_index: int = 0
+    ) -> Optional[Fragment]:
         seen = [self]
 
-        def search(match, types):
+        def search(match: ContentMatch, types: List["NodeType"]) -> Optional[Fragment]:
             nonlocal seen
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
-                return Fragment.from_([tp.create_and_fill() for tp in types])
-            for i in range(0, len(match.next), 2):
-                type = match.next[i]
-                next = match.next[i + 1]
+                return Fragment.from_(
+                    [cast("Node", tp.create_and_fill()) for tp in types]
+                )
+            for i in match.next:
+                type = i.type
+                next = i.next
                 if not (type.is_text or type.has_required_attrs()) and next not in seen:
                     seen.append(next)
                     found = search(next, [*types, type])
                     if found:
                         return found
+            return None
 
         return search(self, [])
 
-    def find_wrapping(self, target):
-        for i in range(0, len(self.wrap_cache), 2):
-            if self.wrap_cache[i].name == target.name:
-                return self.wrap_cache[i + 1]
+    def find_wrapping(self, target: "NodeType") -> Optional[List["NodeType"]]:
+        for entry in self.wrap_cache:
+            if entry.target.name == target.name:
+                return entry.computed
         computed = self.compute_wrapping(target)
-        self.wrap_cache.extend([target, computed])
+        self.wrap_cache.append(WrapCacheEntry(target, computed))
         return computed
 
-    def compute_wrapping(self, target):
+    def compute_wrapping(self, target: "NodeType") -> Optional[List["NodeType"]]:
         seen = {}
-        active = [{"match": self, "type": None, "via": None}]
+        active: List[Active] = [{"match": self, "type": None, "via": None}]
         while len(active):
             current = active.pop(0)
             match = current["match"]
@@ -100,50 +157,59 @@ class ContentMatch:
                 obj = current
                 while obj["type"]:
                     result.append(obj["type"])
-                    obj = obj["via"]
+                    obj = cast(Active, obj["via"])
                 return list(reversed(result))
-            for i in range(0, len(match.next), 2):
-                type = match.next[i]
+            for i in range(len(match.next)):
+                type = match.next[i].type
                 if (
                     not type.is_leaf
                     and not type.has_required_attrs()
                     and type.name not in seen
-                    and (not current["type"] or match.next[i + 1].valid_end)
+                    and (not current["type"] or match.next[i].next.valid_end)
                 ):
                     active.append(
-                        {"match": type.content_match, "via": current, "type": type}
+                        {
+                            "match": type.content_match,
+                            "via": current,
+                            "type": type,
+                        }
                     )
                     seen[type.name] = True
+        return None
 
     @property
-    def edge_count(self):
-        return len(self.next) >> 1
+    def edge_count(self) -> int:
+        return len(self.next)
 
-    def edge(self, n):
-        i = n << 1
-        if i >= len(self.next):
+    def edge(self, n: int) -> MatchEdge:
+        if n >= len(self.next):
             raise ValueError(f"There's no {n}th edge in this content match")
-        return {"type": self.next[i], "next": self.next[i + 1]}
+        return self.next[n]
 
-    def __str__(self):
+    def __str__(self) -> str:
         seen = []
 
-        def scan(m):
+        def scan(m: "ContentMatch") -> None:
             nonlocal seen
-            for i in range(1, len(m.next), 2):
-                if m.next[i] in seen:
-                    scan(m.next[i])
+            seen.append(m)
+            for i in m.next:
+                if i.next not in seen:
+                    scan(i.next)
 
         scan(self)
 
-        def iteratee(m, i):
-            out = i + ("*" if m.valid_end else " ") + " "
-            for i in range(0, len(m.next), 2):
+        def iteratee(m: "ContentMatch", i: int) -> str:
+            out = str(i) + ("*" if m.valid_end else " ") + " "
+            for i in range(len(m.next)):
                 out += (
-                    (", " if i else "") + m.next(i) + "->" + seen.index(m.next[i + 1])
+                    (", " if i else "")
+                    + m.next[i].type.name
+                    + "->"
+                    + str(seen.index(m.next[i].next))
                 )
+            return out
 
-        return "\n".join((iteratee(m, i)) for m, i in enumerate(seen))
+        return "\n".join((iteratee(m, i)) for i, m in enumerate(seen))
 
 
 ContentMatch.empty = ContentMatch(True)
@@ -153,33 +219,75 @@ TOKEN_REGEX = re.compile(r"\w+|\W")
 
 
 class TokenStream:
-    def __init__(self, string, node_types):
+    inline: Optional[bool]
+    tokens: List[str]
+
+    def __init__(self, string: str, node_types: Dict[str, "NodeType"]) -> None:
         self.string = string
         self.node_types = node_types
         self.inline = None
         self.pos = 0
         self.tokens = [i for i in TOKEN_REGEX.findall(string) if i.strip()]
 
-    @property
-    def next(self):
+    def next(self) -> Optional[str]:
         try:
             return self.tokens[self.pos]
         except IndexError:
             return None
 
-    def eat(self, tok):
-        if self.next == tok:
+    def eat(self, tok: str) -> Union[int, bool]:
+        if self.next() == tok:
             pos = self.pos
             self.pos += 1
             return pos or True
         else:
             return False
 
-    def err(self, str):
+    def err(self, str: str) -> NoReturn:
         raise SyntaxError(f'{str} (in content expression) "{self.string}"')
 
 
-def parse_expr(stream):
+class ChoiceExpr(TypedDict):
+    type: Literal["choice"]
+    exprs: List["Expr"]
+
+
+class SeqExpr(TypedDict):
+    type: Literal["seq"]
+    exprs: List["Expr"]
+
+
+class PlusExpr(TypedDict):
+    type: Literal["plus"]
+    expr: "Expr"
+
+
+class StarExpr(TypedDict):
+    type: Literal["star"]
+    expr: "Expr"
+
+
+class OptExpr(TypedDict):
+    type: Literal["opt"]
+    expr: "Expr"
+
+
+class RangeExpr(TypedDict):
+    type: Literal["range"]
+    min: int
+    max: int
+    expr: "Expr"
+
+
+class NameExpr(TypedDict):
+    type: Literal["name"]
+    value: "NodeType"
+
+
+Expr = Union[ChoiceExpr, SeqExpr, PlusExpr, StarExpr, OptExpr, RangeExpr, NameExpr]
+
+
+def parse_expr(stream: TokenStream) -> Expr:
     exprs = []
     while True:
         exprs.append(parse_expr_seq(stream))
@@ -190,18 +298,19 @@ def parse_expr(stream):
     return {"type": "choice", "exprs": exprs}
 
 
-def parse_expr_seq(stream):
+def parse_expr_seq(stream: TokenStream) -> Expr:
     exprs = []
     while True:
         exprs.append(parse_expr_subscript(stream))
-        if not (stream.next and stream.next != ")" and stream.next != "|"):
+        next_ = stream.next()
+        if not (next_ and next_ != ")" and next_ != "|"):
             break
     if len(exprs) == 1:
         return exprs[0]
     return {"type": "seq", "exprs": exprs}
 
 
-def parse_expr_subscript(stream):
+def parse_expr_subscript(stream: TokenStream) -> Expr:
     expr = parse_expr_atom(stream)
     while True:
         if stream.eat("+"):
@@ -220,19 +329,21 @@ def parse_expr_subscript(stream):
 NUMBER_REGEX = re.compile(r"\D")
 
 
-def parse_num(stream: TokenStream):
-    if NUMBER_REGEX.match(stream.next):
-        stream.err(f'Expected number, got "{stream.next}"')
-    result = int(stream.next)
+def parse_num(stream: TokenStream) -> int:
+    next = stream.next()
+    assert next is not None
+    if NUMBER_REGEX.match(next):
+        stream.err(f'Expected number, got "{next}"')
+    result = int(next)
     stream.pos += 1
     return result
 
 
-def parse_expr_range(stream: TokenStream, expr):
+def parse_expr_range(stream: TokenStream, expr: Expr) -> Expr:
     min_ = parse_num(stream)
     max_ = min_
     if stream.eat(","):
-        if stream.next != "}":
+        if stream.next() != "}":
             max_ = parse_num(stream)
         else:
             max_ = -1
@@ -241,7 +352,7 @@ def parse_expr_range(stream: TokenStream, expr):
     return {"type": "range", "min": min_, "max": max_, "expr": expr}
 
 
-def resolve_name(stream: TokenStream, name):
+def resolve_name(stream: TokenStream, name: str) -> List["NodeType"]:
     types = stream.node_types
     type = types.get(name)
     if type:
@@ -255,15 +366,17 @@ def resolve_name(stream: TokenStream, name):
     return result
 
 
-def parse_expr_atom(stream: TokenStream):
+def parse_expr_atom(
+    stream: TokenStream,
+) -> Expr:
     if stream.eat("("):
         expr = parse_expr(stream)
         if not stream.eat(")"):
             stream.err("missing closing patren")
         return expr
-    elif not re.match(r"\W", stream.next):
+    elif not re.match(r"\W", cast(str, stream.next())):
 
-        def iteratee(type):
+        def iteratee(type: "NodeType") -> Expr:
             nonlocal stream
             if stream.inline is None:
                 stream.inline = type.is_inline
@@ -271,46 +384,61 @@ def parse_expr_atom(stream: TokenStream):
                 stream.err("Mixing inline and block content")
             return {"type": "name", "value": type}
 
-        exprs = [iteratee(type) for type in resolve_name(stream, stream.next)]
+        exprs = [
+            iteratee(type) for type in resolve_name(stream, cast(str, stream.next()))
+        ]
         stream.pos += 1
         if len(exprs) == 1:
             return exprs[0]
         return {"type": "choice", "exprs": exprs}
     else:
-        stream.err(f'Unexpected token "{stream.next}"')
+        stream.err(f'Unexpected token "{stream.next()}"')
 
 
-def nfa(expr):
-    nfa_ = [[]]
+class Edge(TypedDict):
+    term: Optional["NodeType"]
+    to: Optional[int]
 
-    def node():
+
+def nfa(
+    expr: Expr,
+) -> List[List[Edge]]:
+    nfa_: List[List[Edge]] = [[]]
+
+    def node() -> int:
         nonlocal nfa_
         nfa_.append([])
         return len(nfa_) - 1
 
-    def edge(from_, to=None, term=None):
+    def edge(
+        from_: int, to: Optional[int] = None, term: Optional["NodeType"] = None
+    ) -> Edge:
         nonlocal nfa_
-        edge = {"term": term, "to": to}
+        edge: Edge = {"term": term, "to": to}
         nfa_[from_].append(edge)
         return edge
 
-    def connect(edges, to):
+    def connect(edges: List[Edge], to: int) -> None:
         for edge in edges:
             edge["to"] = to
 
-    def compile(expr, from_):
+    def compile(expr: Expr, from_: int) -> List[Edge]:
         if expr["type"] == "choice":
             return list(
-                reduce(lambda out, expr: out + compile(expr, from_), expr["exprs"], [])
+                reduce(
+                    lambda out, expr: [*out, *compile(expr, from_)],
+                    expr["exprs"],
+                    cast(List[Edge], []),
+                )
             )
         elif expr["type"] == "seq":
             i = 0
             while True:
-                next = compile(expr["exprs"][i], from_)
+                next_ = compile(expr["exprs"][i], from_)
                 if i == len(expr["exprs"]) - 1:
-                    return next
+                    return next_
                 from_ = node()
-                connect(next, from_)
+                connect(next_, from_)
                 i += 1
         elif expr["type"] == "star":
             loop = node()
@@ -346,73 +474,81 @@ def nfa(expr):
     return nfa_
 
 
-def cmp(a, b):
+def cmp(a: int, b: int) -> int:
     return b - a
 
 
-def null_from(nfa, node):
+def null_from(
+    nfa: List[List[Edge]],
+    node: int,
+) -> List[int]:
     result = []
 
-    def scan(n):
+    def scan(n: int) -> None:
         nonlocal result
         edges = nfa[n]
         if len(edges) == 1 and not edges[0].get("term"):
-            return scan(edges[0].get("to"))
+            return scan(cast(int, edges[0]["to"]))
         result.append(n)
         for edge in edges:
             term, to = edge.get("term"), edge.get("to")
             if not term and to not in result:
-                scan(to)
+                scan(cast(int, to))
 
     scan(node)
     return sorted(result)
 
 
-def dfa(nfa):
+class DFAState(NamedTuple):
+    state: "NodeType"
+    next: List[int]
+
+
+def dfa(nfa: List[List[Edge]]) -> ContentMatch:
     labeled = {}
 
-    def explore(states):
+    def explore(states: List[int]) -> ContentMatch:
         nonlocal labeled
-        out = []
+        out: List[DFAState] = []
         for node in states:
             for item in nfa[node]:
                 term, to = item.get("term"), item.get("to")
                 if not term:
                     continue
-                known = term in out
-                if known:
-                    set = out[out.index(term) + 1]
-                else:
-                    set = False
-                for n in null_from(nfa, to):
-                    if not set:
+                set: Optional[List[int]] = None
+                for t in out:
+                    if t[0] == term:
+                        set = t[1]
+                for n in null_from(nfa, cast(int, to)):
+                    if set is None:
                         set = []
-                        out.extend([term, set])
+                        out.append(DFAState(term, set))
                     if n not in set:
                         set.append(n)
         state = ContentMatch((len(nfa) - 1) in states)
         labeled[",".join([str(s) for s in states])] = state
-        for i in range(0, len(out), 2):
-            out[i + 1].sort(key=cmp_to_key(cmp))
-            states = out[i + 1]
+        for i in range(len(out)):
+            out[i][1].sort(key=cmp_to_key(cmp))
+            states = out[i][1]
             find_by_key = ",".join(str(s) for s in states)
-            items_to_extend = [out[i], labeled.get(find_by_key) or explore(states)]
-            state.next.extend(items_to_extend)
+            state.next.append(
+                MatchEdge(out[i][0], labeled.get(find_by_key) or explore(states))
+            )
         return state
 
     return explore(null_from(nfa, 0))
 
 
-def check_for_dead_ends(match, stream):
+def check_for_dead_ends(match: ContentMatch, stream: TokenStream) -> None:
     work = [match]
     i = 0
     while i < len(work):
         state = work[i]
         dead = not state.valid_end
         nodes = []
-        for j in range(0, len(state.next), 2):
-            node = state.next[j]
-            next = state.next[j + 1]
+        for j in range(len(state.next)):
+            node = state.next[j].type
+            next = state.next[j].next
             nodes.append(node.name)
             if dead and not (node.is_text or node.has_required_attrs()):
                 dead = False

@@ -1,13 +1,16 @@
-from prosemirror.model import Node
+from typing import List, Optional, TypedDict, Union
+
+from prosemirror.model import ContentMatch, Node, NodeRange, NodeType, Slice
+from prosemirror.utils import Attrs
 
 
-def can_cut(node, start, end):
+def can_cut(node: Node, start: int, end: int) -> bool:
     if start == 0 or node.can_replace(start, node.child_count):
         return (end == node.child_count) or node.can_replace(0, end)
     return False
 
 
-def lift_target(range_):
+def lift_target(range_: NodeRange) -> Optional[int]:
     parent = range_.parent
     content = parent.content.cut_by_index(range_.start_index, range_.end_index)
     depth = range_.depth
@@ -25,18 +28,34 @@ def lift_target(range_):
             break
         depth -= 1
 
+    return None
 
-def find_wrapping(range_, node_type, attrs=None, inner_range=None):
+
+class NodeTypeWithAttrs(TypedDict):
+    type: NodeType
+    attrs: Optional[Attrs]
+
+
+def find_wrapping(
+    range_: NodeRange,
+    node_type: NodeType,
+    attrs: Optional[Attrs] = None,
+    inner_range: Optional[NodeRange] = None,
+) -> Optional[List[NodeTypeWithAttrs]]:
     if inner_range is None:
         inner_range = range_
+
     around = find_wrapping_outside(range_, node_type)
-    inner = False
+    inner = None
+
     if around is not None:
         inner = find_wrapping_inside(inner_range, node_type)
     else:
         return None
+
     if inner is None:
         return None
+
     return (
         [with_attrs(item) for item in around]
         + [{"type": node_type, "attrs": attrs}]
@@ -44,11 +63,13 @@ def find_wrapping(range_, node_type, attrs=None, inner_range=None):
     )
 
 
-def with_attrs(type):
-    return {"type": type, "attrs": None}
+def with_attrs(type: NodeType) -> NodeTypeWithAttrs:
+    return NodeTypeWithAttrs(type=type, attrs=None)
 
 
-def find_wrapping_outside(range_, type):
+def find_wrapping_outside(
+    range_: NodeRange, type: NodeType
+) -> Optional[List[NodeType]]:
     parent = range_.parent
     start_index = range_.start_index
     end_index = range_.end_index
@@ -59,41 +80,54 @@ def find_wrapping_outside(range_, type):
     return around if parent.can_replace_with(start_index, end_index, outer) else None
 
 
-def find_wrapping_inside(range_, type):
+def find_wrapping_inside(range_: NodeRange, type: NodeType) -> Optional[List[NodeType]]:
     parent = range_.parent
     start_index = range_.start_index
     end_index = range_.end_index
     inner = parent.child(start_index)
     inside = type.content_match.find_wrapping(inner.type)
+
     if inside is None:
         return None
+
     last_type = inside[-1] if len(inside) else type
-    inner_match = last_type.content_match
+    inner_match: Optional[ContentMatch] = last_type.content_match
     i = start_index
+
     while inner_match and i < end_index:
         inner_match = inner_match.match_type(parent.child(i).type)
         i += 1
+
     if not inner_match or not inner_match.valid_end:
         return None
+
     return inside
 
 
-def can_change_type(doc, pos, type):
+def can_change_type(doc: Node, pos: int, type: NodeType) -> bool:
     pos_ = doc.resolve(pos)
     index = pos_.index()
     return pos_.parent.can_replace_with(index, index + 1, type)
 
 
-def can_split(doc, pos, depth=None, types_after=None):
+def can_split(
+    doc: Node,
+    pos: int,
+    depth: Optional[int] = None,
+    types_after: Optional[List[NodeTypeWithAttrs]] = None,
+) -> bool:
     if depth is None:
         depth = 1
     pos_ = doc.resolve(pos)
     base = pos_.depth - depth
-    inner_type = None
+    inner_type: Union[NodeTypeWithAttrs, Node, None] = None
+
     if types_after:
         inner_type = types_after[-1]
+
     if not inner_type:
         inner_type = pos_.parent
+
     if isinstance(inner_type, Node):
         if (
             base < 0
@@ -104,6 +138,7 @@ def can_split(doc, pos, depth=None, types_after=None):
             )
         ):
             return False
+
     elif isinstance(inner_type, dict):
         if (
             base < 0
@@ -114,29 +149,34 @@ def can_split(doc, pos, depth=None, types_after=None):
             )
         ):
             return False
+
     d = pos_.depth - 1
     i = depth - 2
+
     while d > base:
         node = pos_.node(d)
         index = pos_.index(d)
         if node.type.spec.get("isolating"):
             return False
         rest = node.content.cut_by_index(index, node.child_count)
+
         if types_after and len(types_after) > i:
             override_child = types_after[i + 1]
             rest = rest.replace_child(
                 0, override_child["type"].create(override_child.get("attrs"))
             )
-        after = None
+        after: Union[NodeTypeWithAttrs, Node, None] = None
         if types_after and len(types_after) > i:
             after = types_after[i]
         if not after:
             after = node
+
         if isinstance(after, dict):
             if not node.can_replace(index + 1, node.child_count) or not after[
                 "type"
             ].valid_content(rest):
                 return False
+
         if isinstance(after, Node):
             if after != node:
                 rest = rest.replace_child(0, after.type.create(after.attrs))
@@ -153,7 +193,7 @@ def can_split(doc, pos, depth=None, types_after=None):
     )
 
 
-def can_join(doc, pos):
+def can_join(doc: Node, pos: int) -> Optional[bool]:
     pos_ = doc.resolve(pos)
     index = pos_.index()
     return (
@@ -163,13 +203,13 @@ def can_join(doc, pos):
     )
 
 
-def joinable(a, b):
+def joinable(a: Optional[Node], b: Optional[Node]) -> bool:
     if a and b and not a.is_leaf:
         return a.can_append(b)
     return False
 
 
-def join_point(doc, pos, dir=-1):
+def join_point(doc: Node, pos: int, dir: int = -1) -> Optional[int]:
     pos_ = doc.resolve(pos)
     for d in range(pos_.depth, -1, -1):
         before = None
@@ -196,8 +236,10 @@ def join_point(doc, pos, dir=-1):
             break
         pos = pos_.before(d) if dir < 0 else pos_.after(d)
 
+    return None
 
-def insert_point(doc, pos, node_type):
+
+def insert_point(doc: Node, pos: int, node_type: NodeType) -> Optional[int]:
     pos_ = doc.resolve(pos)
     if pos_.parent.can_replace_with(pos_.index(), pos_.index(), node_type):
         return pos
@@ -216,13 +258,16 @@ def insert_point(doc, pos, node_type):
             if index < pos_.node(d).child_count:
                 return None
 
+    return None
 
-def drop_point(doc, pos, slice):
+
+def drop_point(doc: Node, pos: int, slice: Slice) -> Optional[int]:
     pos_ = doc.resolve(pos)
     if not slice.content.size:
         return pos
     content = slice.content
     for i in range(slice.open_start):
+        assert content.first_child is not None
         content = content.first_child.content
     pass_ = 1
     while pass_ <= (2 if slice.open_start == 0 and slice.size else 1):
@@ -239,10 +284,11 @@ def drop_point(doc, pos, slice):
             if pass_ == 1:
                 fits = parent.can_replace(insert_pos, insert_pos, content)
             else:
+                assert content.first_child is not None
                 wrapping = parent.content_match_at(insert_pos).find_wrapping(
                     content.first_child.type
                 )
-                fits = wrapping and parent.can_replace_with(
+                fits = wrapping is not None and parent.can_replace_with(
                     insert_pos, insert_pos, wrapping[0]
                 )
             if fits:
