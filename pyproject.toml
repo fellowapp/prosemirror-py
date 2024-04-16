@@ -27,7 +27,7 @@ pandoc = "^2.3"
 pydash = "^7.0.3"
 pytest = "^7.4.3"
 pytest-cov = "^4.0.0"
-ruff = "^0.1.5"
+ruff = ">=0.1.5,<0.4.0"
 
 [tool.black]
 max-line-length = 88
