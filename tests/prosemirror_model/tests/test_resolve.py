@@ -17,23 +17,21 @@ _p2 = {"node": _blk["node"].child(0), "start": 6, "end": 10}
 @pytest.mark.parametrize(
     "pos,exp",
     list(
-        enumerate(
-            [
-                [_doc, 0, None, _p1["node"]],
-                [_doc, _p1, 0, None, "ab"],
-                [_doc, _p1, 1, "a", "b"],
-                [_doc, _p1, 2, "ab", None],
-                [_doc, 4, _p1["node"], _blk["node"]],
-                [_doc, _blk, 0, None, _p2["node"]],
-                [_doc, _blk, _p2, 0, None, "cd"],
-                [_doc, _blk, _p2, 1, "c", "d"],
-                [_doc, _blk, _p2, 2, "cd", "ef"],
-                [_doc, _blk, _p2, 3, "e", "f"],
-                [_doc, _blk, _p2, 4, "ef", None],
-                [_doc, _blk, 6, _p2["node"], None],
-                [_doc, 12, _blk["node"], None],
-            ]
-        )
+        enumerate([
+            [_doc, 0, None, _p1["node"]],
+            [_doc, _p1, 0, None, "ab"],
+            [_doc, _p1, 1, "a", "b"],
+            [_doc, _p1, 2, "ab", None],
+            [_doc, 4, _p1["node"], _blk["node"]],
+            [_doc, _blk, 0, None, _p2["node"]],
+            [_doc, _blk, _p2, 0, None, "cd"],
+            [_doc, _blk, _p2, 1, "c", "d"],
+            [_doc, _blk, _p2, 2, "cd", "ef"],
+            [_doc, _blk, _p2, 3, "e", "f"],
+            [_doc, _blk, _p2, 4, "ef", None],
+            [_doc, _blk, 6, _p2["node"], None],
+            [_doc, 12, _blk["node"], None],
+        ])
     ),
 )
 def test_node_resolve(pos, exp):

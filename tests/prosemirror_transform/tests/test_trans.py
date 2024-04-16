@@ -76,12 +76,10 @@ def test_add_mark(doc, mark, expect, test_transform):
 
 
 def test_does_not_remove_non_excluded_marks_of_the_same_type():
-    schema = Schema(
-        {
-            "nodes": {"doc": {"content": "text*"}, "text": {}},
-            "marks": {"comment": {"excludes": "", "attrs": {"id": {}}}},
-        }
-    )
+    schema = Schema({
+        "nodes": {"doc": {"content": "text*"}, "text": {}},
+        "marks": {"comment": {"excludes": "", "attrs": {"id": {}}}},
+    })
     tr = Transform(
         schema.node(
             "doc", None, schema.text("hi", [schema.mark("comment", {"id": 10})])
@@ -92,12 +90,10 @@ def test_does_not_remove_non_excluded_marks_of_the_same_type():
 
 
 def test_can_remote_multiple_excluded_marks():
-    schema = Schema(
-        {
-            "nodes": {"doc": {"content": "text*"}, "text": {}},
-            "marks": {"big": {"excludes": "small1 small2"}, "small1": {}, "small2": {}},
-        }
-    )
+    schema = Schema({
+        "nodes": {"doc": {"content": "text*"}, "text": {}},
+        "marks": {"big": {"excludes": "small1 small2"}, "small1": {}, "small2": {}},
+    })
     tr = Transform(
         schema.node(
             "doc",
@@ -171,17 +167,15 @@ def test_remove_mark(doc, mark, expect, test_transform):
 
 
 def test_remove_more_than_one_mark_of_same_type_from_block():
-    schema = Schema(
-        {
-            "nodes": {
-                "doc": {"content": "text*"},
-                "text": {},
-            },
-            "marks": {
-                "comment": {"excludes": "", "attrs": {"id": {}}},
-            },
-        }
-    )
+    schema = Schema({
+        "nodes": {
+            "doc": {"content": "text*"},
+            "text": {},
+        },
+        "marks": {
+            "comment": {"excludes": "", "attrs": {"id": {}}},
+        },
+    })
     tr = Transform(
         schema.node(
             "doc",
@@ -772,15 +766,13 @@ def test_replace(doc, source, expect, test_transform):
 
 
 def test_doesnt_fail_when_moving_text_would_solve_unsatisfied_content_constraint():
-    s = Schema(
-        {
-            "nodes": {
-                **schema.spec["nodes"],
-                "title": {"content": "text*"},
-                "doc": {"content": "title? block*"},
-            },
-        }
-    )
+    s = Schema({
+        "nodes": {
+            **schema.spec["nodes"],
+            "title": {"content": "text*"},
+            "doc": {"content": "title? block*"},
+        },
+    })
     tr = Transform(s.node("doc", None, s.node("title", None, s.text("hi"))))
     tr.replace(
         1,
@@ -798,15 +790,13 @@ def test_doesnt_fail_when_moving_text_would_solve_unsatisfied_content_constraint
 
 
 def test_pasting_half_open_slice_with_title_and_code_block_into_empty_title():
-    s = Schema(
-        {
-            "nodes": {
-                **schema.spec["nodes"],
-                "title": {"content": "text*"},
-                "doc": {"content": "title? block*"},
-            },
-        }
-    )
+    s = Schema({
+        "nodes": {
+            **schema.spec["nodes"],
+            "title": {"content": "text*"},
+            "doc": {"content": "title? block*"},
+        },
+    })
     tr = Transform(s.node("doc", None, [s.node("title", None, [])]))
     tr.replace(
         1,
@@ -824,15 +814,13 @@ def test_pasting_half_open_slice_with_title_and_code_block_into_empty_title():
 
 
 def test_pasting_half_open_slice_with_heading_and_code_block_into_empty_title():
-    s = Schema(
-        {
-            "nodes": {
-                **schema.spec["nodes"],
-                "title": {"content": "text*"},
-                "doc": {"content": "title? block*"},
-            },
-        }
-    )
+    s = Schema({
+        "nodes": {
+            **schema.spec["nodes"],
+            "title": {"content": "text*"},
+            "doc": {"content": "title? block*"},
+        },
+    })
     tr = Transform(s.node("doc", None, [s.node("title")]))
     tr.replace(
         1,
@@ -850,17 +838,15 @@ def test_pasting_half_open_slice_with_heading_and_code_block_into_empty_title():
 
 
 def test_replacing_in_nodes_with_fixed_content():
-    s = Schema(
-        {
-            "nodes": {
-                "doc": {"content": "block+"},
-                "a": {"content": "inline*"},
-                "b": {"content": "inline*"},
-                "block": {"content": "a b"},
-                "text": {"group": "inline"},
-            }
+    s = Schema({
+        "nodes": {
+            "doc": {"content": "block+"},
+            "a": {"content": "inline*"},
+            "b": {"content": "inline*"},
+            "block": {"content": "a b"},
+            "text": {"group": "inline"},
         }
-    )
+    })
 
     doc = s.node(
         "doc",
@@ -879,15 +865,13 @@ def test_replacing_in_nodes_with_fixed_content():
 
 
 class TestTopLevelMarkReplace:
-    ms = Schema(
-        {
-            "nodes": {
-                **schema.spec["nodes"],
-                "doc": {**schema.spec["nodes"]["doc"], "marks": "_"},  # type: ignore
-            },
-            "marks": schema.spec["marks"],
-        }
-    )
+    ms = Schema({
+        "nodes": {
+            **schema.spec["nodes"],
+            "doc": {**schema.spec["nodes"]["doc"], "marks": "_"},  # type: ignore
+        },
+        "marks": schema.spec["marks"],
+    })
 
     def test_preserves_mark_on_block_nodes(self):
         ms = self.ms
@@ -924,12 +908,10 @@ class TestTopLevelMarkReplace:
 
 class TestEnforcingHeadingAndBody:
     nodes_sepc = schema.spec["nodes"].copy()
-    nodes_sepc.update(
-        {
-            "doc": {**nodes_sepc["doc"], "content": "heading body"},  # type: ignore
-            "body": {"content": "block+"},
-        }
-    )
+    nodes_sepc.update({
+        "doc": {**nodes_sepc["doc"], "content": "heading body"},  # type: ignore
+        "body": {"content": "block+"},
+    })
     hb_schema = Schema({"nodes": nodes_sepc, "marks": schema.spec["marks"]})
     hb = builders(
         hb_schema,
@@ -988,18 +970,16 @@ class TestEnforcingHeadingAndBody:
 
 
 def test_keeps_isolating_nodes_together():
-    s = Schema(
-        {
-            "nodes": {
-                **schema.spec["nodes"],
-                "iso": {
-                    "group": "block",
-                    "content": "block+",
-                    "isolating": True,
-                },
+    s = Schema({
+        "nodes": {
+            **schema.spec["nodes"],
+            "iso": {
+                "group": "block",
+                "content": "block+",
+                "isolating": True,
             },
-        }
-    )
+        },
+    })
     doc = s.node("doc", None, [s.node("paragraph", None, [s.text("one")])])
     iso = Fragment.from_(
         s.node("iso", None, [s.node("paragraph", None, [s.text("two")])])

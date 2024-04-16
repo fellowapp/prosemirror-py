@@ -44,7 +44,7 @@ def fits_trivially(
 
 
 class _FrontierItem:
-    __slots__ = ("type", "match")
+    __slots__ = ("match", "type")
 
     def __init__(self, type_: NodeType, match: ContentMatch) -> None:
         self.type = type_
@@ -52,7 +52,7 @@ class _FrontierItem:
 
 
 class _Fittable:
-    __slots__ = ("slice_depth", "frontier_depth", "parent", "inject", "wrap")
+    __slots__ = ("frontier_depth", "inject", "parent", "slice_depth", "wrap")
 
     def __init__(
         self,
@@ -84,7 +84,7 @@ class _CloseLevel:
 
 
 class Fitter:
-    __slots__ = ("to_", "from__", "unplaced", "frontier", "placed")
+    __slots__ = ("from__", "frontier", "placed", "to_", "unplaced")
 
     def __init__(self, from__: ResolvedPos, to_: ResolvedPos, slice: Slice) -> None:
         self.to_ = to_

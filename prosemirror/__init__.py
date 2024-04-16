@@ -4,13 +4,13 @@ from .transform import Mapping, Step, Transform
 
 __all__ = [
     "Fragment",
+    "Mapping",
     "Mark",
     "Node",
     "ResolvedPos",
     "Schema",
     "Slice",
-    "basic_schema",
-    "Mapping",
     "Step",
     "Transform",
+    "basic_schema",
 ]

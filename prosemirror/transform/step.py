@@ -14,26 +14,22 @@ class Step(metaclass=abc.ABCMeta):
     json_id: str
 
     @abc.abstractmethod
-    def apply(self, _doc: Node) -> "StepResult":
-        ...
+    def apply(self, _doc: Node) -> "StepResult": ...
 
     def get_map(self) -> StepMap:
         return StepMap.empty
 
     @abc.abstractmethod
-    def invert(self, _doc: Node) -> "Step":
-        ...
+    def invert(self, _doc: Node) -> "Step": ...
 
     @abc.abstractmethod
-    def map(self, _mapping: Mappable) -> Optional["Step"]:
-        ...
+    def map(self, _mapping: Mappable) -> Optional["Step"]: ...
 
     def merge(self, _other: "Step") -> Optional["Step"]:
         return None
 
     @abc.abstractmethod
-    def to_json(self) -> JSONDict:
-        ...
+    def to_json(self) -> JSONDict: ...
 
     @staticmethod
     def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
@@ -62,12 +58,10 @@ def step_json_id(id: str, step_class: Type[StepSubclass]) -> Type[StepSubclass]:
 
 class StepResult:
     @overload
-    def __init__(self, doc: Node, failed: Literal[None]) -> None:
-        ...
+    def __init__(self, doc: Node, failed: Literal[None]) -> None: ...
 
     @overload
-    def __init__(self, doc: None, failed: str) -> None:
-        ...
+    def __init__(self, doc: None, failed: str) -> None: ...
 
     def __init__(self, doc: Optional[Node], failed: Optional[str]) -> None:
         self.doc = doc

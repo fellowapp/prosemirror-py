@@ -54,7 +54,7 @@ class AddMarkStep(Step):
     def map(self, mapping: Mappable) -> Optional[Step]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
-        if from_.deleted and to.deleted or from_.pos > to.pos:
+        if (from_.deleted and to.deleted) or from_.pos > to.pos:
             return None
         return AddMarkStep(from_.pos, to.pos, self.mark)
 
