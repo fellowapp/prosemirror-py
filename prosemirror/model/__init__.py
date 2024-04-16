@@ -9,17 +9,17 @@ from .schema import MarkType, NodeType, Schema
 from .to_dom import DOMSerializer
 
 __all__ = [
-    "Node",
-    "ResolvedPos",
-    "NodeRange",
-    "Fragment",
-    "Slice",
-    "ReplaceError",
-    "Mark",
-    "Schema",
-    "NodeType",
-    "MarkType",
     "ContentMatch",
-    "DOMSerializer",
     "DOMParser",
+    "DOMSerializer",
+    "Fragment",
+    "Mark",
+    "MarkType",
+    "Node",
+    "NodeRange",
+    "NodeType",
+    "ReplaceError",
+    "ResolvedPos",
+    "Schema",
+    "Slice",
 ]

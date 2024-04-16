@@ -10,21 +10,17 @@ from .build import builders
 
 nodes = add_list_nodes(_schema.spec["nodes"], "paragraph block*", "block")
 
-nodes.update(
-    {
-        "doc": {
-            "content": "block+",
-            "attrs": {"meta": {"default": None}},
-        }
+nodes.update({
+    "doc": {
+        "content": "block+",
+        "attrs": {"meta": {"default": None}},
     }
-)
+})
 
-test_schema: Schema[Any, Any] = Schema(
-    {
-        "nodes": nodes,
-        "marks": _schema.spec["marks"],
-    }
-)
+test_schema: Schema[Any, Any] = Schema({
+    "nodes": nodes,
+    "marks": _schema.spec["marks"],
+})
 
 out = builders(
     test_schema,

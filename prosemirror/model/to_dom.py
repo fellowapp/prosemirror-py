@@ -28,25 +28,23 @@ class DocumentFragment:
         return "".join([str(c) for c in self.children])
 
 
-SELF_CLOSING_ELEMENTS = frozenset(
-    {
-        "area",
-        "base",
-        "br",
-        "col",
-        "embed",
-        "hr",
-        "img",
-        "input",
-        "keygen",
-        "link",
-        "meta",
-        "param",
-        "source",
-        "track",
-        "wbr",
-    }
-)
+SELF_CLOSING_ELEMENTS = frozenset({
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "keygen",
+    "link",
+    "meta",
+    "param",
+    "source",
+    "track",
+    "wbr",
+})
 
 
 class Element(DocumentFragment):
@@ -208,7 +206,7 @@ class DOMSerializer:
 
 
 def gather_to_dom(
-    obj: Mapping[str, Union[NodeType, MarkType]]
+    obj: Mapping[str, Union[NodeType, MarkType]],
 ) -> Dict[str, Callable[..., Any]]:
     result = {}
     for name in obj:

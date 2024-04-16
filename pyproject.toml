@@ -11,35 +11,28 @@ repository = "https://github.com/fellowinsights/prosemirror-py"
 keywords = ["prosemirror", "collaborative", "editing"]
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<4"
+python = ">=3.8"
 typing-extensions = "^4.4.0"
-lxml = ">=4.9.2,<6.0.0"
+lxml = "^5.2.1"
 cssselect = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 codecov = "^2.1.13"
 coverage = "^7.0.5"
-flake8 = ">=6,<8"
-isort = "^5.11.4"
-lxml-stubs = "^0.4.0"
-mypy = "1.8.0"
+lxml-stubs = "^0.5.1"
+mypy = "^1.9.0"
 pandoc = "^2.3"
-pydash = "^7.0.3"
-pytest = "^7.4.3"
-pytest-cov = "^4.0.0"
-ruff = "^0.1.5"
+pydash = "^8.0.0"
+pytest = "^8.1.1"
+pytest-cov = "^5.0.0"
+ruff = "^0.3.7"
 
-[tool.black]
-max-line-length = 88
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "RUF"]
+preview = true
 
-[tool.ruff]
-select = [
-    "E",
-    "F",
-    "W",
-    "I",
-    "RUF",
-]
+[tool.ruff.format]
+preview = true
 
 [tool.mypy]
 strict = true

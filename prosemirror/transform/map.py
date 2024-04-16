@@ -58,12 +58,10 @@ class MapResult:
 
 class Mappable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def map(self, pos: int, assoc: int = 1) -> int:
-        ...
+    def map(self, pos: int, assoc: int = 1) -> int: ...
 
     @abc.abstractmethod
-    def map_result(self, pos: int, assoc: int = 1) -> MapResult:
-        ...
+    def map_result(self, pos: int, assoc: int = 1) -> MapResult: ...
 
 
 class StepMap(Mappable):
@@ -92,12 +90,10 @@ class StepMap(Mappable):
         return self._map(pos, assoc, False)
 
     @overload
-    def _map(self, pos: int, assoc: int, simple: Literal[True]) -> int:
-        ...
+    def _map(self, pos: int, assoc: int, simple: Literal[True]) -> int: ...
 
     @overload
-    def _map(self, pos: int, assoc: int, simple: Literal[False]) -> MapResult:
-        ...
+    def _map(self, pos: int, assoc: int, simple: Literal[False]) -> MapResult: ...
 
     def _map(self, pos: int, assoc: int, simple: bool) -> Union[MapResult, int]:
         diff = 0
@@ -257,12 +253,10 @@ class Mapping(Mappable):
         return self._map(pos, assoc, False)
 
     @overload
-    def _map(self, pos: int, assoc: int, simple: Literal[True]) -> int:
-        ...
+    def _map(self, pos: int, assoc: int, simple: Literal[True]) -> int: ...
 
     @overload
-    def _map(self, pos: int, assoc: int, simple: Literal[False]) -> MapResult:
-        ...
+    def _map(self, pos: int, assoc: int, simple: Literal[False]) -> MapResult: ...
 
     def _map(self, pos: int, assoc: int, simple: bool) -> Union[MapResult, int]:
         del_info = 0

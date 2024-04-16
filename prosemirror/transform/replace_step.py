@@ -144,16 +144,14 @@ class ReplaceAroundStep(Step):
         return StepResult.from_replace(doc, self.from_, self.to, inserted)
 
     def get_map(self) -> StepMap:
-        return StepMap(
-            [
-                self.from_,
-                self.gap_from - self.from_,
-                self.insert,
-                self.gap_to,
-                self.to - self.gap_to,
-                self.slice.size - self.insert,
-            ]
-        )
+        return StepMap([
+            self.from_,
+            self.gap_from - self.from_,
+            self.insert,
+            self.gap_to,
+            self.to - self.gap_to,
+            self.slice.size - self.insert,
+        ])
 
     def invert(self, doc: Node) -> "ReplaceAroundStep":
         gap = self.gap_to - self.gap_from

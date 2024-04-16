@@ -123,9 +123,9 @@ class ContentMatch:
             nonlocal seen
             finished = match.match_fragment(after, start_index)
             if finished and (not to_end or finished.valid_end):
-                return Fragment.from_(
-                    [cast("Node", tp.create_and_fill()) for tp in types]
-                )
+                return Fragment.from_([
+                    cast("Node", tp.create_and_fill()) for tp in types
+                ])
             for i in match.next:
                 type = i.type
                 next = i.next
@@ -167,13 +167,11 @@ class ContentMatch:
                     and type.name not in seen
                     and (not current["type"] or match.next[i].next.valid_end)
                 ):
-                    active.append(
-                        {
-                            "match": type.content_match,
-                            "via": current,
-                            "type": type,
-                        }
-                    )
+                    active.append({
+                        "match": type.content_match,
+                        "via": current,
+                        "type": type,
+                    })
                     seen[type.name] = True
         return None
 

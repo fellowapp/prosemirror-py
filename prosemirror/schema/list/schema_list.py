@@ -30,15 +30,13 @@ def add_list_nodes(
     nodes: Dict["Nodes", "NodeSpec"], item_content: str, list_group: str
 ) -> Dict["Nodes", "NodeSpec"]:
     copy = nodes.copy()
-    copy.update(
-        {
-            cast(Nodes, "ordered_list"): add(
-                orderd_list, NodeSpec(content="list_item+", group=list_group)
-            ),
-            cast(Nodes, "bullet_list"): add(
-                bullet_list, NodeSpec(content="list_item+", group=list_group)
-            ),
-            cast(Nodes, "list_item"): add(list_item, NodeSpec(content=item_content)),
-        }
-    )
+    copy.update({
+        cast(Nodes, "ordered_list"): add(
+            orderd_list, NodeSpec(content="list_item+", group=list_group)
+        ),
+        cast(Nodes, "bullet_list"): add(
+            bullet_list, NodeSpec(content="list_item+", group=list_group)
+        ),
+        cast(Nodes, "list_item"): add(list_item, NodeSpec(content=item_content)),
+    })
     return copy

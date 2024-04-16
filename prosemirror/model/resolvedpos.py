@@ -171,12 +171,10 @@ class ResolvedPos:
         return other if other.pos < self.pos else self
 
     def __str__(self) -> str:
-        path = "/".join(
-            [
-                f"{self.node(i).type.name}_{self.index(i - 1)}"
-                for i in range(1, self.depth + 1)
-            ]
-        )
+        path = "/".join([
+            f"{self.node(i).type.name}_{self.index(i - 1)}"
+            for i in range(1, self.depth + 1)
+        ])
         return f"{path}:{self.parent_offset}"
 
     @classmethod

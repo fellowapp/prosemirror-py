@@ -19,27 +19,23 @@ img = out["img"]
 
 custom_schema: Schema[
     Literal["doc", "paragraph", "text", "contact", "hard_break"], str
-] = Schema(
-    {
-        "nodes": {
-            "doc": {"content": "paragraph+"},
-            "paragraph": {"content": "(text|contact)*"},
-            "text": {
-                "toDebugString": lambda _: "custom_text",
-            },
-            "contact": {
-                "inline": True,
-                "attrs": {"name": {}, "email": {}},
-                "leafText": (
-                    lambda node: f"{node.attrs['name']} <{node.attrs['email']}>"
-                ),
-            },
-            "hard_break": {
-                "toDebugString": lambda _: "custom_hard_break",
-            },
+] = Schema({
+    "nodes": {
+        "doc": {"content": "paragraph+"},
+        "paragraph": {"content": "(text|contact)*"},
+        "text": {
+            "toDebugString": lambda _: "custom_text",
         },
-    }
-)
+        "contact": {
+            "inline": True,
+            "attrs": {"name": {}, "email": {}},
+            "leafText": (lambda node: f"{node.attrs['name']} <{node.attrs['email']}>"),
+        },
+        "hard_break": {
+            "toDebugString": lambda _: "custom_hard_break",
+        },
+    },
+})
 
 
 class TestToString:
@@ -77,9 +73,10 @@ class TestToString:
         assert str(f) == "<custom_text, custom_hard_break, custom_text>"
 
     def test_should_respect_custom_leafText_spec(self):
-        contact = custom_schema.nodes["contact"].create_checked(
-            {"name": "Bob", "email": "bob@example.com"}
-        )
+        contact = custom_schema.nodes["contact"].create_checked({
+            "name": "Bob",
+            "email": "bob@example.com",
+        })
         paragraph = custom_schema.nodes["paragraph"].create_checked(
             {}, [custom_schema.text("Hello "), contact]
         )
@@ -201,9 +198,10 @@ class TestTextBetween:
                     {},
                     [
                         custom_schema.text("Hello "),
-                        custom_schema.nodes["contact"].create_checked(
-                            {"name": "Alice", "email": "alice@example.com"}
-                        ),
+                        custom_schema.nodes["contact"].create_checked({
+                            "name": "Alice",
+                            "email": "alice@example.com",
+                        }),
                     ],
                 )
             ],
@@ -218,9 +216,10 @@ class TestTextBetween:
                     {},
                     [
                         custom_schema.text("Hello "),
-                        custom_schema.nodes["contact"].create_checked(
-                            {"name": "Alice", "email": "alice@example.com"}
-                        ),
+                        custom_schema.nodes["contact"].create_checked({
+                            "name": "Alice",
+                            "email": "alice@example.com",
+                        }),
                     ],
                 )
             ],

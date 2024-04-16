@@ -3,24 +3,22 @@ import pytest
 from prosemirror.model import Schema, Slice
 from prosemirror.transform import Transform, can_split, find_wrapping, lift_target
 
-schema = Schema(
-    {
-        "nodes": {
-            "doc": {"content": "head? block* sect* closing?"},
-            "para": {"content": "text*", "group": "block"},
-            "head": {"content": "text*", "marks": ""},
-            "figure": {"content": "caption figureimage", "group": "block"},
-            "quote": {"content": "block+", "group": "block"},
-            "figureimage": {},
-            "caption": {"content": "text*", "marks": ""},
-            "sect": {"content": "head block* sect*"},
-            "closing": {"content": "text*"},
-            "text": {"group": "inline"},
-            "fixed": {"content": "head para closing", "group": "block"},
-        },
-        "marks": {"em": {}},
-    }
-)
+schema = Schema({
+    "nodes": {
+        "doc": {"content": "head? block* sect* closing?"},
+        "para": {"content": "text*", "group": "block"},
+        "head": {"content": "text*", "marks": ""},
+        "figure": {"content": "caption figureimage", "group": "block"},
+        "quote": {"content": "block+", "group": "block"},
+        "figureimage": {},
+        "caption": {"content": "text*", "marks": ""},
+        "sect": {"content": "head block* sect*"},
+        "closing": {"content": "text*"},
+        "text": {"group": "inline"},
+        "fixed": {"content": "head para closing", "group": "block"},
+    },
+    "marks": {"em": {}},
+})
 
 
 def n(name, *content):
@@ -106,26 +104,24 @@ class TestCanSplit:
     def test_doesnt_return_true_when_split_content_doesnt_fit_in_given_node_type(
         self,
     ):
-        s = Schema(
-            {
-                "nodes": {
-                    "doc": {"content": "chapter+"},
-                    "para": {"content": "text*", "group": "block"},
-                    "head": {"content": "text*", "marks": ""},
-                    "figure": {"content": "caption figureimage", "group": "block"},
-                    "quote": {"content": "block+", "group": "block"},
-                    "figureimage": {},
-                    "caption": {"content": "text*", "marks": ""},
-                    "sect": {"content": "head block* sect*"},
-                    "closing": {"content": "text*"},
-                    "text": {"group": "inline"},
-                    "fixed": {"content": "head para closing", "group": "block"},
-                    "title": {"content": "text*"},
-                    "chapter": {"content": "title scene+"},
-                    "scene": {"content": "para+"},
-                }
+        s = Schema({
+            "nodes": {
+                "doc": {"content": "chapter+"},
+                "para": {"content": "text*", "group": "block"},
+                "head": {"content": "text*", "marks": ""},
+                "figure": {"content": "caption figureimage", "group": "block"},
+                "quote": {"content": "block+", "group": "block"},
+                "figureimage": {},
+                "caption": {"content": "text*", "marks": ""},
+                "sect": {"content": "head block* sect*"},
+                "closing": {"content": "text*"},
+                "text": {"group": "inline"},
+                "fixed": {"content": "head para closing", "group": "block"},
+                "title": {"content": "text*"},
+                "chapter": {"content": "title scene+"},
+                "scene": {"content": "para+"},
             }
-        )
+        })
         assert not can_split(
             s.node(
                 "doc",

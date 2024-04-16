@@ -20,21 +20,19 @@ def link(href, title=None):
 code = schema.mark("code")
 
 
-custom_schema = Schema(
-    {
-        "nodes": {
-            "doc": {"content": "paragraph+"},
-            "paragraph": {"content": "text*"},
-            "text": {},
-        },
-        "marks": {
-            "remark": {"attrs": {"id": {}}, "excludes": "", "inclusive": False},
-            "user": {"attrs": {"id": {}}, "excludes": "_"},
-            "strong": {"excludes": "em-group"},
-            "em": {"group": "em-group"},
-        },
-    }
-)
+custom_schema = Schema({
+    "nodes": {
+        "doc": {"content": "paragraph+"},
+        "paragraph": {"content": "text*"},
+        "text": {},
+    },
+    "marks": {
+        "remark": {"attrs": {"id": {}}, "excludes": "", "inclusive": False},
+        "user": {"attrs": {"id": {}}, "excludes": "_"},
+        "strong": {"excludes": "em-group"},
+        "em": {"group": "em-group"},
+    },
+})
 
 custom = custom_schema.marks
 remark1 = custom["remark"].create({"id": 1})

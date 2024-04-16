@@ -181,14 +181,12 @@ class Transform:
                         found["to"] = end
                         found["step"] = step
                     else:
-                        matched.append(
-                            {
-                                "style": style,
-                                "from_": max(pos, from_),
-                                "to": end,
-                                "step": step,
-                            }
-                        )
+                        matched.append({
+                            "style": style,
+                            "from_": max(pos, from_),
+                            "to": end,
+                            "step": step,
+                        })
             return None
 
         self.doc.nodes_between(from_, to, iteratee)

@@ -98,15 +98,13 @@ class DOMParser:
 
         self._styles = [rule for rule in rules if rule.style is not None]
 
-        self.normalize_lists = not any(
-            [
-                schema.nodes[r.node].content_match.match_type(schema.nodes[r.node])
-                for r in self._tags
-                if r.node is not None
-                and r.tag is not None
-                and re.match(r"^(ul|ol)\b", r.tag) is not None
-            ]
-        )
+        self.normalize_lists = not any([
+            schema.nodes[r.node].content_match.match_type(schema.nodes[r.node])
+            for r in self._tags
+            if r.node is not None
+            and r.tag is not None
+            and re.match(r"^(ul|ol)\b", r.tag) is not None
+        ])
 
     def parse(
         self, dom_: lxml.html.HtmlElement, options: Optional[ParseOptions] = None
@@ -189,10 +187,11 @@ class DOMParser:
             if (
                 style is None
                 or style.index(prop) != 0
-                or rule.context
-                and not context.matches_context(rule.context)
-                or len(style) > len(prop)
-                and (ord(style[len(prop)]) != 61 or style[len(prop) + 1 :] != value)
+                or (rule.context and not context.matches_context(rule.context))
+                or (
+                    len(style) > len(prop)
+                    and (ord(style[len(prop)]) != 61 or style[len(prop) + 1 :] != value)
+                )
             ):
                 continue
 
@@ -929,9 +928,9 @@ class ParseContext:
 
     def matches_context(self, context: str) -> bool:
         if "|" in context:
-            return any(
-                [self.matches_context(s) for s in re.split(r"\s*\|\s*", context)]
-            )
+            return any([
+                self.matches_context(s) for s in re.split(r"\s*\|\s*", context)
+            ])
 
         parts = context.split("/")
         option = self.options.context
