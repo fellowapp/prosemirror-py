@@ -1,4 +1,3 @@
-import pydash
 import pytest
 
 from prosemirror.model import Fragment, Slice
@@ -23,9 +22,9 @@ def test_mapping():
     def t_mapping(mapping, *cases):
         inverted = mapping.invert()
         for case in cases:
-            from_, to, bias, lossy = [
-                pydash.get(case, *param) for param in enumerate([None, None, 1, False])
-            ]
+            from_, to, bias, lossy = (
+                lambda from_, to, bias=1, lossy=False: (from_, to, bias, lossy)
+            )(*case)
             assert mapping.map(from_, bias) == to
             if not lossy:
                 assert inverted.map(to, bias) == from_

@@ -12,21 +12,14 @@ jobs:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - name: cache poetry install
-        uses: actions/cache@v3
-        with:
-          path: ~/.local
-          key: poetry-3.11-0
-      - uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - name: Build and publish package
-        run: |
-          poetry build
+          python-version: "3.12"
+      - run: pip install uv
+      - run: uv venv
+      - run: uv pip install --requirement pyproject.toml
+      - run: uv pip install setuptools wheel build
+      - run: .venv/bin/python -m build --no-isolation
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
