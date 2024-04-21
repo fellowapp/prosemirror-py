@@ -264,7 +264,7 @@ def drop_point(doc: Node, pos: int, slice: Slice) -> int | None:
     if not slice.content.size:
         return pos
     content = slice.content
-    for i in range(slice.open_start):
+    for _i in range(slice.open_start):
         assert content.first_child is not None
         content = content.first_child.content
     pass_ = 1

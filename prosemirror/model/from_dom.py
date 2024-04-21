@@ -992,7 +992,7 @@ class ParseContext:
 
                 d -= 1
 
-        for name, type_ in self.parser.schema.nodes.items():
+        for type_ in self.parser.schema.nodes.values():
             if type_.is_text_block and type_.default_attrs:
                 return type_
 
@@ -1069,14 +1069,14 @@ def parse_styles(style: str) -> list[str]:
 def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
     nodes = node_type.schema.nodes
 
-    for name, parent in nodes.items():
+    for parent in nodes.values():
         if not parent.allows_mark_type(mark_type):
             continue
 
         seen: list[ContentMatch] = []
 
         def scan(match: ContentMatch) -> bool:
-            seen.append(match)
+            seen.append(match)  # noqa: B023
             i = 0
             while i < match.edge_count:
                 result = match.edge(i)
@@ -1085,7 +1085,7 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
 
                 if _type == node_type:
                     return True
-                if _next not in seen and scan(_next):
+                if _next not in seen and scan(_next):  # noqa: B023
                     return True
 
                 i += 1

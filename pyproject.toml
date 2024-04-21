@@ -28,7 +28,7 @@ dev = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "RUF", "UP"]
+select = ["E", "F", "W", "I", "RUF", "UP", "B"]
 preview = true
 
 [tool.ruff.format]

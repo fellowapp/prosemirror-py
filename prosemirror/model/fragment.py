@@ -171,7 +171,7 @@ class Fragment:
     def eq(self, other: "Fragment") -> bool:
         if len(self.content) != len(other.content):
             return False
-        return all(a.eq(b) for (a, b) in zip(self.content, other.content))
+        return all(a.eq(b) for (a, b) in zip(self.content, other.content, strict=True))
 
     @property
     def first_child(self) -> Optional["Node"]:

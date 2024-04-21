@@ -178,25 +178,18 @@ class Fitter:
                     type_ = self.frontier[frontier_depth].type
                     match = self.frontier[frontier_depth].match
 
-                    _nothing = object()
-                    inject = _nothing
-                    wrap = _nothing
-
-                    def _lazy_inject() -> Fragment | None:
-                        nonlocal inject
-                        if inject is _nothing:
-                            inject = match.fill_before(Fragment.from_(first), False)
-                        return cast(Fragment | None, inject)
-
-                    def _lazy_wrap() -> list[NodeType] | None:
-                        nonlocal wrap
-                        assert first is not None
-                        if wrap is _nothing:
-                            wrap = match.find_wrapping(first.type)
-                        return cast(list[NodeType] | None, wrap)
+                    inject = None
+                    wrap = None
 
                     if pass_ == 1 and (
-                        (match.match_type(first.type) or _lazy_inject())
+                        (
+                            match.match_type(first.type)
+                            or (
+                                inject := match.fill_before(
+                                    Fragment.from_(first), False
+                                )
+                            )
+                        )
                         if first
                         else parent and type_.compatible_content(parent.type)
                     ):
@@ -204,14 +197,18 @@ class Fitter:
                             slice_depth,
                             frontier_depth,
                             parent,
-                            inject=_lazy_inject(),
+                            inject=inject,
                         )
-                    elif pass_ == 2 and first and _lazy_wrap():
+                    elif (
+                        pass_ == 2
+                        and first
+                        and (wrap := match.find_wrapping(first.type))
+                    ):
                         return _Fittable(
                             slice_depth,
                             frontier_depth,
                             parent,
-                            wrap=_lazy_wrap(),
+                            wrap=wrap,
                         )
                     if parent and match.match_type(parent.type):
                         break

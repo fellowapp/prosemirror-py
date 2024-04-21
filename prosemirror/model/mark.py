@@ -74,7 +74,7 @@ class Mark:
             return True
         if len(a) != len(b):
             return False
-        return all(item_a.eq(item_b) for (item_a, item_b) in zip(a, b))
+        return all(item_a.eq(item_b) for (item_a, item_b) in zip(a, b, strict=True))
 
     @classmethod
     def set_from(cls, marks: Union[list["Mark"], "Mark", None]) -> list["Mark"]:

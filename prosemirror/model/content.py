@@ -447,14 +447,14 @@ def nfa(
             return [edge(from_), *compile(expr["expr"], from_)]
         elif expr["type"] == "range":
             cur = from_
-            for i in range(expr["min"]):
+            for _i in range(expr["min"]):
                 next = node()
                 connect(compile(expr["expr"], cur), next)
                 cur = next
             if expr["max"] == -1:
                 connect(compile(expr["expr"], cur), cur)
             else:
-                for i in range(expr["min"], expr["max"]):
+                for _i in range(expr["min"], expr["max"]):
                     next = node()
                     edge(cur, next)
                     connect(compile(expr["expr"], cur), next)

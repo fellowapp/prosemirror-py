@@ -36,7 +36,9 @@ def find_diff_start(a: "Fragment", b: "Fragment", pos: int) -> int | None:
                     (
                         index_a
                         for ((index_a, char_a), (_, char_b)) in zip(
-                            enumerate(child_a.text), enumerate(child_b.text)
+                            enumerate(child_a.text),
+                            enumerate(child_b.text),
+                            strict=True,
                         )
                         if char_a != char_b
                     ),
