@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from prosemirror.model import Node, Schema
 from prosemirror.transform.map import Mappable, StepMap
@@ -26,7 +26,7 @@ class DocAttrStep(Step):
     def invert(self, doc: Node) -> Step:
         return DocAttrStep(self.attr, doc.attrs[self.attr])
 
-    def map(self, mapping: Mappable) -> Optional[Step]:
+    def map(self, mapping: Mappable) -> Step | None:
         return self
 
     def to_json(self) -> JSONDict:
@@ -39,9 +39,7 @@ class DocAttrStep(Step):
         return json_data
 
     @staticmethod
-    def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
-    ) -> "DocAttrStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "DocAttrStep":
         if isinstance(json_data, str):
             import json
 

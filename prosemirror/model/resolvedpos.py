@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Callable, List, Optional, Union, cast
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Optional, Union, cast
 
 from .mark import Mark
 
@@ -8,14 +9,14 @@ if TYPE_CHECKING:
 
 class ResolvedPos:
     def __init__(
-        self, pos: int, path: List[Union["Node", int]], parent_offset: int
+        self, pos: int, path: list[Union["Node", int]], parent_offset: int
     ) -> None:
         self.pos = pos
         self.path = path
         self.depth = int(len(path) / 3 - 1)
         self.parent_offset = parent_offset
 
-    def resolve_depth(self, val: Optional[int] = None) -> int:
+    def resolve_depth(self, val: int | None = None) -> int:
         if val is None:
             return self.depth
         return self.depth + val if val < 0 else val
@@ -31,7 +32,7 @@ class ResolvedPos:
     def node(self, depth: int) -> "Node":
         return cast("Node", self.path[self.resolve_depth(depth) * 3])
 
-    def index(self, depth: Optional[int] = None) -> int:
+    def index(self, depth: int | None = None) -> int:
         return cast(int, self.path[self.resolve_depth(depth) * 3 + 1])
 
     def index_after(self, depth: int) -> int:
@@ -40,15 +41,15 @@ class ResolvedPos:
             0 if depth == self.depth and not self.text_offset else 1
         )
 
-    def start(self, depth: Optional[int] = None) -> int:
+    def start(self, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         return 0 if depth == 0 else cast(int, self.path[depth * 3 - 1]) + 1
 
-    def end(self, depth: Optional[int] = None) -> int:
+    def end(self, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         return self.start(depth) + self.node(depth).content.size
 
-    def before(self, depth: Optional[int] = None) -> int:
+    def before(self, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         if not depth:
             raise ValueError("There is no position before the top level node")
@@ -56,7 +57,7 @@ class ResolvedPos:
             self.pos if depth == self.depth + 1 else cast(int, self.path[depth * 3 - 1])
         )
 
-    def after(self, depth: Optional[int] = None) -> int:
+    def after(self, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         if not depth:
             raise ValueError("There is no position after the top level node")
@@ -89,7 +90,7 @@ class ResolvedPos:
             return self.parent.child(index).cut(0, d_off)
         return None if index == 0 else self.parent.child(index - 1)
 
-    def pos_at_index(self, index: int, depth: Optional[int] = None) -> int:
+    def pos_at_index(self, index: int, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         node = cast("Node", self.path[depth * 3])
         pos = 0 if depth == 0 else cast(int, self.path[depth * 3 - 1]) + 1
@@ -97,7 +98,7 @@ class ResolvedPos:
             pos += node.child(i).node_size
         return pos
 
-    def marks(self) -> List["Mark"]:
+    def marks(self) -> list["Mark"]:
         parent = self.parent
         index = self.index()
         if parent.content.size == 0:
@@ -119,7 +120,7 @@ class ResolvedPos:
             i += 1
         return marks
 
-    def marks_across(self, end: "ResolvedPos") -> Optional[List["Mark"]]:
+    def marks_across(self, end: "ResolvedPos") -> list["Mark"] | None:
         after = self.parent.maybe_child(self.index())
         if not after or not after.is_inline:
             return None
@@ -146,7 +147,7 @@ class ResolvedPos:
     def block_range(
         self,
         other: Optional["ResolvedPos"] = None,
-        pred: Optional[Callable[["Node"], bool]] = None,
+        pred: Callable[["Node"], bool] | None = None,
     ) -> Optional["NodeRange"]:
         if other is None:
             other = self
@@ -181,7 +182,7 @@ class ResolvedPos:
     def resolve(cls, doc: "Node", pos: int) -> "ResolvedPos":
         if not (pos >= 0 and pos <= doc.content.size):
             raise ValueError(f"Position {pos} out of range")
-        path: List[Union["Node", int]] = []
+        path: list["Node" | int] = []
         start = 0
         parent_offset = pos
         node = doc

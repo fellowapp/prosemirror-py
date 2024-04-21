@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, cast
 
 from prosemirror.model import Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -8,7 +8,7 @@ from prosemirror.utils import JSONDict
 
 class ReplaceStep(Step):
     def __init__(
-        self, from_: int, to: int, slice: Slice, structure: Optional[bool] = None
+        self, from_: int, to: int, slice: Slice, structure: bool | None = None
     ) -> None:
         super().__init__()
         self.from_ = from_
@@ -86,9 +86,7 @@ class ReplaceStep(Step):
         return json_data
 
     @staticmethod
-    def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
-    ) -> "ReplaceStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "ReplaceStep":
         if isinstance(json_data, str):
             import json
 
@@ -101,7 +99,7 @@ class ReplaceStep(Step):
         return ReplaceStep(
             json_data["from"],
             json_data["to"],
-            Slice.from_json(schema, cast(Optional[JSONDict], json_data.get("slice"))),
+            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
             bool(json_data.get("structure")),
         )
 
@@ -118,7 +116,7 @@ class ReplaceAroundStep(Step):
         gap_to: int,
         slice: Slice,
         insert: int,
-        structure: Optional[bool] = None,
+        structure: bool | None = None,
     ) -> None:
         super().__init__()
         self.from_ = from_
@@ -201,7 +199,7 @@ class ReplaceAroundStep(Step):
 
     @staticmethod
     def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
+        schema: Schema[Any, Any], json_data: JSONDict | str
     ) -> "ReplaceAroundStep":
         if isinstance(json_data, str):
             import json
@@ -221,7 +219,7 @@ class ReplaceAroundStep(Step):
             json_data["to"],
             json_data["gapFrom"],
             json_data["gapTo"],
-            Slice.from_json(schema, cast(Optional[JSONDict], json_data.get("slice"))),
+            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
             json_data["insert"],
             bool(json_data.get("structure")),
         )

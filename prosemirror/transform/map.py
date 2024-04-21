@@ -1,5 +1,6 @@
 import abc
-from typing import Callable, ClassVar, List, Literal, Optional, Union, overload
+from collections.abc import Callable
+from typing import ClassVar, Literal, overload
 
 lower16 = 0xFFFF
 factor16 = 2**16
@@ -24,9 +25,7 @@ DEL_SIDE = 8
 
 
 class MapResult:
-    def __init__(
-        self, pos: int, del_info: int = 0, recover: Optional[int] = None
-    ) -> None:
+    def __init__(self, pos: int, del_info: int = 0, recover: int | None = None) -> None:
         self.pos = pos
         self.del_info = del_info
         self.recover = recover
@@ -67,7 +66,7 @@ class Mappable(metaclass=abc.ABCMeta):
 class StepMap(Mappable):
     empty: ClassVar["StepMap"]
 
-    def __init__(self, ranges: List[int], inverted: bool = False) -> None:
+    def __init__(self, ranges: list[int], inverted: bool = False) -> None:
         # prosemirror-transform overrides the constructor to return the
         # StepMap.empty singleton when ranges are empty.
         # It is not easy to do in Python, and the intent of that is to make sure
@@ -95,7 +94,7 @@ class StepMap(Mappable):
     @overload
     def _map(self, pos: int, assoc: int, simple: Literal[False]) -> MapResult: ...
 
-    def _map(self, pos: int, assoc: int, simple: bool) -> Union[MapResult, int]:
+    def _map(self, pos: int, assoc: int, simple: bool) -> MapResult | int:
         diff = 0
         old_index = 2 if self.inverted else 1
         new_index = 1 if self.inverted else 2
@@ -177,17 +176,17 @@ StepMap.empty = StepMap([])
 class Mapping(Mappable):
     def __init__(
         self,
-        maps: Optional[List[StepMap]] = None,
-        mirror: Optional[List[int]] = None,
-        from_: Optional[int] = None,
-        to: Optional[int] = None,
+        maps: list[StepMap] | None = None,
+        mirror: list[int] | None = None,
+        from_: int | None = None,
+        to: int | None = None,
     ) -> None:
         self.maps = maps or []
         self.from_ = from_ or 0
         self.to = len(self.maps) if to is None else to
         self.mirror = mirror
 
-    def slice(self, from_: int = 0, to: Optional[int] = None) -> "Mapping":
+    def slice(self, from_: int = 0, to: int | None = None) -> "Mapping":
         if to is None:
             to = len(self.maps)
         return Mapping(self.maps, self.mirror, from_, to)
@@ -197,7 +196,7 @@ class Mapping(Mappable):
             self.maps[:], (self.mirror[:] if self.mirror else None), self.from_, self.to
         )
 
-    def append_map(self, map: StepMap, mirrors: Optional[int] = None) -> None:
+    def append_map(self, map: StepMap, mirrors: int | None = None) -> None:
         self.maps.append(map)
         self.to = len(self.maps)
         if mirrors is not None:
@@ -214,7 +213,7 @@ class Mapping(Mappable):
                 (start_size + mirr) if (mirr is not None and mirr < i) else None,
             )
 
-    def get_mirror(self, n: int) -> Optional[int]:
+    def get_mirror(self, n: int) -> int | None:
         if self.mirror:
             for i in range(len(self.mirror)):
                 if (self.mirror[i]) == n:
@@ -258,7 +257,7 @@ class Mapping(Mappable):
     @overload
     def _map(self, pos: int, assoc: int, simple: Literal[False]) -> MapResult: ...
 
-    def _map(self, pos: int, assoc: int, simple: bool) -> Union[MapResult, int]:
+    def _map(self, pos: int, assoc: int, simple: bool) -> MapResult | int:
         del_info = 0
 
         i = self.from_

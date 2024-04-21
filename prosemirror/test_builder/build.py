@@ -1,7 +1,8 @@
 # type: ignore
 
 import re
-from typing import Any, Callable, Dict, List, Tuple, Union
+from collections.abc import Callable
+from typing import Any
 
 from prosemirror.model import Node, Schema
 from prosemirror.utils import JSONDict
@@ -11,9 +12,9 @@ NO_TAG = Node.tag = {}
 
 def flatten(
     schema: Schema[Any, Any],
-    children: List[Union[Node, JSONDict, str]],
+    children: list[Node | JSONDict | str],
     f: Callable[[Node], Node],
-) -> Tuple[List[Node], Dict[str, int]]:
+) -> tuple[list[Node], dict[str, int]]:
     result, pos, tag = [], 0, NO_TAG
 
     for child in children:
@@ -68,7 +69,7 @@ def block(type, attrs):
         if (
             args
             and args[0]
-            and not isinstance(args[0], (str, Node))
+            and not isinstance(args[0], str | Node)
             and not getattr(args[0], "flat", None)
             and "flat" not in args[0]
         ):
@@ -95,7 +96,7 @@ def mark(type, attrs):
         if (
             args
             and args[0]
-            and not isinstance(args[0], (str, Node))
+            and not isinstance(args[0], str | Node)
             and not getattr(args[0], "flat", None)
             and "flat" not in args[0]
         ):
