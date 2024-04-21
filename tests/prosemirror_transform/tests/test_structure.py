@@ -2,6 +2,7 @@ import pytest
 
 from prosemirror.model import Schema, Slice
 from prosemirror.transform import Transform, can_split, find_wrapping, lift_target
+from prosemirror.transform.structure import NodeTypeWithAttrs
 
 schema = Schema({
     "nodes": {
@@ -94,7 +95,10 @@ class TestCanSplit:
     )
     def test_can_split(self, pass_, pos, depth, after):
         res = can_split(
-            doc, pos, depth, [{"type": schema.nodes[after]}] if after else None
+            doc,
+            pos,
+            depth,
+            [NodeTypeWithAttrs(type=schema.nodes[after])] if after else None,
         )
         if pass_:
             assert res
@@ -137,7 +141,7 @@ class TestCanSplit:
             ),
             4,
             1,
-            [{"type": s.nodes["scene"]}],
+            [NodeTypeWithAttrs(s.nodes["scene"])],
         )
 
 

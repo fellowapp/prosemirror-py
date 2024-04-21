@@ -4,6 +4,7 @@ from prosemirror.model import Fragment, Schema, Slice
 from prosemirror.test_builder import builders, out
 from prosemirror.test_builder import test_schema as schema
 from prosemirror.transform import Transform, TransformError, find_wrapping, lift_target
+from prosemirror.transform.structure import NodeTypeWithAttrs
 
 doc = out["doc"]
 docMetaOne = out["docMetaOne"]
@@ -333,7 +334,7 @@ def test_join(doc, expect, test_transform):
         (
             doc(h1("hell<a>o!")),
             doc(h1("hell"), p("<a>o!")),
-            [None, [{"type": schema.nodes["paragraph"]}]],
+            [None, [NodeTypeWithAttrs(schema.nodes["paragraph"])]],
         ),
         (doc(blockquote("<a>", p("x"))), "fail", []),
         (doc(blockquote(p("x"), "<a>")), "fail", []),

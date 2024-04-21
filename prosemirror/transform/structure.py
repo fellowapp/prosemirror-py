@@ -1,4 +1,5 @@
-from typing import TypedDict
+from dataclasses import dataclass
+from typing import cast
 
 from prosemirror.model import ContentMatch, Node, NodeRange, NodeType, Slice
 from prosemirror.utils import Attrs
@@ -31,9 +32,10 @@ def lift_target(range_: NodeRange) -> int | None:
     return None
 
 
-class NodeTypeWithAttrs(TypedDict):
+@dataclass
+class NodeTypeWithAttrs:
     type: NodeType
-    attrs: Attrs | None
+    attrs: Attrs | None = None
 
 
 def find_wrapping(
@@ -58,7 +60,7 @@ def find_wrapping(
 
     return (
         [with_attrs(item) for item in around]
-        + [{"type": node_type, "attrs": attrs}]
+        + [NodeTypeWithAttrs(type=node_type, attrs=attrs)]
         + [with_attrs(item) for item in inner]
     )
 
@@ -118,30 +120,15 @@ def can_split(
         depth = 1
     pos_ = doc.resolve(pos)
     base = pos_.depth - depth
-    inner_type: NodeTypeWithAttrs | Node | None = None
+    inner_type: NodeTypeWithAttrs = cast(
+        NodeTypeWithAttrs, (types_after and types_after[-1]) or pos_.parent
+    )
 
-    if types_after:
-        inner_type = types_after[-1]
-
-    if not inner_type:
-        inner_type = pos_.parent
-
-    if isinstance(inner_type, Node):
-        if (
-            base < 0
-            or pos_.parent.type.spec.get("isolating")
-            or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
-            or not inner_type.type.valid_content(
-                pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
-            )
-        ):
-            return False
-
-    elif isinstance(inner_type, dict) and (
+    if (
         base < 0
         or pos_.parent.type.spec.get("isolating")
         or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
-        or not inner_type["type"].valid_content(
+        or not inner_type.type.valid_content(
             pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
         )
     ):
@@ -160,33 +147,22 @@ def can_split(
         if types_after and len(types_after) > i + 1:
             override_child = types_after[i + 1]
             rest = rest.replace_child(
-                0, override_child["type"].create(override_child.get("attrs"))
+                0, override_child.type.create(override_child.attrs)
             )
-        after: NodeTypeWithAttrs | Node | None = None
-        if types_after and len(types_after) > i:
-            after = types_after[i]
-        if not after:
-            after = node
-
-        if isinstance(after, dict):  # noqa: SIM102
-            if not node.can_replace(index + 1, node.child_count) or not after[
-                "type"
-            ].valid_content(rest):
-                return False
-
-        if isinstance(after, Node):
-            if after != node:
-                rest = rest.replace_child(0, after.type.create(after.attrs))
-            if not node.can_replace(
-                index + 1, node.child_count
-            ) or not after.type.valid_content(rest):
-                return False
+        after: NodeTypeWithAttrs = cast(
+            NodeTypeWithAttrs,
+            (types_after and len(types_after) > i and types_after[i]) or node,
+        )
+        if not node.can_replace(
+            index + 1, node.child_count
+        ) or not after.type.valid_content(rest):
+            return False
         d -= 1
         i -= 1
     index = pos_.index_after(base)
     base_type = types_after[0] if types_after else None
     return pos_.node(base).can_replace_with(
-        index, index, base_type["type"] if base_type else pos_.node(base + 1).type
+        index, index, base_type.type if base_type else pos_.node(base + 1).type
     )
 
 

@@ -475,14 +475,14 @@ class Transform:
         i = len(wrappers) - 1
         while i >= 0:
             if content.size:
-                match = wrappers[i]["type"].content_match.match_fragment(content)
+                match = wrappers[i].type.content_match.match_fragment(content)
                 if not match or not match.valid_end:
                     raise TransformError(
                         "Wrapper type given to Transform.wrap does not form valid "
                         "content of its parent wrapper"
                     )
             content = Fragment.from_(
-                wrappers[i]["type"].create(wrappers[i].get("attrs"), content)
+                wrappers[i].type.create(wrappers[i].attrs, content)
             )
             i -= 1
         start = range_.start
@@ -612,7 +612,7 @@ class Transform:
             if types_after and len(types_after) > i:
                 type_after = types_after[i]
             after = Fragment.from_(
-                type_after["type"].create(type_after.get("attrs"), after)
+                type_after.type.create(type_after.attrs, after)
                 if type_after
                 else pos_.node(d).copy(after)
             )
