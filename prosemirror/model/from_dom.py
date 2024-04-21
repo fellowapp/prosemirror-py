@@ -1106,11 +1106,7 @@ def find_same_mark_in_set(mark: Mark, mark_set: list[Mark]) -> Mark | None:
 
 
 def node_contains(node: DOMNode, find: DOMNode) -> bool:
-    for child_node in node.iterdescendants():
-        if child_node == find:
-            return True
-
-    return False
+    return any(child_node == find for child_node in node.iterdescendants())
 
 
 def compare_document_position(node1: DOMNode, node2: DOMNode) -> int:

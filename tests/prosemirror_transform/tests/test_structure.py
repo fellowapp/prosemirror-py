@@ -263,9 +263,6 @@ class TestFindWrapping:
     ],
 )
 def test_replace(doc, from_, to, content, open_start, open_end, result):
-    if content:
-        slice = Slice(content.content, open_start, open_end)
-    else:
-        slice = Slice.empty
+    slice = Slice(content.content, open_start, open_end) if content else Slice.empty
     tr = Transform(doc).replace(from_, to, slice)
     assert tr.doc.eq(result)

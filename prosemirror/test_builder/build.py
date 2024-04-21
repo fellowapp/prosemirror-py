@@ -1,5 +1,6 @@
 # type: ignore
 
+import contextlib
 import re
 from collections.abc import Callable
 from typing import Any
@@ -82,10 +83,8 @@ def block(type, attrs):
         return node
 
     if type.is_leaf:
-        try:
+        with contextlib.suppress(ValueError):
             result.flat = [type.create(attrs)]
-        except ValueError:
-            pass
 
     return result
 

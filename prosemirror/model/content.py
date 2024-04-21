@@ -336,10 +336,7 @@ def parse_expr_range(stream: TokenStream, expr: Expr) -> Expr:
     min_ = parse_num(stream)
     max_ = min_
     if stream.eat(","):
-        if stream.next() != "}":
-            max_ = parse_num(stream)
-        else:
-            max_ = -1
+        max_ = parse_num(stream) if stream.next() != "}" else -1
     if not stream.eat("}"):
         stream.err("Unclosed braced range")
     return {"type": "range", "min": min_, "max": max_, "expr": expr}

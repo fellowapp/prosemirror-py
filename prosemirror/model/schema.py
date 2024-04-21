@@ -114,10 +114,7 @@ class NodeType:
         )
 
     def has_required_attrs(self) -> bool:
-        for n in self.attrs:
-            if self.attrs[n].is_required:
-                return True
-        return False
+        return any(self.attrs[n].is_required for n in self.attrs)
 
     def compatible_content(self, other: "NodeType") -> bool:
         return self == other or (self.content_match.compatible(other.content_match))
@@ -277,10 +274,8 @@ class MarkType:
         cls, marks: dict["Marks", "MarkSpec"], schema: "Schema[Nodes, Marks]"
     ) -> dict["Marks", "MarkType"]:
         result = {}
-        rank = 0
-        for name, spec in marks.items():
+        for rank, (name, spec) in enumerate(marks.items()):
             result[name] = MarkType(name, rank, schema, spec)
-            rank += 1
         return result
 
     def remove_from_set(self, set_: list["Mark"]) -> list["Mark"]:

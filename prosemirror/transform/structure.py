@@ -137,16 +137,15 @@ def can_split(
         ):
             return False
 
-    elif isinstance(inner_type, dict):
-        if (
-            base < 0
-            or pos_.parent.type.spec.get("isolating")
-            or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
-            or not inner_type["type"].valid_content(
-                pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
-            )
-        ):
-            return False
+    elif isinstance(inner_type, dict) and (
+        base < 0
+        or pos_.parent.type.spec.get("isolating")
+        or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
+        or not inner_type["type"].valid_content(
+            pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
+        )
+    ):
+        return False
 
     d = pos_.depth - 1
     i = depth - 2
@@ -158,7 +157,7 @@ def can_split(
             return False
         rest = node.content.cut_by_index(index, node.child_count)
 
-        if types_after and len(types_after) > i:
+        if types_after and len(types_after) > i + 1:
             override_child = types_after[i + 1]
             rest = rest.replace_child(
                 0, override_child["type"].create(override_child.get("attrs"))
@@ -169,7 +168,7 @@ def can_split(
         if not after:
             after = node
 
-        if isinstance(after, dict):
+        if isinstance(after, dict):  # noqa: SIM102
             if not node.can_replace(index + 1, node.child_count) or not after[
                 "type"
             ].valid_content(rest):

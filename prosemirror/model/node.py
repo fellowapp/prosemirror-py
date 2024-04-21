@@ -228,11 +228,7 @@ class Node:
         return self.type.is_atom
 
     def __str__(self) -> str:
-        to_debug_string = (
-            self.type.spec["toDebugString"]
-            if "toDebugString" in self.type.spec
-            else None
-        )
+        to_debug_string = self.type.spec.get("toDebugString", None)
         if to_debug_string:
             return to_debug_string(self)
         name = self.type.name
@@ -363,11 +359,7 @@ class TextNode(Node):
     def __str__(self) -> str:
         import json
 
-        to_debug_string = (
-            self.type.spec["toDebugString"]
-            if "toDebugString" in self.type.spec
-            else None
-        )
+        to_debug_string = self.type.spec.get("toDebugString", None)
         if to_debug_string:
             return to_debug_string(self)
         return wrap_marks(self.marks, json.dumps(self.text))
