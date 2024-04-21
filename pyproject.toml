@@ -7,7 +7,7 @@ name = "prosemirror"
 version = "0.4.0"
 description = "Python implementation of core ProseMirror modules for collaborative editing"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
     { name = "Samuel Cormier-Iijima", email = "sam@fellow.co" },
     { name = "Shen Li", email = "dustet@gmail.com" },
