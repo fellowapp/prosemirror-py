@@ -118,7 +118,8 @@ class DOMSerializer:
         dom, content_dom = type(self).render_spec(self.nodes[node.type.name](node))
         if content_dom:
             if node.is_leaf:
-                raise Exception("Content hole not allowed in a leaf node spec")
+                msg = "Content hole not allowed in a leaf node spec"
+                raise Exception(msg)
             self.serialize_fragment(node.content, content_dom)
         return dom
 
@@ -148,7 +149,8 @@ class DOMSerializer:
             return structure, None
         tag_name = structure[0]
         if " " in tag_name[1:]:
-            raise NotImplementedError("XML namespaces are not supported")
+            msg = "XML namespaces are not supported"
+            raise NotImplementedError(msg)
         content_dom: Element | None = None
         dom = Element(name=tag_name, attrs={}, children=[])
         attrs = structure[1] if len(structure) > 1 else None
@@ -159,21 +161,22 @@ class DOMSerializer:
                 if value is None:
                     continue
                 if " " in name[1:]:
-                    raise NotImplementedError("XML namespaces are not supported")
+                    msg = "XML namespaces are not supported"
+                    raise NotImplementedError(msg)
                 dom.attrs[name] = value
         for i in range(start, len(structure)):
             child = structure[i]
             if child == 0:
                 if i < len(structure) - 1 or i > start:
-                    raise Exception(
-                        "Content hole must be the only child of its parent node"
-                    )
+                    msg = "Content hole must be the only child of its parent node"
+                    raise Exception(msg)
                 return dom, dom
             inner, inner_content = cls.render_spec(child)
             dom.children.append(inner)
             if inner_content:
                 if content_dom:
-                    raise Exception("Multiple content holes")
+                    msg = "Multiple content holes"
+                    raise Exception(msg)
                 content_dom = inner_content
         return dom, content_dom
 

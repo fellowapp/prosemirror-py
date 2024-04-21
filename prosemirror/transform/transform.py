@@ -477,10 +477,11 @@ class Transform:
             if content.size:
                 match = wrappers[i].type.content_match.match_fragment(content)
                 if not match or not match.valid_end:
-                    raise TransformError(
+                    msg = (
                         "Wrapper type given to Transform.wrap does not form valid "
                         "content of its parent wrapper"
                     )
+                    raise TransformError(msg)
             content = Fragment.from_(
                 wrappers[i].type.create(wrappers[i].attrs, content)
             )
@@ -503,7 +504,8 @@ class Transform:
         if to is None:
             to = from_
         if not type.is_textblock:
-            raise ValueError("Type given to set_block_type should be a textblock")
+            msg = "Type given to set_block_type should be a textblock"
+            raise ValueError(msg)
         map_from = len(self.steps)
 
         def iteratee(
@@ -548,14 +550,16 @@ class Transform:
     ) -> "Transform":
         node = self.doc.node_at(pos)
         if not node:
-            raise ValueError("No node at given position")
+            msg = "No node at given position"
+            raise ValueError(msg)
         if not type:
             type = node.type
         new_node = type.create(attrs, None, marks or node.marks)
         if node.is_leaf:
             return self.replace_with(pos, pos + node.node_size, new_node)
         if not type.valid_content(node.content):
-            raise ValueError(f"Invalid content for node type {type.name}")
+            msg = f"Invalid content for node type {type.name}"
+            raise ValueError(msg)
         return self.step(
             ReplaceAroundStep(
                 pos,
@@ -582,7 +586,8 @@ class Transform:
             node = self.doc.node_at(pos)
 
             if not node:
-                raise ValueError(f"No node at position {pos}")
+                msg = f"No node at position {pos}"
+                raise ValueError(msg)
 
             mark_in_set = mark.is_in_set(node.marks)
 

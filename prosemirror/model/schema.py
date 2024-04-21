@@ -131,7 +131,8 @@ class NodeType:
         marks: list[Mark] | None = None,
     ) -> Node:
         if self.is_text:
-            raise ValueError("NodeType.create cannot construct text nodes")
+            msg = "NodeType.create cannot construct text nodes"
+            raise ValueError(msg)
         return Node(
             self,
             self.compute_attrs(attrs),
@@ -216,11 +217,14 @@ class NodeType:
 
         top_node = cast(Nodes, schema.spec.get("topNode") or "doc")
         if not result.get(top_node):
-            raise ValueError(f"Schema is missing its top node type {top_node}")
+            msg = f"Schema is missing its top node type {top_node}"
+            raise ValueError(msg)
         if not result.get(cast(Nodes, "text")):
-            raise ValueError("every schema needs a 'text' type")
+            msg = "every schema needs a 'text' type"
+            raise ValueError(msg)
         if result[cast(Nodes, "text")].attrs:
-            raise ValueError("the text node type should not have attributes")
+            msg = "the text node type should not have attributes"
+            raise ValueError(msg)
         return result
 
     def __str__(self) -> str:
@@ -373,7 +377,8 @@ class Schema(Generic[Nodes, Marks]):
         content_expr_cache = {}
         for prop in self.nodes:
             if prop in self.marks:
-                raise ValueError(f"{prop} can not be both a node and a mark")
+                msg = f"{prop} can not be both a node and a mark"
+                raise ValueError(msg)
             type = self.nodes[prop]
             content_expr = type.spec.get("content", "")
             mark_expr = type.spec.get("marks")
@@ -414,9 +419,11 @@ class Schema(Generic[Nodes, Marks]):
         if isinstance(type, str):
             type = self.node_type(type)
         elif not isinstance(type, NodeType):
-            raise ValueError(f"Invalid node type: {type}")
+            msg = f"Invalid node type: {type}"
+            raise ValueError(msg)
         elif type.schema != self:
-            raise ValueError(f"Node type from different schema used ({type.name})")
+            msg = f"Node type from different schema used ({type.name})"
+            raise ValueError(msg)
         return type.create_checked(attrs, content, marks)
 
     def text(self, text: str, marks: list[Mark] | None = None) -> TextNode:
@@ -446,7 +453,8 @@ class Schema(Generic[Nodes, Marks]):
     def node_type(self, name: str) -> NodeType:
         found = self.nodes.get(cast(Nodes, name))
         if not found:
-            raise ValueError(f"Unknown node type: {name}")
+            msg = f"Unknown node type: {name}"
+            raise ValueError(msg)
         return found
 
 
@@ -465,5 +473,6 @@ def gather_marks(schema: Schema[Any, Any], marks: list[str]) -> list[MarkType]:
                     ok = mark
                     found.append(mark)
         if not ok:
-            raise SyntaxError(f"unknow mark type: '{mark}'")
+            msg = f"unknow mark type: '{mark}'"
+            raise SyntaxError(msg)
     return found

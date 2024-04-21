@@ -52,7 +52,8 @@ class ResolvedPos:
     def before(self, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         if not depth:
-            raise ValueError("There is no position before the top level node")
+            msg = "There is no position before the top level node"
+            raise ValueError(msg)
         return (
             self.pos if depth == self.depth + 1 else cast(int, self.path[depth * 3 - 1])
         )
@@ -60,7 +61,8 @@ class ResolvedPos:
     def after(self, depth: int | None = None) -> int:
         depth = self.resolve_depth(depth)
         if not depth:
-            raise ValueError("There is no position after the top level node")
+            msg = "There is no position after the top level node"
+            raise ValueError(msg)
         return (
             self.pos
             if depth == self.depth + 1
@@ -181,7 +183,8 @@ class ResolvedPos:
     @classmethod
     def resolve(cls, doc: "Node", pos: int) -> "ResolvedPos":
         if not (pos >= 0 and pos <= doc.content.size):
-            raise ValueError(f"Position {pos} out of range")
+            msg = f"Position {pos} out of range"
+            raise ValueError(msg)
         path: list["Node" | int] = []
         start = 0
         parent_offset = pos

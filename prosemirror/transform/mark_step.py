@@ -89,7 +89,8 @@ class AddMarkStep(Step):
         if not isinstance(json_data["from"], int) or not isinstance(
             json_data["to"], int
         ):
-            raise ValueError("Invalid input for AddMarkStep.from_json")
+            msg = "Invalid input for AddMarkStep.from_json"
+            raise ValueError(msg)
         return AddMarkStep(
             json_data["from"],
             json_data["to"],
@@ -160,7 +161,8 @@ class RemoveMarkStep(Step):
         if not isinstance(json_data["from"], int) or not isinstance(
             json_data["to"], int
         ):
-            raise ValueError("Invalid input for RemoveMarkStep.from_json")
+            msg = "Invalid input for RemoveMarkStep.from_json"
+            raise ValueError(msg)
         return RemoveMarkStep(
             json_data["from"],
             json_data["to"],
@@ -219,7 +221,8 @@ class AddNodeMarkStep(Step):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["pos"], int):
-            raise ValueError("Invalid input for AddNodeMarkStep.from_json")
+            msg = "Invalid input for AddNodeMarkStep.from_json"
+            raise ValueError(msg)
         return AddNodeMarkStep(
             json_data["pos"], schema.mark_from_json(cast(JSONDict, json_data["mark"]))
         )
@@ -273,7 +276,8 @@ class RemoveNodeMarkStep(Step):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["pos"], int):
-            raise ValueError("Invalid input for RemoveNodeMarkStep.from_json")
+            msg = "Invalid input for RemoveNodeMarkStep.from_json"
+            raise ValueError(msg)
         return RemoveNodeMarkStep(
             json_data["pos"], schema.mark_from_json(cast(JSONDict, json_data["mark"]))
         )

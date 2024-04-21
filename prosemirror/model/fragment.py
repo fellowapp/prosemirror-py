@@ -229,7 +229,8 @@ class Fragment:
         if pos == self.size:
             return retIndex(len(self.content), pos)
         if pos > self.size or pos < 0:
-            raise ValueError(f"Position {pos} outside of fragment ({self})")
+            msg = f"Position {pos} outside of fragment ({self})"
+            raise ValueError(msg)
         i = 0
         cur_pos = 0
         while True:
@@ -258,7 +259,8 @@ class Fragment:
             value = json.loads(value)
 
         if not isinstance(value, list):
-            raise ValueError("Invalid input for Fragment.from_json")
+            msg = "Invalid input for Fragment.from_json"
+            raise ValueError(msg)
 
         return cls([schema.node_from_json(item) for item in value])
 
@@ -293,7 +295,8 @@ class Fragment:
             return cls.from_array(list(nodes))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
-        raise ValueError(f"cannot convert {nodes!r} to a fragment")
+        msg = f"cannot convert {nodes!r} to a fragment"
+        raise ValueError(msg)
 
     def to_string_inner(self) -> str:
         return ", ".join([str(i) for i in self.content])

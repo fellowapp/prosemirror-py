@@ -59,7 +59,8 @@ class AttrStep(Step):
         if not isinstance(json_data["pos"], int) or not isinstance(
             json_data["attr"], str
         ):
-            raise ValueError("Invalid input for AttrStep.from_json")
+            msg = "Invalid input for AttrStep.from_json"
+            raise ValueError(msg)
         return AttrStep(json_data["pos"], json_data["attr"], json_data["value"])
 
 

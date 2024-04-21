@@ -39,16 +39,19 @@ class Step(metaclass=abc.ABCMeta):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not json_data or not json_data.get("stepType"):
-            raise ValueError("Invalid inpit for Step.from_json")
+            msg = "Invalid inpit for Step.from_json"
+            raise ValueError(msg)
         type = STEPS_BY_ID.get(cast(str, json_data["stepType"]))
         if not type:
-            raise ValueError(f'no step type {json_data["stepType"]} defined')
+            msg = f'no step type {json_data["stepType"]} defined'
+            raise ValueError(msg)
         return type.from_json(schema, json_data)
 
 
 def step_json_id(id: str, step_class: type[StepSubclass]) -> type[StepSubclass]:
     if id in STEPS_BY_ID:
-        raise ValueError(f"Duplicated JSON ID for step type: {id}")
+        msg = f"Duplicated JSON ID for step type: {id}"
+        raise ValueError(msg)
 
     STEPS_BY_ID[id] = step_class
     step_class.json_id = id

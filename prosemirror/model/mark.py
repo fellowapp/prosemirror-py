@@ -61,11 +61,13 @@ class Mark:
         json_data: JSONDict,
     ) -> "Mark":
         if not json_data:
-            raise ValueError("Invalid input for Mark.fromJSON")
+            msg = "Invalid input for Mark.fromJSON"
+            raise ValueError(msg)
         name = json_data["type"]
         type = schema.marks.get(name)
         if not type:
-            raise ValueError(f"There is no mark type {name} in this schema")
+            msg = f"There is no mark type {name} in this schema"
+            raise ValueError(msg)
         return type.create(cast(JSONDict | None, json_data.get("attrs")))
 
     @classmethod

@@ -242,7 +242,8 @@ class Node:
     def content_match_at(self, index: int) -> "ContentMatch":
         match = self.type.content_match.match_fragment(self.content, 0, index)
         if not match:
-            raise ValueError("Called contentMatchAt on a node with invalid content")
+            msg = "Called contentMatchAt on a node with invalid content"
+            raise ValueError(msg)
         return match
 
     def can_replace(
@@ -285,17 +286,17 @@ class Node:
 
     def check(self) -> None:
         if not self.type.valid_content(self.content):
-            raise ValueError(
-                f"Invalid content for node {self.type.name}: {str(self.content)[:50]}"
-            )
+            msg = f"Invalid content for node {self.type.name}: {str(self.content)[:50]}"
+            raise ValueError(msg)
         copy = Mark.none
         for mark in self.marks:
             copy = mark.add_to_set(copy)
         if not Mark.same_set(copy, self.marks):
-            raise ValueError(
+            msg = (
                 f"Invalid collection of marks for node {self.type.name}:"
                 f" {[m.type.name for m in self.marks]!r}"
             )
+            raise ValueError(msg)
 
         def iteratee(node: "Node", offset: int, index: int) -> None:
             node.check()
@@ -329,11 +330,13 @@ class Node:
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not json_data:
-            raise ValueError("Invalid input for Node.from_json")
+            msg = "Invalid input for Node.from_json"
+            raise ValueError(msg)
         marks = None
         if json_data.get("marks"):
             if not isinstance(json_data["marks"], list):
-                raise ValueError("Invalid mark data for Node.fromJSON")
+                msg = "Invalid mark data for Node.fromJSON"
+                raise ValueError(msg)
             marks = [schema.mark_from_json(item) for item in json_data["marks"]]
         if json_data["type"] == "text":
             return schema.text(str(json_data["text"]), marks)
@@ -353,7 +356,8 @@ class TextNode(Node):
     ) -> None:
         super().__init__(type, attrs, None, marks)
         if not content:
-            raise ValueError("Empty text nodes are not allowed")
+            msg = "Empty text nodes are not allowed"
+            raise ValueError(msg)
         self.text = content
 
     def __str__(self) -> str:

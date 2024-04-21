@@ -1113,7 +1113,8 @@ def compare_document_position(node1: DOMNode, node2: DOMNode) -> int:
     if not isinstance(node1, lxml.etree._Element) or not isinstance(
         node2, lxml.etree._Element
     ):
-        raise ValueError("Both arguments must be lxml Element objects.")
+        msg = "Both arguments must be lxml Element objects."
+        raise ValueError(msg)
 
     tree = lxml.etree.ElementTree(node1)
 
@@ -1144,7 +1145,8 @@ def compare_document_position(node1: DOMNode, node2: DOMNode) -> int:
 
 def get_node_type(element: DOMNode) -> int:
     if not isinstance(element, lxml.etree._Element):
-        raise ValueError("The provided element is not an lxml HtmlElement.")
+        msg = "The provided element is not an lxml HtmlElement."
+        raise ValueError(msg)
 
     if isinstance(element, lxml.etree._Comment):
         return 8  # Comment node type

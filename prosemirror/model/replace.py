@@ -22,11 +22,13 @@ def remove_range(content: Fragment, from_: int, to: int) -> Fragment:
     index_to, offset_to = to_index_info["index"], to_index_info["offset"]
     if offset == from_ or cast("Node", child).is_text:
         if offset_to != to and not content.child(index_to).is_text:
-            raise ValueError("removing non-flat range")
+            msg = "removing non-flat range"
+            raise ValueError(msg)
         return content.cut(0, from_).append(content.cut(to))
     assert child
     if index != index_to:
-        raise ValueError("removing non-flat range")
+        msg = "removing non-flat range"
+        raise ValueError(msg)
     return content.replace_child(
         index,
         child.copy(remove_range(child.content, from_ - offset - 1, to - offset - 1)),
@@ -112,7 +114,8 @@ class Slice:
         open_start = json_data.get("openStart", 0) or 0
         open_end = json_data.get("openEnd", 0) or 0
         if not isinstance(open_start, int) or not isinstance(open_end, int):
-            raise ValueError("invalid input for Slice.from_json")
+            msg = "invalid input for Slice.from_json"
+            raise ValueError(msg)
         return cls(
             Fragment.from_json(schema, json_data.get("content")),
             open_start,
@@ -139,9 +142,11 @@ Slice.empty = Slice(Fragment.empty, 0, 0)
 
 def replace(from_: "ResolvedPos", to: "ResolvedPos", slice: Slice) -> "Node":
     if slice.open_start > from_.depth:
-        raise ReplaceError("Inserted content deeper than insertion position")
+        msg = "Inserted content deeper than insertion position"
+        raise ReplaceError(msg)
     if from_.depth - slice.open_start != to.depth - slice.open_end:
-        raise ReplaceError("Inconsistent open depths")
+        msg = "Inconsistent open depths"
+        raise ReplaceError(msg)
     return replace_outer(from_, to, slice, 0)
 
 
@@ -177,7 +182,8 @@ def replace_outer(
 
 def check_join(main: "Node", sub: "Node") -> None:
     if not sub.type.compatible_content(main.type):
-        raise ReplaceError(f"Cannot join {sub.type.name} onto {main.type.name}")
+        msg = f"Cannot join {sub.type.name} onto {main.type.name}"
+        raise ReplaceError(msg)
 
 
 def joinable(before: "ResolvedPos", after: "ResolvedPos", depth: int) -> "Node":
@@ -220,7 +226,8 @@ def add_range(
 
 def close(node: "Node", content: Fragment) -> "Node":
     if not node.type.valid_content(content):
-        raise ReplaceError(f"Invalid content for node {node.type.name}")
+        msg = f"Invalid content for node {node.type.name}"
+        raise ReplaceError(msg)
     return node.copy(content)
 
 

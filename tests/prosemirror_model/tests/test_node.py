@@ -128,15 +128,16 @@ class TestBetween:
             nonlocal i
 
             if i == len(nodes):
-                raise Exception(f"More nodes iterated than list ({node.type.name})")
+                msg = f"More nodes iterated than list ({node.type.name})"
+                raise Exception(msg)
             compare = node.text if node.is_text else node.type.name
             if compare != nodes[i]:
-                raise Exception(f"Expected {nodes[i]!r}, got {compare!r}")
+                msg = f"Expected {nodes[i]!r}, got {compare!r}"
+                raise Exception(msg)
             i += 1
             if not node.is_text and doc.node_at(pos) != node:
-                raise Exception(
-                    f"Pos {pos} does not point at node {node!r} {doc.nodeAt(pos)!r}"
-                )
+                msg = f"Pos {pos} does not point at node {node!r} {doc.nodeAt(pos)!r}"
+                raise Exception(msg)
 
         doc.nodes_between(doc.tag["a"], doc.tag["b"], iteratee)
 

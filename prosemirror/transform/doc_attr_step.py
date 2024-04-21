@@ -46,7 +46,8 @@ class DocAttrStep(Step):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["attr"], str):
-            raise ValueError("Invalid input for DocAttrStep.from_json")
+            msg = "Invalid input for DocAttrStep.from_json"
+            raise ValueError(msg)
         return DocAttrStep(json_data["attr"], json_data["value"])
 
 

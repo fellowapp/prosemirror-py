@@ -95,7 +95,8 @@ class ReplaceStep(Step):
         if not isinstance(json_data["from"], int) or not isinstance(
             json_data["to"], int
         ):
-            raise ValueError("Invlid input for ReplaceStep.from_json")
+            msg = "Invlid input for ReplaceStep.from_json"
+            raise ValueError(msg)
         return ReplaceStep(
             json_data["from"],
             json_data["to"],
@@ -213,7 +214,8 @@ class ReplaceAroundStep(Step):
             or not isinstance(json_data["gapTo"], int)
             or not isinstance(json_data["insert"], int)
         ):
-            raise ValueError("Invlid input for ReplaceAroundStep.from_json")
+            msg = "Invlid input for ReplaceAroundStep.from_json"
+            raise ValueError(msg)
         return ReplaceAroundStep(
             json_data["from"],
             json_data["to"],

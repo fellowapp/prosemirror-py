@@ -176,7 +176,8 @@ class ContentMatch:
 
     def edge(self, n: int) -> MatchEdge:
         if n >= len(self.next):
-            raise ValueError(f"There's no {n}th edge in this content match")
+            msg = f"There's no {n}th edge in this content match"
+            raise ValueError(msg)
         return self.next[n]
 
     def __str__(self) -> str:
@@ -237,7 +238,8 @@ class TokenStream:
             return False
 
     def err(self, str: str) -> NoReturn:
-        raise SyntaxError(f'{str} (in content expression) "{self.string}"')
+        msg = f'{str} (in content expression) "{self.string}"'
+        raise SyntaxError(msg)
 
 
 class ChoiceExpr(TypedDict):
