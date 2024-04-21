@@ -1,31 +1,31 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "prosemirror"
 version = "0.4.0"
 description = "Python implementation of core ProseMirror modules for collaborative editing"
 readme = "README.md"
-authors = ["Shen Li <shen@fellow.co>"]
-license = "BSD-3-Clause"
-packages = [{ include = "prosemirror" }]
-homepage = "https://github.com/fellowinsights/prosemirror-py"
-repository = "https://github.com/fellowinsights/prosemirror-py"
+requires-python = ">=3.8"
+authors = [
+    { name = "Samuel Cormier-Iijima", email = "sam@fellow.co" },
+    { name = "Shen Li", email = "dustet@gmail.com" },
+]
+license = { text = "BSD-3-Clause" }
 keywords = ["prosemirror", "collaborative", "editing"]
+dependencies = ["typing-extensions>=4.4", "lxml>=5.2", "cssselect>=1.2"]
 
-[tool.poetry.dependencies]
-python = ">=3.8"
-typing-extensions = "^4.4.0"
-lxml = "^5.2.1"
-cssselect = "^1.2.0"
-
-[tool.poetry.group.dev.dependencies]
-codecov = "^2.1.13"
-coverage = "^7.0.5"
-lxml-stubs = "^0.5.1"
-mypy = "^1.9.0"
-pandoc = "^2.3"
-pydash = "^8.0.0"
-pytest = "^8.1.1"
-pytest-cov = "^5.0.0"
-ruff = "^0.3.7"
+[project.optional-dependencies]
+dev = [
+    "codecov~=2.1",
+    "coverage~=7.0",
+    "lxml-stubs~=0.5",
+    "mypy~=1.9",
+    "pytest~=8.1",
+    "pytest-cov~=5.0",
+    "ruff~=0.3",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "RUF"]
@@ -36,7 +36,3 @@ preview = true
 
 [tool.mypy]
 strict = true
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
