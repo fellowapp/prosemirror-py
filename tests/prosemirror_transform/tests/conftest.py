@@ -70,15 +70,15 @@ def make_step():
     return _make_step
 
 
-def _make_step(from_, to, val):
+def _make_step(from_: int, to: int, val: str | None) -> Step:
     if val == "+em":
-        return AddMarkStep(from_, to, schema.marks["em"].create)
+        return AddMarkStep(from_, to, schema.marks["em"].create())
     elif val == "-em":
-        return RemoveMarkStep(from_, to, schema.marks["em"].create)
+        return RemoveMarkStep(from_, to, schema.marks["em"].create())
     return ReplaceStep(
         from_,
         to,
-        Slice.empty if val is None else Slice(Fragment.from_(schema.text(val), 0, 0)),
+        Slice.empty if val is None else Slice(Fragment.from_(schema.text(val)), 0, 0),
     )
 
 

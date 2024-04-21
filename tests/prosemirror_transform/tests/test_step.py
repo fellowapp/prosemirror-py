@@ -20,8 +20,8 @@ def no(from1, to1, val1, from2, to2, val2):
     def inner():
         step1 = _make_step(from1, to1, val1)
         step2 = _make_step(from2, to2, val2)
-        with pytest.raises(ValueError):
-            step1.merge(step2)
+        merged = step1.merge(step2)
+        assert merged is None
 
     return inner
 
@@ -51,4 +51,4 @@ def no(from1, to1, val1, from2, to2, val2):
     ],
 )
 def test_all_cases(pass_, from1, to1, val1, from2, to2, val2):
-    pass_(from1, to1, val1, from2, to2, val2)
+    pass_(from1, to1, val1, from2, to2, val2)()
