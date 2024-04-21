@@ -14,7 +14,7 @@ authors = [
 ]
 license = { text = "BSD-3-Clause" }
 keywords = ["prosemirror", "collaborative", "editing"]
-dependencies = ["typing-extensions>=4.4", "lxml>=5.2", "cssselect>=1.2"]
+dependencies = ["typing-extensions>=4.1", "lxml>=4.9", "cssselect>=1.2"]
 
 [project.optional-dependencies]
 dev = [
@@ -24,7 +24,7 @@ dev = [
     "mypy~=1.9",
     "pytest~=8.1",
     "pytest-cov~=5.0",
-    "ruff~=0.3",
+    "ruff~=0.4",
 ]
 
 [tool.ruff.lint]
