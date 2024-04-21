@@ -106,7 +106,8 @@ class Fragment:
             self.content.copy(),
             0,
         )
-        assert last is not None and first is not None
+        assert last is not None
+        assert first is not None
         if pm_node.is_text(last) and last.same_markup(first):
             assert isinstance(first, pm_node.TextNode)
             content[len(content) - 1] = last.with_text(last.text + first.text)

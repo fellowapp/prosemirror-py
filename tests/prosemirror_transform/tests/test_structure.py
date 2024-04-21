@@ -69,7 +69,7 @@ def fill(params, length):
 
 class TestCanSplit:
     @pytest.mark.parametrize(
-        "pass_,pos,depth,after",
+        ("pass_", "pos", "depth", "after"),
         fill(
             [
                 (False, 0),
@@ -147,7 +147,7 @@ class TestCanSplit:
 
 class TestLiftTarget:
     @pytest.mark.parametrize(
-        "pass_,pos",
+        ("pass_", "pos"),
         [(False, 0), (False, 3), (False, 52), (False, 70), (True, 76), (False, 86)],
     )
     def test_lift_target(self, pass_, pos):
@@ -160,7 +160,7 @@ class TestLiftTarget:
 
 class TestFindWrapping:
     @pytest.mark.parametrize(
-        "pass_,pos,end,type",
+        ("pass_", "pos", "end", "type"),
         [
             (True, 0, 92, "sect"),
             (False, 4, 4, "sect"),
@@ -179,7 +179,7 @@ class TestFindWrapping:
 
 
 @pytest.mark.parametrize(
-    "doc,from_,to,content,open_start,open_end,result",
+    ("doc", "from_", "to", "content", "open_start", "open_end", "result"),
     [
         (
             n("doc", n("sect", n("head", t("foo")), n("para", t("bar")))),

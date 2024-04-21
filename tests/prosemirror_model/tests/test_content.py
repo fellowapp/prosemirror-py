@@ -30,7 +30,7 @@ def match(expr, types):
 
 
 @pytest.mark.parametrize(
-    "expr,types,valid",
+    ("expr", "types", "valid"),
     [
         ("", "", True),
         ("", "image", False),
@@ -100,7 +100,7 @@ def test_match_type(expr, types, valid):
 
 
 @pytest.mark.parametrize(
-    "expr,before,after,result",
+    ("expr", "before", "after", "result"),
     [
         (
             "paragraph horizontal_rule paragraph",
@@ -218,7 +218,7 @@ def test_fill_before(expr, before, after, result):
 
 
 @pytest.mark.parametrize(
-    "expr,before,mid,after,left,right",
+    ("expr", "before", "mid", "after", "left", "right"),
     [
         (
             "paragraph horizontal_rule paragraph horizontal_rule paragraph",

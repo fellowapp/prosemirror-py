@@ -12,7 +12,7 @@ blockquote = out["blockquote"]
 
 
 @pytest.mark.parametrize(
-    "doc,expect,open_start,open_end",
+    ("doc", "expect", "open_start", "open_end"),
     [
         (doc(p("hello<b> world")), doc(p("hello")), 0, 1),
         (doc(p("hello<b>")), doc(p("hello")), 0, 1),

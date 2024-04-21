@@ -29,7 +29,7 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
 
 
 @pytest.mark.parametrize(
-    "desc,doc,html",
+    ("desc", "doc", "html"),
     [
         (
             "it can represent simple node",
@@ -119,7 +119,7 @@ def test_serializer_first(doc, html, desc):
 
 
 @pytest.mark.parametrize(
-    "desc,serializer,doc,expect",
+    ("desc", "serializer", "doc", "expect"),
     [
         (
             "it can omit a mark",
@@ -161,7 +161,7 @@ def test_html_is_escaped():
 
 
 @pytest.mark.parametrize(
-    "desc,doc,expect",
+    ("desc", "doc", "expect"),
     [
         (
             "Basic text node",

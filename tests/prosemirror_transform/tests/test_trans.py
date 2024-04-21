@@ -27,7 +27,7 @@ hr = out["hr"]
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         (
             doc(p("hello <a>there<b>!")),
@@ -108,7 +108,7 @@ def test_can_remote_multiple_excluded_marks():
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         (
             doc(p(em("hello <a>world<b>!"))),
@@ -124,11 +124,6 @@ def test_can_remote_multiple_excluded_marks():
             doc(p(em("one ", strong("<a>two<b>"), " three"))),
             schema.mark("strong"),
             doc(p(em("one two three"))),
-        ),
-        (
-            doc(p("<a>hello ", a("link<b>"))),
-            schema.mark("link", {"href": "foo"}),
-            doc(p("hello link")),
         ),
         (
             doc(p("<a>hello ", a("link<b>"))),
@@ -193,7 +188,7 @@ def test_remove_more_than_one_mark_of_same_type_from_block():
 
 
 @pytest.mark.parametrize(
-    "doc,nodes,expect",
+    ("doc", "nodes", "expect"),
     [
         (
             doc(p("hello<a>there")),
@@ -235,7 +230,7 @@ def test_insert(doc, nodes, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (
             doc(p("<1>one"), "<a>", p("tw<2>o"), "<b>", p("<3>three")),
@@ -256,7 +251,7 @@ def test_delete(doc, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (
             doc(
@@ -296,7 +291,7 @@ def test_join(doc, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,args",
+    ("doc", "expect", "args"),
     [
         (
             doc(p("<1>a"), p("<2>foo<a>bar<3>"), p("<4>b")),
@@ -350,7 +345,7 @@ def test_split(doc, expect, args, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (
             doc(blockquote(p("<before>one"), p("<a>two"), p("<after>three"))),
@@ -416,7 +411,7 @@ def test_lift(doc, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,type,attrs",
+    ("doc", "expect", "type", "attrs"),
     [
         (
             doc(p("one"), p("<a>two"), p("three")),
@@ -471,7 +466,7 @@ def test_wrap(doc, expect, type, attrs, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,node_type,attrs",
+    ("doc", "expect", "node_type", "attrs"),
     [
         (doc(p("am<a> i")), doc(h2("am i")), "heading", {"level": 2}),
         (
@@ -532,7 +527,7 @@ def test_set_block_type_works_after_another_step(test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,type,attrs",
+    ("doc", "expect", "type", "attrs"),
     [
         (doc("<a>", p("foo")), doc(h1("foo")), "heading", {"level": 1}),
         (
@@ -549,7 +544,7 @@ def test_set_node_markup(doc, expect, type, attrs, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,attr,value",
+    ("doc", "expect", "attr", "value"),
     [
         (doc("<a>", h1("foo")), doc(h2("foo")), "level", 2),
         (
@@ -566,7 +561,7 @@ def test_set_node_attribute(doc, expect, attr, value, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,attr,value",
+    ("doc", "expect", "attr", "value"),
     [
         (doc(h1("foo")), docMetaOne(h1("foo")), "meta", 1),
         (docMetaOne(h1("foo")), docMetaTwo(h1("foo")), "meta", 2),
@@ -579,7 +574,7 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,source,expect",
+    ("doc", "source", "expect"),
     [
         (doc(p("hell<a>o y<b>ou")), None, doc(p("hell<a><b>ou"))),
         (doc(p("hell<a>o"), p("y<b>ou")), None, doc(p("hell<a><b>ou"))),
@@ -1008,7 +1003,7 @@ def test_keeps_isolating_nodes_together():
 
 
 @pytest.mark.parametrize(
-    "doc,source,expect",
+    ("doc", "source", "expect"),
     [
         (doc(p("foo<a>b<b>ar")), p("<a>xx<b>"), doc(p("foo<a>xx<b>ar"))),
         (doc(p("<a>")), doc(h1("<a>text<b>")), doc(h1("text"))),
@@ -1056,7 +1051,7 @@ def test_replace_range(doc, source, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,node,expect",
+    ("doc", "node", "expect"),
     [
         (doc(p("fo<a>o")), img(), doc(p("fo", img(), "<a>o"))),
         (doc(p("<a>fo<b>o")), img(), doc(p("<a>", img(), "o"))),
@@ -1080,7 +1075,7 @@ def test_replace_range_with(doc, node, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (doc(p("fo<a>o"), p("b<b>ar")), doc(p("fo<a><b>ar"))),
         (
@@ -1112,7 +1107,7 @@ def test_delete_range(doc, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         # adds a mark
         (doc(p("<a>", img())), schema.mark("em"), doc(p("<a>", em(img())))),
@@ -1131,7 +1126,7 @@ def test_add_node_mark(doc, mark, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         # removes a mark
         (doc(p("<a>", em(img()))), schema.mark("em"), doc(p("<a>", img()))),

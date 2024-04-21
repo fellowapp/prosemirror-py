@@ -12,7 +12,7 @@ strong = out["strong"]
 
 
 @pytest.mark.parametrize(
-    "a,b",
+    ("a", "b"),
     [
         (
             doc(p("a", em("b")), p("hello"), blockquote(h1("bye"))),
@@ -39,7 +39,7 @@ def test_find_diff_start(a, b):
 
 
 @pytest.mark.parametrize(
-    "a,b",
+    ("a", "b"),
     [
         (
             doc(p("a", em("b")), p("hello"), blockquote(h1("bye"))),

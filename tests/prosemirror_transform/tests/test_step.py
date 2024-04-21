@@ -27,7 +27,7 @@ def no(from1, to1, val1, from2, to2, val2):
 
 
 @pytest.mark.parametrize(
-    "pass_,from1,to1,val1,from2,to2,val2",
+    ("pass_", "from1", "to1", "val1", "from2", "to2", "val2"),
     [
         (yes, 2, 2, "a", 3, 3, "b"),
         (yes, 2, 2, "a", 2, 2, "b"),
