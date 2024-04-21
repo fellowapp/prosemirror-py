@@ -67,7 +67,9 @@ class AddMarkStep(Step):
             and self.to >= other.from_
         ):
             return AddMarkStep(
-                min(self.from_, other.from_), max(self.to, other.to), self.mark
+                min(self.from_, other.from_),
+                max(self.to, other.to),
+                self.mark,
             )
         return None
 
@@ -87,7 +89,8 @@ class AddMarkStep(Step):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["from"], int) or not isinstance(
-            json_data["to"], int
+            json_data["to"],
+            int,
         ):
             msg = "Invalid input for AddMarkStep.from_json"
             raise ValueError(msg)
@@ -139,7 +142,9 @@ class RemoveMarkStep(Step):
             and self.to >= other.from_
         ):
             return RemoveMarkStep(
-                min(self.from_, other.from_), max(self.to, other.to), self.mark
+                min(self.from_, other.from_),
+                max(self.to, other.to),
+                self.mark,
             )
         return None
 
@@ -159,7 +164,8 @@ class RemoveMarkStep(Step):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["from"], int) or not isinstance(
-            json_data["to"], int
+            json_data["to"],
+            int,
         ):
             msg = "Invalid input for RemoveMarkStep.from_json"
             raise ValueError(msg)
@@ -224,7 +230,8 @@ class AddNodeMarkStep(Step):
             msg = "Invalid input for AddNodeMarkStep.from_json"
             raise ValueError(msg)
         return AddNodeMarkStep(
-            json_data["pos"], schema.mark_from_json(cast(JSONDict, json_data["mark"]))
+            json_data["pos"],
+            schema.mark_from_json(cast(JSONDict, json_data["mark"])),
         )
 
 
@@ -242,7 +249,9 @@ class RemoveNodeMarkStep(Step):
         if not node:
             return StepResult.fail("No node at mark step's position")
         updated = node.type.create(
-            node.attrs, None, self.mark.remove_from_set(node.marks)
+            node.attrs,
+            None,
+            self.mark.remove_from_set(node.marks),
         )
         return StepResult.from_replace(
             doc,
@@ -279,7 +288,8 @@ class RemoveNodeMarkStep(Step):
             msg = "Invalid input for RemoveNodeMarkStep.from_json"
             raise ValueError(msg)
         return RemoveNodeMarkStep(
-            json_data["pos"], schema.mark_from_json(cast(JSONDict, json_data["mark"]))
+            json_data["pos"],
+            schema.mark_from_json(cast(JSONDict, json_data["mark"])),
         )
 
 

@@ -94,7 +94,10 @@ def find_diff_end(a: "Fragment", b: "Fragment", pos_a: int, pos_b: int) -> Diff 
 
         if child_a.content.size or child_b.content.size:
             inner = find_diff_end(
-                child_a.content, child_b.content, pos_a - 1, pos_b - 1
+                child_a.content,
+                child_b.content,
+                pos_a - 1,
+                pos_b - 1,
             )
             if inner:
                 return inner

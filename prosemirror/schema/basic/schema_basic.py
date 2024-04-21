@@ -66,7 +66,7 @@ nodes: dict[str, NodeSpec] = {
                     "src": dom_.get("src"),
                     "title": dom_.get("title"),
                 },
-            }
+            },
         ],
         "toDOM": lambda node: [
             "img",

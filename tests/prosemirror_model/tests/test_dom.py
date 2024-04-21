@@ -57,7 +57,7 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
                 p(
                     "a ",
                     a({"href": "foo"}, "big ", a({"href": "bar"}, "nested"), " link"),
-                )
+                ),
             ),
             '<p>a <a href="foo">big </a><a href="bar">nested</a>'
             '<a href="foo"> link</a></p>',
@@ -65,7 +65,8 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
         (
             "it can represent an unordered list",
             doc(
-                ul(li(p("one")), li(p("two")), li(p("three", strong("!")))), p("after")
+                ul(li(p("one")), li(p("two")), li(p("three", strong("!")))),
+                p("after"),
             ),
             "<ul><li><p>one</p></li><li><p>two</p></li><li><p>three"
             "<strong>!</strong></p></li></ul><p>after</p>",
@@ -73,7 +74,8 @@ no_em = DOMSerializer(serializer.nodes, _marks_copy)
         (
             "it can represent an ordered list",
             doc(
-                ol(li(p("one")), li(p("two")), li(p("three", strong("!")))), p("after")
+                ol(li(p("one")), li(p("two")), li(p("three", strong("!")))),
+                p("after"),
             ),
             "<ol><li><p>one</p></li><li><p>two</p></li><li><p>three"
             "<strong>!</strong></p></li></ol><p>after</p>",
@@ -169,7 +171,10 @@ def test_html_is_escaped():
             {
                 "type": "doc",
                 "content": [
-                    {"type": "paragraph", "content": [{"type": "text", "text": "test"}]}
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "test"}],
+                    },
                 ],
             },
         ),
@@ -189,7 +194,7 @@ def test_html_is_escaped():
                                 "text": "some bolded text",
                             },
                         ],
-                    }
+                    },
                 ],
             },
         ),
@@ -247,7 +252,7 @@ def test_html_is_escaped():
                                             "href": "www.google.ca",
                                             "title": None,
                                         },
-                                    }
+                                    },
                                 ],
                                 "text": "google",
                             },
@@ -264,7 +269,7 @@ def test_html_is_escaped():
                                     "alt": None,
                                     "title": None,
                                 },
-                            }
+                            },
                         ],
                     },
                     {
@@ -274,7 +279,7 @@ def test_html_is_escaped():
                                 "type": "text",
                                 "marks": [{"type": "strong", "attrs": {}}],
                                 "text": "Hello",
-                            }
+                            },
                         ],
                     },
                     {
@@ -314,9 +319,9 @@ def test_html_is_escaped():
                     {
                         "type": "paragraph",
                         "content": [
-                            {"type": "text", "text": "Testing the result of this"}
+                            {"type": "text", "text": "Testing the result of this"},
                         ],
-                    }
+                    },
                 ],
             },
         ),

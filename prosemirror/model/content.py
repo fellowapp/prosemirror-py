@@ -79,7 +79,10 @@ class ContentMatch:
         return None
 
     def match_fragment(
-        self, frag: Fragment, start: int = 0, end: int | None = None
+        self,
+        frag: Fragment,
+        start: int = 0,
+        end: int | None = None,
     ) -> Optional["ContentMatch"]:
         if end is None:
             end = frag.child_count
@@ -110,7 +113,10 @@ class ContentMatch:
         return False
 
     def fill_before(
-        self, after: Fragment, to_end: bool = False, start_index: int = 0
+        self,
+        after: Fragment,
+        to_end: bool = False,
+        start_index: int = 0,
     ) -> Fragment | None:
         seen = [self]
 
@@ -403,7 +409,9 @@ def nfa(
         return len(nfa_) - 1
 
     def edge(
-        from_: int, to: int | None = None, term: Optional["NodeType"] = None
+        from_: int,
+        to: int | None = None,
+        term: Optional["NodeType"] = None,
     ) -> Edge:
         nonlocal nfa_
         edge: Edge = {"term": term, "to": to}
@@ -421,7 +429,7 @@ def nfa(
                     lambda out, expr: [*out, *compile(expr, from_)],
                     expr["exprs"],
                     cast(list[Edge], []),
-                )
+                ),
             )
         elif expr["type"] == "seq":
             i = 0
@@ -524,7 +532,7 @@ def dfa(nfa: list[list[Edge]]) -> ContentMatch:
             states = out[i][1]
             find_by_key = ",".join(str(s) for s in states)
             state.next.append(
-                MatchEdge(out[i][0], labeled.get(find_by_key) or explore(states))
+                MatchEdge(out[i][0], labeled.get(find_by_key) or explore(states)),
             )
         return state
 
@@ -549,6 +557,6 @@ def check_for_dead_ends(match: ContentMatch, stream: TokenStream) -> None:
         if dead:
             stream.err(
                 f'Only non-generatable nodes ({", ".join(nodes)}) in a required '
-                "position (see https://prosemirror.net/docs/guide/#generatable)"
+                "position (see https://prosemirror.net/docs/guide/#generatable)",
             )
         i += 1

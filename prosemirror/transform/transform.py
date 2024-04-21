@@ -227,14 +227,15 @@ class Transform:
                             slice = Slice(
                                 Fragment.from_(
                                     parent_type.schema.text(
-                                        " ", parent_type.allowed_marks(child.marks)
-                                    )
+                                        " ",
+                                        parent_type.allowed_marks(child.marks),
+                                    ),
                                 ),
                                 0,
                                 0,
                             )
                         repl_steps.append(
-                            ReplaceStep(cur + m.start(), cur + m.end(), slice)
+                            ReplaceStep(cur + m.start(), cur + m.end(), slice),
                         )
                         m = newline.search(child.text, m.end())
             cur = end
@@ -329,7 +330,7 @@ class Transform:
             assert left_node is not None
             def_ = defines_content(left_node.type)
             if def_ and not left_node.same_markup(
-                from__.node(abs(preferred_target) - 1)
+                from__.node(abs(preferred_target) - 1),
             ):
                 preferred_depth = d
             elif def_ or not left_node.type.is_textblock:
@@ -357,7 +358,11 @@ class Transform:
                         to_.after(target_depth) if expand else to,
                         Slice(
                             close_fragment(
-                                slice.content, 0, slice.open_start, open_depth, None
+                                slice.content,
+                                0,
+                                slice.open_start,
+                                open_depth,
+                                None,
                             ),
                             open_depth,
                             slice.open_end,
@@ -403,7 +408,8 @@ class Transform:
             if depth > 0 and (
                 last
                 or from__.node(depth - 1).can_replace(
-                    from__.index(depth - 1), to_.index_after(depth - 1)
+                    from__.index(depth - 1),
+                    to_.index_after(depth - 1),
                 )
             ):
                 return self.delete(from__.before(depth), to_.after(depth))
@@ -465,11 +471,13 @@ class Transform:
                 Slice(before.append(after), open_start, open_end),
                 before.size - open_start,
                 True,
-            )
+            ),
         )
 
     def wrap(
-        self, range_: NodeRange, wrappers: list[structure.NodeTypeWithAttrs]
+        self,
+        range_: NodeRange,
+        wrappers: list[structure.NodeTypeWithAttrs],
     ) -> "Transform":
         content = Fragment.empty
         i = len(wrappers) - 1
@@ -483,15 +491,21 @@ class Transform:
                     )
                     raise TransformError(msg)
             content = Fragment.from_(
-                wrappers[i].type.create(wrappers[i].attrs, content)
+                wrappers[i].type.create(wrappers[i].attrs, content),
             )
             i -= 1
         start = range_.start
         end = range_.end
         return self.step(
             ReplaceAroundStep(
-                start, end, start, end, Slice(content, 0, 0), len(wrappers), True
-            )
+                start,
+                end,
+                start,
+                end,
+                Slice(content, 0, 0),
+                len(wrappers),
+                True,
+            ),
         )
 
     def set_block_type(
@@ -509,13 +523,18 @@ class Transform:
         map_from = len(self.steps)
 
         def iteratee(
-            node: "Node", pos: int, parent: Optional["Node"], i: int
+            node: "Node",
+            pos: int,
+            parent: Optional["Node"],
+            i: int,
         ) -> bool | None:
             if (
                 node.is_textblock
                 and not node.has_markup(type, attrs)
                 and structure.can_change_type(
-                    self.doc, self.mapping.slice(map_from).map(pos), type
+                    self.doc,
+                    self.mapping.slice(map_from).map(pos),
+                    type,
                 )
             ):
                 self.clear_incompatible(self.mapping.slice(map_from).map(pos, 1), type)
@@ -529,11 +548,13 @@ class Transform:
                         start_m + 1,
                         end_m - 1,
                         Slice(
-                            Fragment.from_(type.create(attrs, None, node.marks)), 0, 0
+                            Fragment.from_(type.create(attrs, None, node.marks)),
+                            0,
+                            0,
                         ),
                         1,
                         True,
-                    )
+                    ),
                 )
                 return False
             return None
@@ -569,7 +590,7 @@ class Transform:
                 Slice(Fragment.from_(new_node), 0, 0),
                 1,
                 True,
-            )
+            ),
         )
 
     def set_node_attribute(self, pos: int, attr: str, value: JSON) -> "Transform":
@@ -619,12 +640,12 @@ class Transform:
             after = Fragment.from_(
                 type_after.type.create(type_after.attrs, after)
                 if type_after
-                else pos_.node(d).copy(after)
+                else pos_.node(d).copy(after),
             )
             d -= 1
             i -= 1
         return self.step(
-            ReplaceStep(pos, pos, Slice(before.append(after), depth, depth), True)
+            ReplaceStep(pos, pos, Slice(before.append(after), depth, depth), True),
         )
 
     def join(self, pos: int, depth: int = 1) -> "Transform":

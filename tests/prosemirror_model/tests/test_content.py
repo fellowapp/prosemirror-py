@@ -287,7 +287,7 @@ def test_fill3_before(expr, before, mid, after, left, right):
     b = False
     if a:
         b = content.match_fragment(
-            before.content.append(a).append(mid.content)
+            before.content.append(a).append(mid.content),
         ).fill_before(after.content, True)
     if left:
         left = Node.from_json(schema, left)

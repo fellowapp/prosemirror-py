@@ -116,7 +116,7 @@ def test_remove_form_set(ist):
         Mark.same_set(
             link("http://foo", "title").remove_from_set([link("http://foo")]),
             [link("http://foo")],
-        )
+        ),
     )
 
 

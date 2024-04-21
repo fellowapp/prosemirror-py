@@ -10,7 +10,7 @@ def yes(from1, to1, val1, from2, to2, val2):
         merged = step1.merge(step2)
         assert merged
         assert merged.apply(_test_doc).doc.eq(
-            step2.apply(step1.apply(_test_doc).doc).doc
+            step2.apply(step1.apply(_test_doc).doc).doc,
         )
 
     return inner

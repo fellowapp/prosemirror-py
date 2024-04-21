@@ -65,8 +65,10 @@ blockquote = out["blockquote"]
         (
             doc(
                 blockquote(
-                    p("foo<a>bar"), ul(li(p("a")), li(p("b"), "<b>", p("c"))), p("d")
-                )
+                    p("foo<a>bar"),
+                    ul(li(p("a")), li(p("b"), "<b>", p("c"))),
+                    p("d"),
+                ),
             ),
             blockquote(p("bar"), ul(li(p("a")), li(p("b")))),
             1,

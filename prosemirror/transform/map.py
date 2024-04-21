@@ -193,7 +193,10 @@ class Mapping(Mappable):
 
     def copy(self) -> "Mapping":
         return Mapping(
-            self.maps[:], (self.mirror[:] if self.mirror else None), self.from_, self.to
+            self.maps[:],
+            (self.mirror[:] if self.mirror else None),
+            self.from_,
+            self.to,
         )
 
     def append_map(self, map: StepMap, mirrors: int | None = None) -> None:

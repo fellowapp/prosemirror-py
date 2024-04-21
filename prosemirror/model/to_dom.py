@@ -43,7 +43,10 @@ SELF_CLOSING_ELEMENTS = frozenset({
 
 class Element(DocumentFragment):
     def __init__(
-        self, name: str, attrs: dict[str, str], children: list[HTMLNode]
+        self,
+        name: str,
+        attrs: dict[str, str],
+        children: list[HTMLNode],
     ) -> None:
         self.name = name
         self.attrs = attrs
@@ -72,7 +75,9 @@ class DOMSerializer:
         self.marks = marks
 
     def serialize_fragment(
-        self, fragment: Fragment, target: Element | DocumentFragment | None = None
+        self,
+        fragment: Fragment,
+        target: Element | DocumentFragment | None = None,
     ) -> DocumentFragment:
         tgt: DocumentFragment = target or DocumentFragment(children=[])
 
@@ -134,7 +139,9 @@ class DOMSerializer:
         return dom
 
     def serialize_mark(
-        self, mark: Mark, inline: bool
+        self,
+        mark: Mark,
+        inline: bool,
     ) -> tuple[HTMLNode, Element | None] | None:
         to_dom = self.marks.get(mark.type.name)
         if to_dom:
@@ -186,7 +193,8 @@ class DOMSerializer:
 
     @classmethod
     def nodes_from_schema(
-        cls, schema: Schema[str, Any]
+        cls,
+        schema: Schema[str, Any],
     ) -> dict[str, Callable[["Node"], HTMLOutputSpec]]:
         result = gather_to_dom(schema.nodes)
         if "text" not in result:
@@ -195,7 +203,8 @@ class DOMSerializer:
 
     @classmethod
     def marks_from_schema(
-        cls, schema: Schema[Any, Any]
+        cls,
+        schema: Schema[Any, Any],
     ) -> dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
         return gather_to_dom(schema.marks)
 

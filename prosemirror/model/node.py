@@ -64,7 +64,8 @@ class Node:
         self.content.nodes_between(from_, to, f, start_pos, self)
 
     def descendants(
-        self, f: Callable[["Node", int, Optional["Node"], int], bool | None]
+        self,
+        f: Callable[["Node", int, Optional["Node"], int], bool | None],
     ) -> None:
         self.nodes_between(0, self.content.size, f)
 
@@ -127,7 +128,10 @@ class Node:
         return self.copy(self.content.cut(from_, to))
 
     def slice(
-        self, from_: int, to: int | None = None, include_parents: bool = False
+        self,
+        from_: int,
+        to: int | None = None,
+        include_parents: bool = False,
     ) -> Slice:
         if to is None:
             to = self.content.size
@@ -183,13 +187,19 @@ class Node:
         return ResolvedPos.resolve(self, pos)
 
     def range_has_mark(
-        self, from_: int, to: int, type: Union["Mark", "MarkType"]
+        self,
+        from_: int,
+        to: int,
+        type: Union["Mark", "MarkType"],
     ) -> bool:
         found = False
         if to > from_:
 
             def iteratee(
-                node: "Node", pos: int, parent: Optional["Node"], index: int
+                node: "Node",
+                pos: int,
+                parent: Optional["Node"],
+                index: int,
             ) -> bool:
                 nonlocal found
                 if type.is_in_set(node.marks):
@@ -268,7 +278,11 @@ class Node:
         return True
 
     def can_replace_with(
-        self, from_: int, to: int, type: "NodeType", marks: list[Mark] | None = None
+        self,
+        from_: int,
+        to: int,
+        type: "NodeType",
+        marks: list[Mark] | None = None,
     ) -> bool:
         if marks and not self.type.allows_marks(marks):
             return False
@@ -342,7 +356,9 @@ class Node:
             return schema.text(str(json_data["text"]), marks)
         content = Fragment.from_json(schema, json_data.get("content"))
         return schema.node_type(str(json_data["type"])).create(
-            cast("Attrs", json_data.get("attrs")), content, marks
+            cast("Attrs", json_data.get("attrs")),
+            content,
+            marks,
         )
 
 
@@ -403,7 +419,7 @@ class TextNode(Node):
         if from_ == 0 and to == text_length(self.text):
             return self
         substring = self.text.encode("utf-16-le")[2 * from_ : 2 * to].decode(
-            "utf-16-le"
+            "utf-16-le",
         )
         return self.with_text(substring)
 

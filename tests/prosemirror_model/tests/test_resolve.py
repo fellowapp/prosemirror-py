@@ -31,7 +31,7 @@ _p2 = {"node": _blk["node"].child(0), "start": 6, "end": 10}
             [_doc, _blk, _p2, 4, "ef", None],
             [_doc, _blk, 6, _p2["node"], None],
             [_doc, 12, _blk["node"], None],
-        ])
+        ]),
     ),
 )
 def test_node_resolve(pos, exp):

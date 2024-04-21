@@ -208,7 +208,9 @@ class NodeType:
 
     @classmethod
     def compile(
-        cls, nodes: dict["Nodes", "NodeSpec"], schema: "Schema[Nodes, Marks]"
+        cls,
+        nodes: dict["Nodes", "NodeSpec"],
+        schema: "Schema[Nodes, Marks]",
     ) -> dict["Nodes", "NodeType"]:
         result: dict["Nodes", "NodeType"] = {}
 
@@ -252,7 +254,11 @@ class MarkType:
     instance: Mark | None
 
     def __init__(
-        self, name: str, rank: int, schema: "Schema[Any, Any]", spec: "MarkSpec"
+        self,
+        name: str,
+        rank: int,
+        schema: "Schema[Any, Any]",
+        spec: "MarkSpec",
     ) -> None:
         self.name = name
         self.schema = schema
@@ -275,7 +281,9 @@ class MarkType:
 
     @classmethod
     def compile(
-        cls, marks: dict["Marks", "MarkSpec"], schema: "Schema[Nodes, Marks]"
+        cls,
+        marks: dict["Marks", "MarkSpec"],
+        schema: "Schema[Nodes, Marks]",
     ) -> dict["Marks", "MarkType"]:
         result = {}
         for rank, (name, spec) in enumerate(marks.items()):
@@ -384,7 +392,8 @@ class Schema(Generic[Nodes, Marks]):
             mark_expr = type.spec.get("marks")
             if content_expr not in content_expr_cache:
                 content_expr_cache[content_expr] = ContentMatch.parse(
-                    content_expr, cast(dict[str, "NodeType"], self.nodes)
+                    content_expr,
+                    cast(dict[str, "NodeType"], self.nodes),
                 )
 
             type.content_match = content_expr_cache[content_expr]
@@ -429,7 +438,10 @@ class Schema(Generic[Nodes, Marks]):
     def text(self, text: str, marks: list[Mark] | None = None) -> TextNode:
         type = self.nodes[cast(Nodes, "text")]
         return TextNode(
-            type, cast(Attrs, type.default_attrs), text, Mark.set_from(marks)
+            type,
+            cast(Attrs, type.default_attrs),
+            text,
+            Mark.set_from(marks),
         )
 
     def mark(

@@ -9,7 +9,10 @@ if TYPE_CHECKING:
 
 class ResolvedPos:
     def __init__(
-        self, pos: int, path: list[Union["Node", int]], parent_offset: int
+        self,
+        pos: int,
+        path: list[Union["Node", int]],
+        parent_offset: int,
     ) -> None:
         self.pos = pos
         self.path = path

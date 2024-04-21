@@ -59,7 +59,8 @@ class Fragment:
             i += 1
 
     def descendants(
-        self, f: Callable[["Node", int, Optional["Node"], int], bool | None]
+        self,
+        f: Callable[["Node", int, Optional["Node"], int], bool | None],
     ) -> None:
         self.nodes_between(0, self.size, f)
 
@@ -74,7 +75,10 @@ class Fragment:
         separated = True
 
         def iteratee(
-            node: "Node", pos: int, _parent: Optional["Node"], _to: int
+            node: "Node",
+            pos: int,
+            _parent: Optional["Node"],
+            _to: int,
         ) -> None:
             nonlocal text
             nonlocal separated
@@ -134,7 +138,8 @@ class Fragment:
                 if pos < from_ or end > to:
                     if pm_node.is_text(child):
                         child = child.cut(
-                            max(0, from_ - pos), min(text_length(child.text), to - pos)
+                            max(0, from_ - pos),
+                            min(text_length(child.text), to - pos),
                         )
                     else:
                         child = child.cut(
@@ -285,7 +290,8 @@ class Fragment:
 
     @classmethod
     def from_(
-        cls, nodes: Union["Fragment", "Node", Sequence["Node"], None]
+        cls,
+        nodes: Union["Fragment", "Node", Sequence["Node"], None],
     ) -> "Fragment":
         if not nodes:
             return cls.empty

@@ -18,7 +18,8 @@ hr = out["hr"]
 img = out["img"]
 
 custom_schema: Schema[
-    Literal["doc", "paragraph", "text", "contact", "hard_break"], str
+    Literal["doc", "paragraph", "text", "contact", "hard_break"],
+    str,
 ] = Schema({
     "nodes": {
         "doc": {"content": "paragraph+"},
@@ -78,7 +79,8 @@ class TestToString:
             "email": "bob@example.com",
         })
         paragraph = custom_schema.nodes["paragraph"].create_checked(
-            {}, [custom_schema.text("Hello "), contact]
+            {},
+            [custom_schema.text("Hello "), contact],
         )
 
         assert contact.text_content, "Bob <bob@example.com>"
@@ -100,8 +102,9 @@ class TestCut:
         self.cut(
             doc(
                 blockquote(
-                    ul(li(p("a"), p("b<a>c")), li(p("d")), "<b>", li(p("e"))), p("3")
-                )
+                    ul(li(p("a"), p("b<a>c")), li(p("d")), "<b>", li(p("e"))),
+                    p("3"),
+                ),
             ),
             doc(blockquote(ul(li(p("c")), li(p("d"))))),
         )
@@ -165,7 +168,7 @@ class TestBetween:
                     em("bar", img, strong("baz"), br),
                     "quux",
                     code("xy<b>z"),
-                )
+                ),
             ),
             "paragraph",
             "foo",
@@ -204,7 +207,7 @@ class TestTextBetween:
                             "email": "alice@example.com",
                         }),
                     ],
-                )
+                ),
             ],
         )
         assert d.text_between(0, d.content.size) == "Hello Alice <alice@example.com>"
@@ -222,7 +225,7 @@ class TestTextBetween:
                             "email": "alice@example.com",
                         }),
                     ],
-                )
+                ),
             ],
         )
         assert (
@@ -282,5 +285,5 @@ class TestToJSON:
 
     def test_serialize_nested_nodes(self):
         self.round_trip(
-            doc(blockquote(ul(li(p("a"), p("b")), li(p(img))), p("c")), p("d"))
+            doc(blockquote(ul(li(p("a"), p("b")), li(p(img))), p("c")), p("d")),
         )

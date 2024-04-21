@@ -51,7 +51,9 @@ hr = out["hr"]
         ),
         (
             doc(
-                p("before"), blockquote(p("the variable is called <a>i<b>")), p("after")
+                p("before"),
+                blockquote(p("the variable is called <a>i<b>")),
+                p("after"),
             ),
             schema.mark("code"),
             doc(
@@ -83,8 +85,10 @@ def test_does_not_remove_non_excluded_marks_of_the_same_type():
     })
     tr = Transform(
         schema.node(
-            "doc", None, schema.text("hi", [schema.mark("comment", {"id": 10})])
-        )
+            "doc",
+            None,
+            schema.text("hi", [schema.mark("comment", {"id": 10})]),
+        ),
     )
     tr.add_mark(0, 2, schema.mark("comment", {"id": 20}))
     assert len(tr.doc.first_child.marks) == 2
@@ -100,7 +104,7 @@ def test_can_remote_multiple_excluded_marks():
             "doc",
             None,
             schema.text("hi", [schema.mark("small1"), schema.mark("small2")]),
-        )
+        ),
     )
     assert len(tr.doc.first_child.marks) == 2
     tr.add_mark(0, 2, schema.mark("big"))
@@ -180,7 +184,7 @@ def test_remove_more_than_one_mark_of_same_type_from_block():
                 "hi",
                 [schema.mark("comment", {"id": 1}), schema.mark("comment", {"id": 2})],
             ),
-        )
+        ),
     )
     assert len(tr.doc.first_child.marks) == 2
     tr.remove_mark(0, 2, schema.marks["comment"])
@@ -255,7 +259,10 @@ def test_delete(doc, expect, test_transform):
     [
         (
             doc(
-                blockquote(p("<before>a")), "<a>", blockquote(p("b")), p("after<after>")
+                blockquote(p("<before>a")),
+                "<a>",
+                blockquote(p("b")),
+                p("after<after>"),
             ),
             doc(blockquote(p("<before>a"), "<a>", p("b")), p("after<after>")),
         ),
@@ -266,12 +273,12 @@ def test_delete(doc, expect, test_transform):
                     blockquote(p("a"), p("b<before>")),
                     "<a>",
                     blockquote(p("c"), p("d<after>")),
-                )
+                ),
             ),
             doc(
                 blockquote(
-                    blockquote(p("a"), p("b<before>"), "<a>", p("c"), p("d<after>"))
-                )
+                    blockquote(p("a"), p("b<before>"), "<a>", p("c"), p("d<after>")),
+                ),
             ),
         ),
         (
@@ -301,7 +308,8 @@ def test_join(doc, expect, test_transform):
         (
             doc(blockquote(blockquote(p("foo<a>bar"))), p("after<1>")),
             doc(
-                blockquote(blockquote(p("foo")), blockquote(p("<a>bar"))), p("after<1>")
+                blockquote(blockquote(p("foo")), blockquote(p("<a>bar"))),
+                p("after<1>"),
             ),
             [2],
         ),
@@ -350,7 +358,9 @@ def test_split(doc, expect, args, test_transform):
         (
             doc(blockquote(p("<before>one"), p("<a>two"), p("<after>three"))),
             doc(
-                blockquote(p("<before>one")), p("<a>two"), blockquote(p("<after>three"))
+                blockquote(p("<before>one")),
+                p("<a>two"),
+                blockquote(p("<after>three")),
             ),
         ),
         (
@@ -379,8 +389,8 @@ def test_split(doc, expect, args, test_transform):
                         p("<3>three"),
                         p("<b>four"),
                         p("<5>five"),
-                    )
-                )
+                    ),
+                ),
             ),
             doc(
                 blockquote(
@@ -389,7 +399,7 @@ def test_split(doc, expect, args, test_transform):
                     p("<3>three"),
                     p("<b>four"),
                     blockquote(p("<5>five")),
-                )
+                ),
             ),
         ),
         (
@@ -404,7 +414,7 @@ def test_split(doc, expect, args, test_transform):
 )
 def test_lift(doc, expect, test_transform):
     range = doc.resolve(doc.tag.get("a")).block_range(
-        doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
+        doc.resolve(doc.tag.get("b") or doc.tag.get("a")),
     )
     tr = Transform(doc).lift(range, lift_target(range))
     test_transform(tr, expect)
@@ -437,14 +447,14 @@ def test_lift(doc, expect, test_transform):
                     li(p("<1>one")),
                     li(p("..."), p("<a>two"), p("<b>three")),
                     li(p("<4>four")),
-                )
+                ),
             ),
             doc(
                 ol(
                     li(p("<1>one")),
                     li(p("..."), ol(li(p("<a>two"), p("<b>three")))),
                     li(p("<4>four")),
-                )
+                ),
             ),
             "ordered_list",
             None,
@@ -459,7 +469,7 @@ def test_lift(doc, expect, test_transform):
 )
 def test_wrap(doc, expect, type, attrs, test_transform):
     range = doc.resolve(doc.tag.get("a")).block_range(
-        doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
+        doc.resolve(doc.tag.get("b") or doc.tag.get("a")),
     )
     tr = Transform(doc).wrap(range, find_wrapping(range, schema.nodes[type], attrs))
     test_transform(tr, expect)
@@ -611,8 +621,14 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
         (
             doc(
                 blockquote(
-                    ul(li(p("a")), li(p("b<a>")), li(p("c")), li(p("<b>d")), li(p("e")))
-                )
+                    ul(
+                        li(p("a")),
+                        li(p("b<a>")),
+                        li(p("c")),
+                        li(p("<b>d")),
+                        li(p("e")),
+                    ),
+                ),
             ),
             None,
             doc(blockquote(ul(li(p("a")), li(p("b<a><b>d")), li(p("e"))))),
@@ -676,8 +692,8 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
         (
             doc(
                 blockquote(
-                    blockquote(p("one"), p("tw<a>o"), p("t<b>hree<3>"), p("four<4>"))
-                )
+                    blockquote(p("one"), p("tw<a>o"), p("t<b>hree<3>"), p("four<4>")),
+                ),
             ),
             doc(ol(li(p("hello<a>world")), li(p("bye"))), p("ne<b>xt")),
             doc(
@@ -688,8 +704,8 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
                         ol(li(p("bye"))),
                         p("ne<b>hree<3>"),
                         p("four<4>"),
-                    )
-                )
+                    ),
+                ),
             ),
         ),
         (
@@ -756,7 +772,9 @@ def test_replace(doc, source, expect, test_transform):
     else:
         slice = source.slice(source.tag.get("a"), source.tag.get("b"))
     tr = Transform(doc).replace(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        slice,
     )
     test_transform(tr, expect)
 
@@ -841,7 +859,7 @@ def test_replacing_in_nodes_with_fixed_content():
             "b": {"content": "inline*"},
             "block": {"content": "a b"},
             "text": {"group": "inline"},
-        }
+        },
     })
 
     doc = s.node(
@@ -879,7 +897,7 @@ class TestTopLevelMarkReplace:
                     ms.node("paragraph", None, [ms.text("hey")], [ms.mark("em")]),
                     ms.node("paragraph", None, [ms.text("ok")], [ms.mark("strong")]),
                 ],
-            )
+            ),
         )
         tr.replace(2, 7, tr.doc.slice(2, 7))
         assert tr.doc.eq(tr.before)
@@ -887,7 +905,7 @@ class TestTopLevelMarkReplace:
     def test_preserves_marks_on_open_slice_block_nodes(self):
         ms = self.ms
         tr = Transform(
-            ms.node("doc", None, [ms.node("paragraph", None, [ms.text("a")])])
+            ms.node("doc", None, [ms.node("paragraph", None, [ms.text("a")])]),
         )
         tr.replace(
             3,
@@ -978,7 +996,7 @@ def test_keeps_isolating_nodes_together():
     })
     doc = s.node("doc", None, [s.node("paragraph", None, [s.text("one")])])
     iso = Fragment.from_(
-        s.node("iso", None, [s.node("paragraph", None, [s.text("two")])])
+        s.node("iso", None, [s.node("paragraph", None, [s.text("two")])]),
     )
     assert (
         Transform(doc)
@@ -992,7 +1010,7 @@ def test_keeps_isolating_nodes_together():
                     s.node("iso", None, [s.node("paragraph", None, [s.text("two")])]),
                     s.node("paragraph", None, [s.text("e")]),
                 ],
-            )
+            ),
         )
     )
     assert (
@@ -1045,7 +1063,9 @@ def test_replace_range(doc, source, expect, test_transform):
     else:
         slice = source.slice(source.tag.get("a"), source.tag.get("b"), True)
     tr = Transform(doc).replace_range(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        slice,
     )
     test_transform(tr, expect)
 
@@ -1069,7 +1089,9 @@ def test_replace_range(doc, source, expect, test_transform):
 )
 def test_replace_range_with(doc, node, expect, test_transform):
     tr = Transform(doc).replace_range_with(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), node
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        node,
     )
     test_transform(tr, expect)
 
@@ -1101,7 +1123,8 @@ def test_replace_range_with(doc, node, expect, test_transform):
 )
 def test_delete_range(doc, expect, test_transform):
     tr = Transform(doc).delete_range(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a")
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
     )
     test_transform(tr, expect)
 

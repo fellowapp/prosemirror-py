@@ -108,7 +108,9 @@ class DOMParser:
         ])
 
     def parse(
-        self, dom_: lxml.html.HtmlElement, options: ParseOptions | None = None
+        self,
+        dom_: lxml.html.HtmlElement,
+        options: ParseOptions | None = None,
     ) -> Node:
         if options is None:
             options = ParseOptions()
@@ -144,7 +146,10 @@ class DOMParser:
         return Slice.max_open(cast(Fragment, context.finish()))
 
     def match_tag(
-        self, dom_: DOMNode, context: "ParseContext", after: ParseRule | None = None
+        self,
+        dom_: DOMNode,
+        context: "ParseContext",
+        after: ParseRule | None = None,
     ) -> ParseRule | None:
         try:
             i = self._tags.index(after) + 1 if after is not None else 0
@@ -254,7 +259,8 @@ class DOMParser:
     def from_schema(cls, schema: Schema[Any, Any]) -> "DOMParser":
         if "dom_parser" not in schema.cached:
             schema.cached["dom_parser"] = DOMParser(
-                schema, DOMParser.schema_rules(schema)
+                schema,
+                DOMParser.schema_rules(schema),
             )
 
         return cast("DOMParser", schema.cached["dom_parser"])
@@ -313,7 +319,9 @@ OPT_OPEN_LEFT = 4
 
 
 def ws_options_for(
-    _type: NodeType | None, preserve_whitespace: WSType, base: int
+    _type: NodeType | None,
+    preserve_whitespace: WSType,
+    base: int,
 ) -> int:
     if preserve_whitespace is not None:
         return (OPT_PRESERVE_WS if preserve_whitespace else 0) | (
@@ -418,7 +426,7 @@ class NodeContext:
         content = Fragment.from_(self.content)
         if not open_end and self.match is not None:
             content = content.append(
-                cast(Fragment, self.match.fill_before(Fragment.empty, True))
+                cast(Fragment, self.match.fill_before(Fragment.empty, True)),
             )
 
         return (
@@ -486,7 +494,13 @@ class ParseContext:
             )
         elif is_open:
             top_context = NodeContext(
-                None, None, Mark.none, Mark.none, True, None, top_options
+                None,
+                None,
+                Mark.none,
+                Mark.none,
+                True,
+                None,
+                top_options,
             )
         else:
             top_context = NodeContext(
@@ -565,7 +579,8 @@ class ParseContext:
                         or (
                             node_before.is_text
                             and re.search(
-                                r"[ \t\r\n\u000c]$", cast(TextNode, node_before).text
+                                r"[ \t\r\n\u000c]$",
+                                cast(TextNode, node_before).text,
                             )
                             is not None
                         )
@@ -632,7 +647,9 @@ class ParseContext:
 
         else:
             self.add_element_by_rule(
-                dom_, rule, rule_id if rule.consuming is False else None
+                dom_,
+                rule,
+                rule_id if rule.consuming is False else None,
             )
 
     def leaf_fallback(self, dom_: DOMNode) -> None:
@@ -678,7 +695,10 @@ class ParseContext:
         return add, remove
 
     def add_element_by_rule(
-        self, dom_: DOMNode, rule: ParseRule, continue_after: ParseRule | None = None
+        self,
+        dom_: DOMNode,
+        rule: ParseRule,
+        continue_after: ParseRule | None = None,
     ) -> None:
         sync: bool = False
         mark: Mark | None = None
@@ -704,7 +724,7 @@ class ParseContext:
         elif rule.get_content is not None:
             self.find_inside(dom_)
             rule.get_content(dom_, self.parser.schema).for_each(
-                lambda node, offset, index: self.insert_node(node)
+                lambda node, offset, index: self.insert_node(node),
             )
         else:
             content_dom = dom_
@@ -807,7 +827,10 @@ class ParseContext:
         return False
 
     def enter(
-        self, type_: NodeType, attrs: Attrs | None = None, preserve_ws: WSType = None
+        self,
+        type_: NodeType,
+        attrs: Attrs | None = None,
+        preserve_ws: WSType = None,
     ) -> bool:
         ok = self.find_place(type_.create(attrs))
         if ok:
@@ -837,8 +860,14 @@ class ParseContext:
 
         self.nodes.append(
             NodeContext(
-                type_, attrs, top.active_marks, top.pending_marks, solid, None, options
-            )
+                type_,
+                attrs,
+                top.active_marks,
+                top.pending_marks,
+                solid,
+                None,
+                options,
+            ),
         )
 
         self.open += 1
@@ -849,7 +878,7 @@ class ParseContext:
         if i > self.open:
             while i > self.open:
                 self.nodes[i - 1].content.append(
-                    cast(Node, self.nodes[i].finish(open_end))
+                    cast(Node, self.nodes[i].finish(open_end)),
                 )
                 i -= 1
 
@@ -1111,7 +1140,8 @@ def node_contains(node: DOMNode, find: DOMNode) -> bool:
 
 def compare_document_position(node1: DOMNode, node2: DOMNode) -> int:
     if not isinstance(node1, lxml.etree._Element) or not isinstance(
-        node2, lxml.etree._Element
+        node2,
+        lxml.etree._Element,
     ):
         msg = "Both arguments must be lxml Element objects."
         raise ValueError(msg)

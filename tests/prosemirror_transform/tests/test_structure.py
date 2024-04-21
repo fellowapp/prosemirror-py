@@ -42,7 +42,9 @@ doc = n(
             n("head", t("Subsection head")),  # 46
             n("para", t("Subtext")),  # 55
             n(
-                "figure", n("caption", t("Figure caption")), n("figureimage")
+                "figure",
+                n("caption", t("Figure caption")),
+                n("figureimage"),
             ),  # 56  # 72  # 74
             n("quote", n("para", t("!"))),
         ),
@@ -124,7 +126,7 @@ class TestCanSplit:
                 "title": {"content": "text*"},
                 "chapter": {"content": "title scene+"},
                 "scene": {"content": "para+"},
-            }
+            },
         })
         assert not can_split(
             s.node(

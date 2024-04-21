@@ -36,7 +36,10 @@ def remove_range(content: Fragment, from_: int, to: int) -> Fragment:
 
 
 def insert_into(
-    content: Fragment, dist: int, insert: Fragment, parent: Optional["Node"]
+    content: Fragment,
+    dist: int,
+    insert: Fragment,
+    parent: Optional["Node"],
 ) -> Fragment | None:
     a = content.find_index(dist)
     index, offset = a["index"], a["offset"]
@@ -151,7 +154,10 @@ def replace(from_: "ResolvedPos", to: "ResolvedPos", slice: Slice) -> "Node":
 
 
 def replace_outer(
-    from_: "ResolvedPos", to: "ResolvedPos", slice: Slice, depth: int
+    from_: "ResolvedPos",
+    to: "ResolvedPos",
+    slice: Slice,
+    depth: int,
 ) -> "Node":
     index = from_.index(depth)
     node = from_.node(depth)
@@ -251,7 +257,8 @@ def replace_three_way(
     else:
         if open_start:
             add_node(
-                close(open_start, replace_two_way(from_, start, depth + 1)), content
+                close(open_start, replace_two_way(from_, start, depth + 1)),
+                content,
             )
         add_range(start, end, depth, content)
         if open_end:
@@ -271,7 +278,8 @@ def replace_two_way(from_: "ResolvedPos", to: "ResolvedPos", depth: int) -> Frag
 
 
 def prepare_slice_for_replace(
-    slice: Slice, along: "ResolvedPos"
+    slice: Slice,
+    along: "ResolvedPos",
 ) -> dict[str, "ResolvedPos"]:
     extra = along.depth - slice.open_start
     parent = along.node(extra)

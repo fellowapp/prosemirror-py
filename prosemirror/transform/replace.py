@@ -118,7 +118,7 @@ class Fitter:
         placed_size = self.placed.size - self.depth - self.from__.depth
         from__ = self.from__
         to_ = self.close(
-            self.to_ if move_inline < 0 else from__.doc.resolve(move_inline)
+            self.to_ if move_inline < 0 else from__.doc.resolve(move_inline),
         )
         if not to_:
             return None
@@ -162,11 +162,14 @@ class Fitter:
 
         for pass_ in [1, 2]:
             for slice_depth in range(
-                start_depth if pass_ == 1 else self.unplaced.open_start, -1, -1
+                start_depth if pass_ == 1 else self.unplaced.open_start,
+                -1,
+                -1,
             ):
                 if slice_depth:
                     parent = content_at(
-                        self.unplaced.content, slice_depth - 1
+                        self.unplaced.content,
+                        slice_depth - 1,
                     ).first_child
                     assert parent
                     fragment = parent.content
@@ -186,7 +189,8 @@ class Fitter:
                             match.match_type(first.type)
                             or (
                                 inject := match.fill_before(
-                                    Fragment.from_(first), False
+                                    Fragment.from_(first),
+                                    False,
                                 )
                             )
                         )
@@ -297,7 +301,7 @@ class Fitter:
                         next_.mark(type_.allowed_marks(next_.marks)),
                         open_start if taken == 1 else 0,
                         open_end_count if taken == fragment.child_count else -1,
-                    )
+                    ),
                 )
 
         to_end = taken == fragment.child_count
@@ -325,7 +329,7 @@ class Fitter:
             node = cur.last_child
             assert node is not None
             self.frontier.append(
-                _FrontierItem(node.type, node.content_match_at(node.child_count))
+                _FrontierItem(node.type, node.content_match_at(node.child_count)),
             )
             cur = node.content
 
@@ -361,7 +365,11 @@ class Fitter:
         if (
             not top.type.is_textblock
             or not content_after_fits(
-                self.to_, self.to_.depth, top.type, top.match, False
+                self.to_,
+                self.to_.depth,
+                top.type,
+                top.match,
+                False,
             )
             or (
                 self.to_.depth == self.depth
@@ -430,7 +438,9 @@ class Fitter:
         assert top_match is not None
         top.match = top_match
         self.placed = add_to_fragment(
-            self.placed, self.depth, Fragment.from_(type_.create(attrs, content))
+            self.placed,
+            self.depth,
+            Fragment.from_(type_.create(attrs, content)),
         )
         self.frontier.append(_FrontierItem(type_, type_.content_match))
 
@@ -531,7 +541,7 @@ def close_fragment(
         fragment = fragment.replace_child(
             0,
             first.copy(
-                close_fragment(first.content, depth + 1, old_open, new_open, first)
+                close_fragment(first.content, depth + 1, old_open, new_open, first),
             ),
         )
     if depth > new_open:
@@ -543,7 +553,8 @@ def close_fragment(
         matched_fragment = match.match_fragment(start)
         assert matched_fragment is not None
         matched_fragment_fill_before = matched_fragment.fill_before(
-            Fragment.empty, True
+            Fragment.empty,
+            True,
         )
         assert matched_fragment_fill_before is not None
         fragment = start.append(matched_fragment_fill_before)

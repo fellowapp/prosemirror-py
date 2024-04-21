@@ -121,7 +121,8 @@ def can_split(
     pos_ = doc.resolve(pos)
     base = pos_.depth - depth
     inner_type: NodeTypeWithAttrs = cast(
-        NodeTypeWithAttrs, (types_after and types_after[-1]) or pos_.parent
+        NodeTypeWithAttrs,
+        (types_after and types_after[-1]) or pos_.parent,
     )
 
     if (
@@ -129,7 +130,7 @@ def can_split(
         or pos_.parent.type.spec.get("isolating")
         or not pos_.parent.can_replace(pos_.index(), pos_.parent.child_count)
         or not inner_type.type.valid_content(
-            pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count)
+            pos_.parent.content.cut_by_index(pos_.index(), pos_.parent.child_count),
         )
     ):
         return False
@@ -147,14 +148,16 @@ def can_split(
         if types_after and len(types_after) > i + 1:
             override_child = types_after[i + 1]
             rest = rest.replace_child(
-                0, override_child.type.create(override_child.attrs)
+                0,
+                override_child.type.create(override_child.attrs),
             )
         after: NodeTypeWithAttrs = cast(
             NodeTypeWithAttrs,
             (types_after and len(types_after) > i and types_after[i]) or node,
         )
         if not node.can_replace(
-            index + 1, node.child_count
+            index + 1,
+            node.child_count,
         ) or not after.type.valid_content(rest):
             return False
         d -= 1
@@ -162,7 +165,9 @@ def can_split(
     index = pos_.index_after(base)
     base_type = types_after[0] if types_after else None
     return pos_.node(base).can_replace_with(
-        index, index, base_type.type if base_type else pos_.node(base + 1).type
+        index,
+        index,
+        base_type.type if base_type else pos_.node(base + 1).type,
     )
 
 
@@ -259,10 +264,12 @@ def drop_point(doc: Node, pos: int, slice: Slice) -> int | None:
             else:
                 assert content.first_child is not None
                 wrapping = parent.content_match_at(insert_pos).find_wrapping(
-                    content.first_child.type
+                    content.first_child.type,
                 )
                 fits = wrapping is not None and parent.can_replace_with(
-                    insert_pos, insert_pos, wrapping[0]
+                    insert_pos,
+                    insert_pos,
+                    wrapping[0],
                 )
             if fits:
                 if bias == 0:
