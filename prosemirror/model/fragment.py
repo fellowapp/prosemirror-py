@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from .node import Node, TextNode
 
 
-def retIndex(index: int, offset: int) -> dict[str, int]:
+def ret_index(index: int, offset: int) -> dict[str, int]:
     return {"index": index, "offset": offset}
 
 
@@ -230,9 +230,9 @@ class Fragment:
 
     def find_index(self, pos: int, round: int = -1) -> dict[str, int]:
         if pos == 0:
-            return retIndex(0, pos)
+            return ret_index(0, pos)
         if pos == self.size:
-            return retIndex(len(self.content), pos)
+            return ret_index(len(self.content), pos)
         if pos > self.size or pos < 0:
             msg = f"Position {pos} outside of fragment ({self})"
             raise ValueError(msg)
@@ -243,8 +243,8 @@ class Fragment:
             end = cur_pos + cur.node_size
             if end >= pos:
                 if end == pos or round > 0:
-                    return retIndex(i + 1, end)
-                return retIndex(i, cur_pos)
+                    return ret_index(i + 1, end)
+                return ret_index(i, cur_pos)
             i += 1
             cur_pos = end
 

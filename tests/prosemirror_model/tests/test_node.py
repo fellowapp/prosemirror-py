@@ -73,7 +73,7 @@ class TestToString:
         )
         assert str(f) == "<custom_text, custom_hard_break, custom_text>"
 
-    def test_should_respect_custom_leafText_spec(self):
+    def test_should_respect_custom_leaf_text_spec(self):
         contact = custom_schema.nodes["contact"].create_checked({
             "name": "Bob",
             "email": "bob@example.com",
@@ -194,7 +194,7 @@ class TestTextBetween:
         text = d.text_between(0, d.content.size, "", leaf_text)
         assert text == "foo<image><break>"
 
-    def test_works_with_leafText(self):
+    def test_works_with_leaf_text(self):
         d = custom_schema.nodes["doc"].create_checked(
             {},
             [
@@ -212,7 +212,7 @@ class TestTextBetween:
         )
         assert d.text_between(0, d.content.size) == "Hello Alice <alice@example.com>"
 
-    def test_should_ignore_leafText_spec_when_passing_a_custom_leaf_text(self):
+    def test_should_ignore_leaf_text_spec_when_passing_a_custom_leaf_text(self):
         d = custom_schema.nodes["doc"].create_checked(
             {},
             [

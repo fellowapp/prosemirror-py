@@ -36,6 +36,7 @@ select = [
     "F",
     "I",
     "I",
+    "N",
     "PT",
     "RSE",
     "RUF",

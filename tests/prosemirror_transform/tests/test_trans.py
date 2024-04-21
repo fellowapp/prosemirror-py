@@ -7,8 +7,8 @@ from prosemirror.transform import Transform, TransformError, find_wrapping, lift
 from prosemirror.transform.structure import NodeTypeWithAttrs
 
 doc = out["doc"]
-docMetaOne = out["docMetaOne"]
-docMetaTwo = out["docMetaTwo"]
+doc_meta_one = out["docMetaOne"]
+doc_meta_two = out["docMetaTwo"]
 blockquote = out["blockquote"]
 pre = out["pre"]
 h1 = out["h1"]
@@ -573,9 +573,9 @@ def test_set_node_attribute(doc, expect, attr, value, test_transform):
 @pytest.mark.parametrize(
     ("doc", "expect", "attr", "value"),
     [
-        (doc(h1("foo")), docMetaOne(h1("foo")), "meta", 1),
-        (docMetaOne(h1("foo")), docMetaTwo(h1("foo")), "meta", 2),
-        (docMetaTwo(h1("foo")), doc(h1("foo")), "meta", None),
+        (doc(h1("foo")), doc_meta_one(h1("foo")), "meta", 1),
+        (doc_meta_one(h1("foo")), doc_meta_two(h1("foo")), "meta", 2),
+        (doc_meta_two(h1("foo")), doc(h1("foo")), "meta", None),
     ],
 )
 def test_set_doc_attribute(doc, expect, attr, value, test_transform):
