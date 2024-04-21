@@ -985,7 +985,7 @@ class ParseContext:
 
                 if (
                     default is not None
-                    and default.is_text_block
+                    and default.is_textblock
                     and default.default_attrs
                 ):
                     return default
@@ -993,7 +993,7 @@ class ParseContext:
                 d -= 1
 
         for type_ in self.parser.schema.nodes.values():
-            if type_.is_text_block and type_.default_attrs:
+            if type_.is_textblock and type_.default_attrs:
                 return type_
 
         return None

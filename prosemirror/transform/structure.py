@@ -200,7 +200,7 @@ def join_point(doc: Node, pos: int, dir: int = -1) -> int | None:
             after = pos_.node(d + 1)
         if (
             before
-            and not before.is_text_block
+            and not before.is_textblock
             and joinable(before, after)
             and pos_.node(d).can_replace(index, index + 1)
         ):

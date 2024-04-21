@@ -345,7 +345,7 @@ class Fitter:
             )
 
     def must_move_inline(self) -> int:
-        if not self.to_.parent.is_text_block:
+        if not self.to_.parent.is_textblock:
             return -1
         top = self.frontier[self.depth]
 
@@ -359,7 +359,7 @@ class Fitter:
             return cast(_CloseLevel | None, level)
 
         if (
-            not top.type.is_text_block
+            not top.type.is_textblock
             or not content_after_fits(
                 self.to_, self.to_.depth, top.type, top.match, False
             )

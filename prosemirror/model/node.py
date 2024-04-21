@@ -204,8 +204,8 @@ class Node:
         return self.type.is_block
 
     @property
-    def is_text_block(self) -> bool:
-        return self.type.is_text_block
+    def is_textblock(self) -> bool:
+        return self.type.is_textblock
 
     @property
     def inline_content(self) -> bool:

@@ -332,7 +332,7 @@ class Transform:
                 from__.node(abs(preferred_target) - 1)
             ):
                 preferred_depth = d
-            elif def_ or not left_node.type.is_text_block:
+            elif def_ or not left_node.type.is_textblock:
                 break
             d -= 1
 
@@ -502,7 +502,7 @@ class Transform:
     ) -> "Transform":
         if to is None:
             to = from_
-        if not type.is_text_block:
+        if not type.is_textblock:
             raise ValueError("Type given to set_block_type should be a textblock")
         map_from = len(self.steps)
 
@@ -510,7 +510,7 @@ class Transform:
             node: "Node", pos: int, parent: Optional["Node"], i: int
         ) -> bool | None:
             if (
-                node.is_text_block
+                node.is_textblock
                 and not node.has_markup(type, attrs)
                 and structure.can_change_type(
                     self.doc, self.mapping.slice(map_from).map(pos), type

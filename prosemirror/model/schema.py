@@ -96,7 +96,7 @@ class NodeType:
         return not self.is_block
 
     @property
-    def is_text_block(self) -> bool:  # FIXME: name is wrong, should be is_textblock
+    def is_textblock(self) -> bool:
         return self.is_block and self.inline_content
 
     @property
