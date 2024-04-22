@@ -19,7 +19,7 @@ jobs:
       - run: pip install uv
       - run: uv venv
       - run: uv pip install --requirement pyproject.toml
-      - run: uv pip install setuptools wheel build
+      - run: uv pip install setuptools setuptools-scm wheel build
       - run: .venv/bin/python -m build --no-isolation
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
