@@ -15,7 +15,7 @@ _p2 = {"node": _blk["node"].child(0), "start": 6, "end": 10}
 
 
 @pytest.mark.parametrize(
-    "pos,exp",
+    ("pos", "exp"),
     list(
         enumerate([
             [_doc, 0, None, _p1["node"]],
@@ -31,7 +31,7 @@ _p2 = {"node": _blk["node"].child(0), "start": 6, "end": 10}
             [_doc, _blk, _p2, 4, "ef", None],
             [_doc, _blk, 6, _p2["node"], None],
             [_doc, 12, _blk["node"], None],
-        ])
+        ]),
     ),
 )
 def test_node_resolve(pos, exp):
@@ -60,7 +60,7 @@ def test_node_resolve(pos, exp):
 
 
 @pytest.mark.parametrize(
-    "pos,result",
+    ("pos", "result"),
     [
         (0, ":0"),
         (1, "paragraph_0:0"),
@@ -71,13 +71,13 @@ def test_resolvedpos_str(pos, result):
     assert str(test_doc.resolve(pos)) == result
 
 
-@pytest.fixture
+@pytest.fixture()
 def doc_for_pos_at_index():
     return doc(blockquote(p("one"), blockquote(p("two ", em("three")), p("four"))))
 
 
 @pytest.mark.parametrize(
-    "index,depth,pos",
+    ("index", "depth", "pos"),
     [
         (0, None, 8),
         (1, None, 12),

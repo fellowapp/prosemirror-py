@@ -1,12 +1,12 @@
 import abc
-from typing import Any, Dict, Literal, Optional, Type, TypeVar, Union, cast, overload
+from typing import Any, Literal, Optional, TypeVar, cast, overload
 
 from prosemirror.model import Node, ReplaceError, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
 from prosemirror.utils import JSONDict
 
 # like a registry
-STEPS_BY_ID: Dict[str, Type["Step"]] = {}
+STEPS_BY_ID: dict[str, type["Step"]] = {}
 StepSubclass = TypeVar("StepSubclass", bound="Step")
 
 
@@ -32,23 +32,26 @@ class Step(metaclass=abc.ABCMeta):
     def to_json(self) -> JSONDict: ...
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> "Step":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "Step":
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not json_data or not json_data.get("stepType"):
-            raise ValueError("Invalid inpit for Step.from_json")
+            msg = "Invalid inpit for Step.from_json"
+            raise ValueError(msg)
         type = STEPS_BY_ID.get(cast(str, json_data["stepType"]))
         if not type:
-            raise ValueError(f'no step type {json_data["stepType"]} defined')
+            msg = f'no step type {json_data["stepType"]} defined'
+            raise ValueError(msg)
         return type.from_json(schema, json_data)
 
 
-def step_json_id(id: str, step_class: Type[StepSubclass]) -> Type[StepSubclass]:
+def step_json_id(id: str, step_class: type[StepSubclass]) -> type[StepSubclass]:
     if id in STEPS_BY_ID:
-        raise ValueError(f"Duplicated JSON ID for step type: {id}")
+        msg = f"Duplicated JSON ID for step type: {id}"
+        raise ValueError(msg)
 
     STEPS_BY_ID[id] = step_class
     step_class.json_id = id
@@ -63,7 +66,7 @@ class StepResult:
     @overload
     def __init__(self, doc: None, failed: str) -> None: ...
 
-    def __init__(self, doc: Optional[Node], failed: Optional[str]) -> None:
+    def __init__(self, doc: Node | None, failed: str | None) -> None:
         self.doc = doc
         self.failed = failed
 

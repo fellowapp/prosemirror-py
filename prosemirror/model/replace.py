@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, cast
 
 from prosemirror.utils import JSONDict
 
@@ -22,11 +22,13 @@ def remove_range(content: Fragment, from_: int, to: int) -> Fragment:
     index_to, offset_to = to_index_info["index"], to_index_info["offset"]
     if offset == from_ or cast("Node", child).is_text:
         if offset_to != to and not content.child(index_to).is_text:
-            raise ValueError("removing non-flat range")
+            msg = "removing non-flat range"
+            raise ValueError(msg)
         return content.cut(0, from_).append(content.cut(to))
     assert child
     if index != index_to:
-        raise ValueError("removing non-flat range")
+        msg = "removing non-flat range"
+        raise ValueError(msg)
     return content.replace_child(
         index,
         child.copy(remove_range(child.content, from_ - offset - 1, to - offset - 1)),
@@ -34,8 +36,11 @@ def remove_range(content: Fragment, from_: int, to: int) -> Fragment:
 
 
 def insert_into(
-    content: Fragment, dist: int, insert: Fragment, parent: Optional["Node"]
-) -> Optional[Fragment]:
+    content: Fragment,
+    dist: int,
+    insert: Fragment,
+    parent: Optional["Node"],
+) -> Fragment | None:
     a = content.find_index(dist)
     index, offset = a["index"], a["offset"]
     child = content.maybe_child(index)
@@ -85,7 +90,7 @@ class Slice:
     def __str__(self) -> str:
         return f"{self.content}({self.open_start},{self.open_end})"
 
-    def to_json(self) -> Optional[JSONDict]:
+    def to_json(self) -> JSONDict | None:
         if not self.content.size:
             return None
         json: JSONDict = {"content": self.content.to_json()}
@@ -105,14 +110,15 @@ class Slice:
     def from_json(
         cls,
         schema: "Schema[Any, Any]",
-        json_data: Optional[JSONDict],
+        json_data: JSONDict | None,
     ) -> "Slice":
         if not json_data:
             return cls.empty
         open_start = json_data.get("openStart", 0) or 0
         open_end = json_data.get("openEnd", 0) or 0
         if not isinstance(open_start, int) or not isinstance(open_end, int):
-            raise ValueError("invalid input for Slice.from_json")
+            msg = "invalid input for Slice.from_json"
+            raise ValueError(msg)
         return cls(
             Fragment.from_json(schema, json_data.get("content")),
             open_start,
@@ -139,14 +145,19 @@ Slice.empty = Slice(Fragment.empty, 0, 0)
 
 def replace(from_: "ResolvedPos", to: "ResolvedPos", slice: Slice) -> "Node":
     if slice.open_start > from_.depth:
-        raise ReplaceError("Inserted content deeper than insertion position")
+        msg = "Inserted content deeper than insertion position"
+        raise ReplaceError(msg)
     if from_.depth - slice.open_start != to.depth - slice.open_end:
-        raise ReplaceError("Inconsistent open depths")
+        msg = "Inconsistent open depths"
+        raise ReplaceError(msg)
     return replace_outer(from_, to, slice, 0)
 
 
 def replace_outer(
-    from_: "ResolvedPos", to: "ResolvedPos", slice: Slice, depth: int
+    from_: "ResolvedPos",
+    to: "ResolvedPos",
+    slice: Slice,
+    depth: int,
 ) -> "Node":
     index = from_.index(depth)
     node = from_.node(depth)
@@ -177,7 +188,8 @@ def replace_outer(
 
 def check_join(main: "Node", sub: "Node") -> None:
     if not sub.type.compatible_content(main.type):
-        raise ReplaceError(f"Cannot join {sub.type.name} onto {main.type.name}")
+        msg = f"Cannot join {sub.type.name} onto {main.type.name}"
+        raise ReplaceError(msg)
 
 
 def joinable(before: "ResolvedPos", after: "ResolvedPos", depth: int) -> "Node":
@@ -186,7 +198,7 @@ def joinable(before: "ResolvedPos", after: "ResolvedPos", depth: int) -> "Node":
     return node
 
 
-def add_node(child: "Node", target: List["Node"]) -> None:
+def add_node(child: "Node", target: list["Node"]) -> None:
     last = len(target) - 1
     if last >= 0 and pm_node.is_text(child) and child.same_markup(target[last]):
         target[last] = child.with_text(cast("TextNode", target[last]).text + child.text)
@@ -198,7 +210,7 @@ def add_range(
     start: Optional["ResolvedPos"],
     end: Optional["ResolvedPos"],
     depth: int,
-    target: List["Node"],
+    target: list["Node"],
 ) -> None:
     node = cast("ResolvedPos", end or start).node(depth)
     start_index = 0
@@ -220,7 +232,8 @@ def add_range(
 
 def close(node: "Node", content: Fragment) -> "Node":
     if not node.type.valid_content(content):
-        raise ReplaceError(f"Invalid content for node {node.type.name}")
+        msg = f"Invalid content for node {node.type.name}"
+        raise ReplaceError(msg)
     return node.copy(content)
 
 
@@ -233,7 +246,7 @@ def replace_three_way(
 ) -> Fragment:
     open_start = joinable(from_, start, depth + 1) if from_.depth > depth else None
     open_end = joinable(end, to, depth + 1) if to.depth > depth else None
-    content: List["Node"] = []
+    content: list["Node"] = []
     add_range(None, from_, depth, content)
     if open_start and open_end and start.index(depth) == end.index(depth):
         check_join(open_start, open_end)
@@ -244,7 +257,8 @@ def replace_three_way(
     else:
         if open_start:
             add_node(
-                close(open_start, replace_two_way(from_, start, depth + 1)), content
+                close(open_start, replace_two_way(from_, start, depth + 1)),
+                content,
             )
         add_range(start, end, depth, content)
         if open_end:
@@ -254,7 +268,7 @@ def replace_three_way(
 
 
 def replace_two_way(from_: "ResolvedPos", to: "ResolvedPos", depth: int) -> Fragment:
-    content: List["Node"] = []
+    content: list["Node"] = []
     add_range(None, from_, depth, content)
     if from_.depth > depth:
         type = joinable(from_, to, depth + 1)
@@ -264,8 +278,9 @@ def replace_two_way(from_: "ResolvedPos", to: "ResolvedPos", depth: int) -> Frag
 
 
 def prepare_slice_for_replace(
-    slice: Slice, along: "ResolvedPos"
-) -> Dict[str, "ResolvedPos"]:
+    slice: Slice,
+    along: "ResolvedPos",
+) -> dict[str, "ResolvedPos"]:
     extra = along.depth - slice.open_start
     parent = along.node(extra)
     node = parent.copy(slice.content)

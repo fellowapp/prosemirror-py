@@ -2,6 +2,7 @@ import pytest
 
 from prosemirror.model import Schema, Slice
 from prosemirror.transform import Transform, can_split, find_wrapping, lift_target
+from prosemirror.transform.structure import NodeTypeWithAttrs
 
 schema = Schema({
     "nodes": {
@@ -41,7 +42,9 @@ doc = n(
             n("head", t("Subsection head")),  # 46
             n("para", t("Subtext")),  # 55
             n(
-                "figure", n("caption", t("Figure caption")), n("figureimage")
+                "figure",
+                n("caption", t("Figure caption")),
+                n("figureimage"),
             ),  # 56  # 72  # 74
             n("quote", n("para", t("!"))),
         ),
@@ -68,7 +71,7 @@ def fill(params, length):
 
 class TestCanSplit:
     @pytest.mark.parametrize(
-        "pass_,pos,depth,after",
+        ("pass_", "pos", "depth", "after"),
         fill(
             [
                 (False, 0),
@@ -94,7 +97,10 @@ class TestCanSplit:
     )
     def test_can_split(self, pass_, pos, depth, after):
         res = can_split(
-            doc, pos, depth, [{"type": schema.nodes[after]}] if after else None
+            doc,
+            pos,
+            depth,
+            [NodeTypeWithAttrs(type=schema.nodes[after])] if after else None,
         )
         if pass_:
             assert res
@@ -120,7 +126,7 @@ class TestCanSplit:
                 "title": {"content": "text*"},
                 "chapter": {"content": "title scene+"},
                 "scene": {"content": "para+"},
-            }
+            },
         })
         assert not can_split(
             s.node(
@@ -137,13 +143,13 @@ class TestCanSplit:
             ),
             4,
             1,
-            [{"type": s.nodes["scene"]}],
+            [NodeTypeWithAttrs(s.nodes["scene"])],
         )
 
 
 class TestLiftTarget:
     @pytest.mark.parametrize(
-        "pass_,pos",
+        ("pass_", "pos"),
         [(False, 0), (False, 3), (False, 52), (False, 70), (True, 76), (False, 86)],
     )
     def test_lift_target(self, pass_, pos):
@@ -156,7 +162,7 @@ class TestLiftTarget:
 
 class TestFindWrapping:
     @pytest.mark.parametrize(
-        "pass_,pos,end,type",
+        ("pass_", "pos", "end", "type"),
         [
             (True, 0, 92, "sect"),
             (False, 4, 4, "sect"),
@@ -175,7 +181,7 @@ class TestFindWrapping:
 
 
 @pytest.mark.parametrize(
-    "doc,from_,to,content,open_start,open_end,result",
+    ("doc", "from_", "to", "content", "open_start", "open_end", "result"),
     [
         (
             n("doc", n("sect", n("head", t("foo")), n("para", t("bar")))),
@@ -263,9 +269,6 @@ class TestFindWrapping:
     ],
 )
 def test_replace(doc, from_, to, content, open_start, open_end, result):
-    if content:
-        slice = Slice(content.content, open_start, open_end)
-    else:
-        slice = Slice.empty
+    slice = Slice(content.content, open_start, open_end) if content else Slice.empty
     tr = Transform(doc).replace(from_, to, slice)
     assert tr.doc.eq(result)

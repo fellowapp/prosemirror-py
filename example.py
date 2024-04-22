@@ -75,10 +75,10 @@ basic_spec = {
             "parseDOM": [{"tag": "a[href]"}],
         },
         "em": {
-            "parseDOM": [{"tag": "i"}, {"tag": "em"}, {"style": "font-style=italic"}]
+            "parseDOM": [{"tag": "i"}, {"tag": "em"}, {"style": "font-style=italic"}],
         },
         "strong": {
-            "parseDOM": [{"tag": "strong"}, {"tag": "b"}, {"style": "font-weight"}]
+            "parseDOM": [{"tag": "strong"}, {"tag": "b"}, {"style": "font-weight"}],
         },
         "code": {"parseDOM": [{"tag": "code"}]},
     },

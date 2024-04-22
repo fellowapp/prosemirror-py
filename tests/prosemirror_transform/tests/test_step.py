@@ -10,7 +10,7 @@ def yes(from1, to1, val1, from2, to2, val2):
         merged = step1.merge(step2)
         assert merged
         assert merged.apply(_test_doc).doc.eq(
-            step2.apply(step1.apply(_test_doc).doc).doc
+            step2.apply(step1.apply(_test_doc).doc).doc,
         )
 
     return inner
@@ -20,14 +20,14 @@ def no(from1, to1, val1, from2, to2, val2):
     def inner():
         step1 = _make_step(from1, to1, val1)
         step2 = _make_step(from2, to2, val2)
-        with pytest.raises(ValueError):
-            step1.merge(step2)
+        merged = step1.merge(step2)
+        assert merged is None
 
     return inner
 
 
 @pytest.mark.parametrize(
-    "pass_,from1,to1,val1,from2,to2,val2",
+    ("pass_", "from1", "to1", "val1", "from2", "to2", "val2"),
     [
         (yes, 2, 2, "a", 3, 3, "b"),
         (yes, 2, 2, "a", 2, 2, "b"),
@@ -51,4 +51,4 @@ def no(from1, to1, val1, from2, to2, val2):
     ],
 )
 def test_all_cases(pass_, from1, to1, val1, from2, to2, val2):
-    pass_(from1, to1, val1, from2, to2, val2)
+    pass_(from1, to1, val1, from2, to2, val2)()

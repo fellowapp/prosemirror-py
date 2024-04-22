@@ -1,18 +1,14 @@
+from collections.abc import Callable, Iterable, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     ClassVar,
-    Dict,
-    Iterable,
-    List,
     Optional,
-    Sequence,
     Union,
     cast,
 )
 
-from prosemirror.utils import JSONList, text_length
+from prosemirror.utils import JSON, JSONList, text_length
 
 if TYPE_CHECKING:
     from prosemirror.model.schema import Schema
@@ -21,16 +17,16 @@ if TYPE_CHECKING:
     from .node import Node, TextNode
 
 
-def retIndex(index: int, offset: int) -> Dict[str, int]:
+def ret_index(index: int, offset: int) -> dict[str, int]:
     return {"index": index, "offset": offset}
 
 
 class Fragment:
     empty: ClassVar["Fragment"]
-    content: List["Node"]
+    content: list["Node"]
     size: int
 
-    def __init__(self, content: List["Node"], size: Optional[int] = None) -> None:
+    def __init__(self, content: list["Node"], size: int | None = None) -> None:
         self.content = content
         self.size = size if size is not None else sum(c.node_size for c in content)
 
@@ -38,7 +34,7 @@ class Fragment:
         self,
         from_: int,
         to: int,
-        f: Callable[["Node", int, Optional["Node"], int], Optional[bool]],
+        f: Callable[["Node", int, Optional["Node"], int], bool | None],
         node_start: int = 0,
         parent: Optional["Node"] = None,
     ) -> None:
@@ -63,7 +59,8 @@ class Fragment:
             i += 1
 
     def descendants(
-        self, f: Callable[["Node", int, Optional["Node"], int], Optional[bool]]
+        self,
+        f: Callable[["Node", int, Optional["Node"], int], bool | None],
     ) -> None:
         self.nodes_between(0, self.size, f)
 
@@ -72,13 +69,16 @@ class Fragment:
         from_: int,
         to: int,
         block_separator: str = "",
-        leaf_text: Union[Callable[["Node"], str], str] = "",
+        leaf_text: Callable[["Node"], str] | str = "",
     ) -> str:
         text = []
         separated = True
 
         def iteratee(
-            node: "Node", pos: int, _parent: Optional["Node"], _to: int
+            node: "Node",
+            pos: int,
+            _parent: Optional["Node"],
+            _to: int,
         ) -> None:
             nonlocal text
             nonlocal separated
@@ -110,7 +110,8 @@ class Fragment:
             self.content.copy(),
             0,
         )
-        assert last is not None and first is not None
+        assert last is not None
+        assert first is not None
         if pm_node.is_text(last) and last.same_markup(first):
             assert isinstance(first, pm_node.TextNode)
             content[len(content) - 1] = last.with_text(last.text + first.text)
@@ -120,12 +121,12 @@ class Fragment:
             i += 1
         return Fragment(content, self.size + other.size)
 
-    def cut(self, from_: int, to: Optional[int] = None) -> "Fragment":
+    def cut(self, from_: int, to: int | None = None) -> "Fragment":
         if to is None:
             to = self.size
         if from_ == 0 and to == self.size:
             return self
-        result: List["Node"] = []
+        result: list["Node"] = []
         size = 0
         if to <= from_:
             return Fragment(result, size)
@@ -137,7 +138,8 @@ class Fragment:
                 if pos < from_ or end > to:
                     if pm_node.is_text(child):
                         child = child.cut(
-                            max(0, from_ - pos), min(text_length(child.text), to - pos)
+                            max(0, from_ - pos),
+                            min(text_length(child.text), to - pos),
                         )
                     else:
                         child = child.cut(
@@ -150,7 +152,7 @@ class Fragment:
             i += 1
         return Fragment(result, size)
 
-    def cut_by_index(self, from_: int, to: Optional[int] = None) -> "Fragment":
+    def cut_by_index(self, from_: int, to: int | None = None) -> "Fragment":
         if from_ == to:
             return Fragment.empty
         if from_ == 0 and to == len(self.content):
@@ -175,7 +177,7 @@ class Fragment:
     def eq(self, other: "Fragment") -> bool:
         if len(self.content) != len(other.content):
             return False
-        return all(a.eq(b) for (a, b) in zip(self.content, other.content))
+        return all(a.eq(b) for (a, b) in zip(self.content, other.content, strict=True))
 
     @property
     def first_child(self) -> Optional["Node"]:
@@ -207,7 +209,7 @@ class Fragment:
             p += child.node_size
             i += 1
 
-    def find_diff_start(self, other: "Fragment", pos: int = 0) -> Optional[int]:
+    def find_diff_start(self, other: "Fragment", pos: int = 0) -> int | None:
         from .diff import find_diff_start
 
         return find_diff_start(self, other, pos)
@@ -215,8 +217,8 @@ class Fragment:
     def find_diff_end(
         self,
         other: "Fragment",
-        pos: Optional[int] = None,
-        other_pos: Optional[int] = None,
+        pos: int | None = None,
+        other_pos: int | None = None,
     ) -> Optional["Diff"]:
         from .diff import find_diff_end
 
@@ -226,13 +228,14 @@ class Fragment:
             other_pos = other.size
         return find_diff_end(self, other, pos, other_pos)
 
-    def find_index(self, pos: int, round: int = -1) -> Dict[str, int]:
+    def find_index(self, pos: int, round: int = -1) -> dict[str, int]:
         if pos == 0:
-            return retIndex(0, pos)
+            return ret_index(0, pos)
         if pos == self.size:
-            return retIndex(len(self.content), pos)
+            return ret_index(len(self.content), pos)
         if pos > self.size or pos < 0:
-            raise ValueError(f"Position {pos} outside of fragment ({self})")
+            msg = f"Position {pos} outside of fragment ({self})"
+            raise ValueError(msg)
         i = 0
         cur_pos = 0
         while True:
@@ -240,18 +243,18 @@ class Fragment:
             end = cur_pos + cur.node_size
             if end >= pos:
                 if end == pos or round > 0:
-                    return retIndex(i + 1, end)
-                return retIndex(i, cur_pos)
+                    return ret_index(i + 1, end)
+                return ret_index(i, cur_pos)
             i += 1
             cur_pos = end
 
-    def to_json(self) -> Optional[JSONList]:
+    def to_json(self) -> JSONList | None:
         if self.content:
             return [item.to_json() for item in self.content]
         return None
 
     @classmethod
-    def from_json(cls, schema: "Schema[Any, Any]", value: Any) -> "Fragment":
+    def from_json(cls, schema: "Schema[Any, Any]", value: JSON) -> "Fragment":
         if not value:
             return cls.empty
 
@@ -261,15 +264,16 @@ class Fragment:
             value = json.loads(value)
 
         if not isinstance(value, list):
-            raise ValueError("Invalid input for Fragment.from_json")
+            msg = "Invalid input for Fragment.from_json"
+            raise ValueError(msg)
 
         return cls([schema.node_from_json(item) for item in value])
 
     @classmethod
-    def from_array(cls, array: List["Node"]) -> "Fragment":
+    def from_array(cls, array: list["Node"]) -> "Fragment":
         if not array:
             return cls.empty
-        joined: Optional[List["Node"]] = None
+        joined: list["Node"] | None = None
         size = 0
         for i in range(len(array)):
             node = array[i]
@@ -286,7 +290,8 @@ class Fragment:
 
     @classmethod
     def from_(
-        cls, nodes: Union["Fragment", "Node", Sequence["Node"], None]
+        cls,
+        nodes: Union["Fragment", "Node", Sequence["Node"], None],
     ) -> "Fragment":
         if not nodes:
             return cls.empty
@@ -296,7 +301,8 @@ class Fragment:
             return cls.from_array(list(nodes))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
-        raise ValueError(f"cannot convert {nodes!r} to a fragment")
+        msg = f"cannot convert {nodes!r} to a fragment"
+        raise ValueError(msg)
 
     def to_string_inner(self) -> str:
         return ", ".join([str(i) for i in self.content])

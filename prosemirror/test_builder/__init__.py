@@ -14,7 +14,7 @@ nodes.update({
     "doc": {
         "content": "block+",
         "attrs": {"meta": {"default": None}},
-    }
+    },
 })
 
 test_schema: Schema[Any, Any] = Schema({

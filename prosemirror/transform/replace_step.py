@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, cast
 
 from prosemirror.model import Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -8,7 +8,11 @@ from prosemirror.utils import JSONDict
 
 class ReplaceStep(Step):
     def __init__(
-        self, from_: int, to: int, slice: Slice, structure: Optional[bool] = None
+        self,
+        from_: int,
+        to: int,
+        slice: Slice,
+        structure: bool | None = None,
     ) -> None:
         super().__init__()
         self.from_ = from_
@@ -26,7 +30,9 @@ class ReplaceStep(Step):
 
     def invert(self, doc: Node) -> "ReplaceStep":
         return ReplaceStep(
-            self.from_, self.from_ + self.slice.size, doc.slice(self.from_, self.to)
+            self.from_,
+            self.from_ + self.slice.size,
+            doc.slice(self.from_, self.to),
         )
 
     def map(self, mapping: Mappable) -> Optional["ReplaceStep"]:
@@ -53,7 +59,10 @@ class ReplaceStep(Step):
                     other.slice.open_end,
                 )
             return ReplaceStep(
-                self.from_, self.to + (other.to - other.from_), slice, self.structure
+                self.from_,
+                self.to + (other.to - other.from_),
+                slice,
+                self.structure,
             )
         elif (
             other.to == self.from_
@@ -86,22 +95,22 @@ class ReplaceStep(Step):
         return json_data
 
     @staticmethod
-    def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
-    ) -> "ReplaceStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "ReplaceStep":
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["from"], int) or not isinstance(
-            json_data["to"], int
+            json_data["to"],
+            int,
         ):
-            raise ValueError("Invlid input for ReplaceStep.from_json")
+            msg = "Invlid input for ReplaceStep.from_json"
+            raise ValueError(msg)
         return ReplaceStep(
             json_data["from"],
             json_data["to"],
-            Slice.from_json(schema, cast(Optional[JSONDict], json_data.get("slice"))),
+            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
             bool(json_data.get("structure")),
         )
 
@@ -118,7 +127,7 @@ class ReplaceAroundStep(Step):
         gap_to: int,
         slice: Slice,
         insert: int,
-        structure: Optional[bool] = None,
+        structure: bool | None = None,
     ) -> None:
         super().__init__()
         self.from_ = from_
@@ -161,7 +170,8 @@ class ReplaceAroundStep(Step):
             self.from_ + self.insert,
             self.from_ + self.insert + gap,
             doc.slice(self.from_, self.to).remove_between(
-                self.gap_from - self.from_, self.gap_to - self.from_
+                self.gap_from - self.from_,
+                self.gap_to - self.from_,
             ),
             self.gap_from - self.from_,
             self.structure,
@@ -175,7 +185,13 @@ class ReplaceAroundStep(Step):
         if (from_.deleted and to.deleted) or gap_from < from_.pos or gap_to > to.pos:
             return None
         return ReplaceAroundStep(
-            from_.pos, to.pos, gap_from, gap_to, self.slice, self.insert, self.structure
+            from_.pos,
+            to.pos,
+            gap_from,
+            gap_to,
+            self.slice,
+            self.insert,
+            self.structure,
         )
 
     def to_json(self) -> JSONDict:
@@ -201,7 +217,8 @@ class ReplaceAroundStep(Step):
 
     @staticmethod
     def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
+        schema: Schema[Any, Any],
+        json_data: JSONDict | str,
     ) -> "ReplaceAroundStep":
         if isinstance(json_data, str):
             import json
@@ -215,13 +232,14 @@ class ReplaceAroundStep(Step):
             or not isinstance(json_data["gapTo"], int)
             or not isinstance(json_data["insert"], int)
         ):
-            raise ValueError("Invlid input for ReplaceAroundStep.from_json")
+            msg = "Invlid input for ReplaceAroundStep.from_json"
+            raise ValueError(msg)
         return ReplaceAroundStep(
             json_data["from"],
             json_data["to"],
             json_data["gapFrom"],
             json_data["gapTo"],
-            Slice.from_json(schema, cast(Optional[JSONDict], json_data.get("slice"))),
+            Slice.from_json(schema, cast(JSONDict | None, json_data.get("slice"))),
             json_data["insert"],
             bool(json_data.get("structure")),
         )

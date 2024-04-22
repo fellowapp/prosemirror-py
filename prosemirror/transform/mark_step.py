@@ -1,4 +1,5 @@
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from prosemirror.model import Fragment, Mark, Node, Schema, Slice
 from prosemirror.transform.map import Mappable
@@ -34,7 +35,7 @@ class AddMarkStep(Step):
         from__ = doc.resolve(self.from_)
         parent = from__.node(from__.shared_depth(self.to))
 
-        def iteratee(node: Node, parent: Optional[Node], i: int) -> Node:
+        def iteratee(node: Node, parent: Node | None, i: int) -> Node:
             if parent and (
                 not node.is_atom or not parent.type.allows_mark_type(self.mark.type)
             ):
@@ -48,17 +49,17 @@ class AddMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Optional[Node] = None) -> Step:
+    def invert(self, doc: Node | None = None) -> Step:
         return RemoveMarkStep(self.from_, self.to, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional[Step]:
+    def map(self, mapping: Mappable) -> Step | None:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if (from_.deleted and to.deleted) or from_.pos > to.pos:
             return None
         return AddMarkStep(from_.pos, to.pos, self.mark)
 
-    def merge(self, other: Step) -> Optional[Step]:
+    def merge(self, other: Step) -> Step | None:
         if (
             isinstance(other, AddMarkStep)
             and other.mark.eq(self.mark)
@@ -66,7 +67,9 @@ class AddMarkStep(Step):
             and self.to >= other.from_
         ):
             return AddMarkStep(
-                min(self.from_, other.from_), max(self.to, other.to), self.mark
+                min(self.from_, other.from_),
+                max(self.to, other.to),
+                self.mark,
             )
         return None
 
@@ -79,18 +82,18 @@ class AddMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
-    ) -> "AddMarkStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "AddMarkStep":
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["from"], int) or not isinstance(
-            json_data["to"], int
+            json_data["to"],
+            int,
         ):
-            raise ValueError("Invalid input for AddMarkStep.from_json")
+            msg = "Invalid input for AddMarkStep.from_json"
+            raise ValueError(msg)
         return AddMarkStep(
             json_data["from"],
             json_data["to"],
@@ -111,7 +114,7 @@ class RemoveMarkStep(Step):
     def apply(self, doc: Node) -> StepResult:
         old_slice = doc.slice(self.from_, self.to)
 
-        def iteratee(node: Node, parent: Optional[Node], i: int) -> Node:
+        def iteratee(node: Node, parent: Node | None, i: int) -> Node:
             return node.mark(self.mark.remove_from_set(node.marks))
 
         slice = Slice(
@@ -121,17 +124,17 @@ class RemoveMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Optional[Node] = None) -> Step:
+    def invert(self, doc: Node | None = None) -> Step:
         return AddMarkStep(self.from_, self.to, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional[Step]:
+    def map(self, mapping: Mappable) -> Step | None:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
         if (from_.deleted and to.deleted) or (from_.pos > to.pos):
             return None
         return RemoveMarkStep(from_.pos, to.pos, self.mark)
 
-    def merge(self, other: Step) -> Optional[Step]:
+    def merge(self, other: Step) -> Step | None:
         if (
             isinstance(other, RemoveMarkStep)
             and (other.mark.eq(self.mark))
@@ -139,7 +142,9 @@ class RemoveMarkStep(Step):
             and self.to >= other.from_
         ):
             return RemoveMarkStep(
-                min(self.from_, other.from_), max(self.to, other.to), self.mark
+                min(self.from_, other.from_),
+                max(self.to, other.to),
+                self.mark,
             )
         return None
 
@@ -152,16 +157,18 @@ class RemoveMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> Step:
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> Step:
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["from"], int) or not isinstance(
-            json_data["to"], int
+            json_data["to"],
+            int,
         ):
-            raise ValueError("Invalid input for RemoveMarkStep.from_json")
+            msg = "Invalid input for RemoveMarkStep.from_json"
+            raise ValueError(msg)
         return RemoveMarkStep(
             json_data["from"],
             json_data["to"],
@@ -201,7 +208,7 @@ class AddNodeMarkStep(Step):
                 return AddNodeMarkStep(self.pos, self.mark)
         return RemoveNodeMarkStep(self.pos, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional[Step]:
+    def map(self, mapping: Mappable) -> Step | None:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else AddNodeMarkStep(pos.pos, self.mark)
 
@@ -213,16 +220,18 @@ class AddNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> Step:
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> Step:
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["pos"], int):
-            raise ValueError("Invalid input for AddNodeMarkStep.from_json")
+            msg = "Invalid input for AddNodeMarkStep.from_json"
+            raise ValueError(msg)
         return AddNodeMarkStep(
-            json_data["pos"], schema.mark_from_json(cast(JSONDict, json_data["mark"]))
+            json_data["pos"],
+            schema.mark_from_json(cast(JSONDict, json_data["mark"])),
         )
 
 
@@ -240,7 +249,9 @@ class RemoveNodeMarkStep(Step):
         if not node:
             return StepResult.fail("No node at mark step's position")
         updated = node.type.create(
-            node.attrs, None, self.mark.remove_from_set(node.marks)
+            node.attrs,
+            None,
+            self.mark.remove_from_set(node.marks),
         )
         return StepResult.from_replace(
             doc,
@@ -255,7 +266,7 @@ class RemoveNodeMarkStep(Step):
             return self
         return AddNodeMarkStep(self.pos, self.mark)
 
-    def map(self, mapping: Mappable) -> Optional[Step]:
+    def map(self, mapping: Mappable) -> Step | None:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else RemoveNodeMarkStep(pos.pos, self.mark)
 
@@ -267,16 +278,18 @@ class RemoveNodeMarkStep(Step):
         }
 
     @staticmethod
-    def from_json(schema: Schema[Any, Any], json_data: Union[JSONDict, str]) -> Step:
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> Step:
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["pos"], int):
-            raise ValueError("Invalid input for RemoveNodeMarkStep.from_json")
+            msg = "Invalid input for RemoveNodeMarkStep.from_json"
+            raise ValueError(msg)
         return RemoveNodeMarkStep(
-            json_data["pos"], schema.mark_from_json(cast(JSONDict, json_data["mark"]))
+            json_data["pos"],
+            schema.mark_from_json(cast(JSONDict, json_data["mark"])),
         )
 
 

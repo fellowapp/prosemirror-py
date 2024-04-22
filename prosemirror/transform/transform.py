@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, TypedDict, Union
+from typing import Optional, TypedDict
 
 from prosemirror.model import (
     ContentMatch,
@@ -34,7 +34,7 @@ from prosemirror.utils import JSON, Attrs
 from .doc_attr_step import DocAttrStep
 
 
-def defines_content(type: Union[NodeType, MarkType]) -> Optional[bool]:
+def defines_content(type: NodeType | MarkType) -> bool | None:
     if isinstance(type, NodeType):
         return type.spec.get("defining") or type.spec.get("definingForContent")
     return False
@@ -57,8 +57,8 @@ class Transform:
 
     def __init__(self, doc: Node) -> None:
         self.doc = doc
-        self.steps: List[Step] = []
-        self.docs: List[Node] = []
+        self.steps: list[Step] = []
+        self.docs: list[Node] = []
         self.mapping = Mapping()
 
     @property
@@ -90,10 +90,10 @@ class Transform:
     def add_mark(self, from_: int, to: int, mark: Mark) -> "Transform":
         removed = []
         added = []
-        removing: Optional[RemoveMarkStep] = None
-        adding: Optional[AddMarkStep] = None
+        removing: RemoveMarkStep | None = None
+        adding: AddMarkStep | None = None
 
-        def iteratee(node: Node, pos: int, parent: Optional[Node], i: int) -> None:
+        def iteratee(node: Node, pos: int, parent: Node | None, i: int) -> None:
             nonlocal removing
             nonlocal adding
             if not node.is_inline:
@@ -136,7 +136,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        mark: Union[Mark, MarkType, None] = None,
+        mark: Mark | MarkType | None = None,
     ) -> "Transform":
         class MatchedTypedDict(TypedDict):
             style: Mark
@@ -144,12 +144,10 @@ class Transform:
             to: int
             step: int
 
-        matched: List[MatchedTypedDict] = []
+        matched: list[MatchedTypedDict] = []
         step = 0
 
-        def iteratee(
-            node: Node, pos: int, parent: Optional[Node], i: int
-        ) -> Optional[bool]:
+        def iteratee(node: Node, pos: int, parent: Node | None, i: int) -> bool | None:
             nonlocal step
             if not node.is_inline:
                 return None
@@ -198,7 +196,7 @@ class Transform:
         self,
         pos: int,
         parent_type: NodeType,
-        match: Optional[ContentMatch] = None,
+        match: ContentMatch | None = None,
     ) -> "Transform":
         if match is None:
             match = parent_type.content_match
@@ -229,14 +227,15 @@ class Transform:
                             slice = Slice(
                                 Fragment.from_(
                                     parent_type.schema.text(
-                                        " ", parent_type.allowed_marks(child.marks)
-                                    )
+                                        " ",
+                                        parent_type.allowed_marks(child.marks),
+                                    ),
                                 ),
                                 0,
                                 0,
                             )
                         repl_steps.append(
-                            ReplaceStep(cur + m.start(), cur + m.end(), slice)
+                            ReplaceStep(cur + m.start(), cur + m.end(), slice),
                         )
                         m = newline.search(child.text, m.end())
             cur = end
@@ -252,8 +251,8 @@ class Transform:
     def replace(
         self,
         from_: int,
-        to: Optional[int] = None,
-        slice: Optional[Slice] = None,
+        to: int | None = None,
+        slice: Slice | None = None,
     ) -> "Transform":
         if to is None:
             to = from_
@@ -268,7 +267,7 @@ class Transform:
         self,
         from_: int,
         to: int,
-        content: Union[Fragment, Node, List[Node]],
+        content: Fragment | Node | list[Node],
     ) -> "Transform":
         return self.replace(from_, to, Slice(Fragment.from_(content), 0, 0))
 
@@ -278,7 +277,7 @@ class Transform:
     def insert(
         self,
         pos: int,
-        content: Union[Fragment, Node, List[Node]],
+        content: Fragment | Node | list[Node],
     ) -> "Transform":
         return self.replace_with(pos, pos, content)
 
@@ -331,10 +330,10 @@ class Transform:
             assert left_node is not None
             def_ = defines_content(left_node.type)
             if def_ and not left_node.same_markup(
-                from__.node(abs(preferred_target) - 1)
+                from__.node(abs(preferred_target) - 1),
             ):
                 preferred_depth = d
-            elif def_ or not left_node.type.is_text_block:
+            elif def_ or not left_node.type.is_textblock:
                 break
             d -= 1
 
@@ -359,7 +358,11 @@ class Transform:
                         to_.after(target_depth) if expand else to,
                         Slice(
                             close_fragment(
-                                slice.content, 0, slice.open_start, open_depth, None
+                                slice.content,
+                                0,
+                                slice.open_start,
+                                open_depth,
+                                None,
                             ),
                             open_depth,
                             slice.open_end,
@@ -405,7 +408,8 @@ class Transform:
             if depth > 0 and (
                 last
                 or from__.node(depth - 1).can_replace(
-                    from__.index(depth - 1), to_.index_after(depth - 1)
+                    from__.index(depth - 1),
+                    to_.index_after(depth - 1),
                 )
             ):
                 return self.delete(from__.before(depth), to_.after(depth))
@@ -467,55 +471,70 @@ class Transform:
                 Slice(before.append(after), open_start, open_end),
                 before.size - open_start,
                 True,
-            )
+            ),
         )
 
     def wrap(
-        self, range_: NodeRange, wrappers: List[structure.NodeTypeWithAttrs]
+        self,
+        range_: NodeRange,
+        wrappers: list[structure.NodeTypeWithAttrs],
     ) -> "Transform":
         content = Fragment.empty
         i = len(wrappers) - 1
         while i >= 0:
             if content.size:
-                match = wrappers[i]["type"].content_match.match_fragment(content)
+                match = wrappers[i].type.content_match.match_fragment(content)
                 if not match or not match.valid_end:
-                    raise TransformError(
+                    msg = (
                         "Wrapper type given to Transform.wrap does not form valid "
                         "content of its parent wrapper"
                     )
+                    raise TransformError(msg)
             content = Fragment.from_(
-                wrappers[i]["type"].create(wrappers[i].get("attrs"), content)
+                wrappers[i].type.create(wrappers[i].attrs, content),
             )
             i -= 1
         start = range_.start
         end = range_.end
         return self.step(
             ReplaceAroundStep(
-                start, end, start, end, Slice(content, 0, 0), len(wrappers), True
-            )
+                start,
+                end,
+                start,
+                end,
+                Slice(content, 0, 0),
+                len(wrappers),
+                True,
+            ),
         )
 
     def set_block_type(
         self,
         from_: int,
-        to: Optional[int],
+        to: int | None,
         type: NodeType,
-        attrs: Optional[Attrs],
+        attrs: Attrs | None,
     ) -> "Transform":
         if to is None:
             to = from_
-        if not type.is_text_block:
-            raise ValueError("Type given to set_block_type should be a textblock")
+        if not type.is_textblock:
+            msg = "Type given to set_block_type should be a textblock"
+            raise ValueError(msg)
         map_from = len(self.steps)
 
         def iteratee(
-            node: "Node", pos: int, parent: Optional["Node"], i: int
-        ) -> Optional[bool]:
+            node: "Node",
+            pos: int,
+            parent: Optional["Node"],
+            i: int,
+        ) -> bool | None:
             if (
-                node.is_text_block
+                node.is_textblock
                 and not node.has_markup(type, attrs)
                 and structure.can_change_type(
-                    self.doc, self.mapping.slice(map_from).map(pos), type
+                    self.doc,
+                    self.mapping.slice(map_from).map(pos),
+                    type,
                 )
             ):
                 self.clear_incompatible(self.mapping.slice(map_from).map(pos, 1), type)
@@ -529,11 +548,13 @@ class Transform:
                         start_m + 1,
                         end_m - 1,
                         Slice(
-                            Fragment.from_(type.create(attrs, None, node.marks)), 0, 0
+                            Fragment.from_(type.create(attrs, None, node.marks)),
+                            0,
+                            0,
                         ),
                         1,
                         True,
-                    )
+                    ),
                 )
                 return False
             return None
@@ -544,20 +565,22 @@ class Transform:
     def set_node_markup(
         self,
         pos: int,
-        type: Optional[NodeType],
-        attrs: Optional[Attrs],
-        marks: Optional[List[Mark]] = None,
+        type: NodeType | None,
+        attrs: Attrs | None,
+        marks: list[Mark] | None = None,
     ) -> "Transform":
         node = self.doc.node_at(pos)
         if not node:
-            raise ValueError("No node at given position")
+            msg = "No node at given position"
+            raise ValueError(msg)
         if not type:
             type = node.type
         new_node = type.create(attrs, None, marks or node.marks)
         if node.is_leaf:
             return self.replace_with(pos, pos + node.node_size, new_node)
         if not type.valid_content(node.content):
-            raise ValueError(f"Invalid content for node type {type.name}")
+            msg = f"Invalid content for node type {type.name}"
+            raise ValueError(msg)
         return self.step(
             ReplaceAroundStep(
                 pos,
@@ -567,7 +590,7 @@ class Transform:
                 Slice(Fragment.from_(new_node), 0, 0),
                 1,
                 True,
-            )
+            ),
         )
 
     def set_node_attribute(self, pos: int, attr: str, value: JSON) -> "Transform":
@@ -579,12 +602,13 @@ class Transform:
     def add_node_mark(self, pos: int, mark: Mark) -> "Transform":
         return self.step(AddNodeMarkStep(pos, mark))
 
-    def remove_node_mark(self, pos: int, mark: Union[Mark, MarkType]) -> "Transform":
+    def remove_node_mark(self, pos: int, mark: Mark | MarkType) -> "Transform":
         if isinstance(mark, MarkType):
             node = self.doc.node_at(pos)
 
             if not node:
-                raise ValueError(f"No node at position {pos}")
+                msg = f"No node at position {pos}"
+                raise ValueError(msg)
 
             mark_in_set = mark.is_in_set(node.marks)
 
@@ -597,8 +621,8 @@ class Transform:
     def split(
         self,
         pos: int,
-        depth: Optional[int] = None,
-        types_after: Optional[List[structure.NodeTypeWithAttrs]] = None,
+        depth: int | None = None,
+        types_after: list[structure.NodeTypeWithAttrs] | None = None,
     ) -> "Transform":
         if depth is None:
             depth = 1
@@ -614,14 +638,14 @@ class Transform:
             if types_after and len(types_after) > i:
                 type_after = types_after[i]
             after = Fragment.from_(
-                type_after["type"].create(type_after.get("attrs"), after)
+                type_after.type.create(type_after.attrs, after)
                 if type_after
-                else pos_.node(d).copy(after)
+                else pos_.node(d).copy(after),
             )
             d -= 1
             i -= 1
         return self.step(
-            ReplaceStep(pos, pos, Slice(before.append(after), depth, depth), True)
+            ReplaceStep(pos, pos, Slice(before.append(after), depth, depth), True),
         )
 
     def join(self, pos: int, depth: int = 1) -> "Transform":

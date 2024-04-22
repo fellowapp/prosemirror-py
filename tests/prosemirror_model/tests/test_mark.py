@@ -44,7 +44,7 @@ custom_strong = custom["strong"].create()
 
 
 @pytest.mark.parametrize(
-    "a,b,res",
+    ("a", "b", "res"),
     [
         ([em_, strong], [em_, strong], True),
         ([em_, strong], [em_, code], False),
@@ -58,7 +58,7 @@ def test_same_set(a, b, res):
 
 
 @pytest.mark.parametrize(
-    "a,b,res",
+    ("a", "b", "res"),
     [
         (link("http://foo"), (link("http://foo")), True),
         (link("http://foo"), link("http://bar"), False),
@@ -116,7 +116,7 @@ def test_remove_form_set(ist):
         Mark.same_set(
             link("http://foo", "title").remove_from_set([link("http://foo")]),
             [link("http://foo")],
-        )
+        ),
     )
 
 
@@ -171,7 +171,7 @@ class TestResolvedPosMarks:
     )
 
     @pytest.mark.parametrize(
-        "doc,mark,result",
+        ("doc", "mark", "result"),
         [
             (doc(p(em("fo<a>o"))), em_, True),
             (doc(p(em("fo<a>o"))), strong, False),
@@ -185,7 +185,7 @@ class TestResolvedPosMarks:
         assert mark.is_in_set(doc.resolve(doc.tag["a"]).marks()) is result
 
     @pytest.mark.parametrize(
-        "a,b",
+        ("a", "b"),
         [
             (custom_doc.resolve(4).marks(), [custom_strong]),
             (custom_doc.resolve(3).marks(), [remark1, custom_strong]),

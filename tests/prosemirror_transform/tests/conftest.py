@@ -17,7 +17,7 @@ doc = out["doc"]
 p = out["p"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_mapping():
     def t_mapping(mapping, *cases):
         inverted = mapping.invert()
@@ -32,7 +32,7 @@ def test_mapping():
     return t_mapping
 
 
-@pytest.fixture
+@pytest.fixture()
 def make_mapping():
     def mk(*args):
         mapping = Mapping()
@@ -47,7 +47,7 @@ def make_mapping():
     return mk
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_del():
     def t_del(mapping: Mapping, pos: int, side: int, flags: str):
         r = mapping.map_result(pos, side)
@@ -65,24 +65,24 @@ def test_del():
     return t_del
 
 
-@pytest.fixture
+@pytest.fixture()
 def make_step():
     return _make_step
 
 
-def _make_step(from_, to, val):
+def _make_step(from_: int, to: int, val: str | None) -> Step:
     if val == "+em":
-        return AddMarkStep(from_, to, schema.marks["em"].create)
+        return AddMarkStep(from_, to, schema.marks["em"].create())
     elif val == "-em":
-        return RemoveMarkStep(from_, to, schema.marks["em"].create)
+        return RemoveMarkStep(from_, to, schema.marks["em"].create())
     return ReplaceStep(
         from_,
         to,
-        Slice.empty if val is None else Slice(Fragment.from_(schema.text(val), 0, 0)),
+        Slice.empty if val is None else Slice(Fragment.from_(schema.text(val)), 0, 0),
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_doc():
     return doc(p("foobar"))
 
@@ -90,7 +90,7 @@ def test_doc():
 _test_doc = doc(p("foobar"))
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_transform():
     def invert(transform):
         out = Transform(transform.doc)

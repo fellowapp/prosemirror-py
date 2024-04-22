@@ -1,19 +1,21 @@
 # type: ignore
 
+import contextlib
 import re
-from typing import Any, Callable, Dict, List, Tuple, Union
+from collections.abc import Callable
+from typing import Any
 
-from prosemirror.model import Node, Schema
-from prosemirror.utils import JSONDict
+from prosemirror.model import Node, NodeType, Schema
+from prosemirror.utils import Attrs, JSONDict
 
 NO_TAG = Node.tag = {}
 
 
 def flatten(
     schema: Schema[Any, Any],
-    children: List[Union[Node, JSONDict, str]],
+    children: list[Node | JSONDict | str],
     f: Callable[[Node], Node],
-) -> Tuple[List[Node], Dict[str, int]]:
+) -> tuple[list[Node], dict[str, int]]:
     result, pos, tag = [], 0, NO_TAG
 
     for child in children:
@@ -58,44 +60,38 @@ def flatten(
     return result, tag
 
 
-def id(x):
-    return x
-
-
-def block(type, attrs):
+def block(type: NodeType, attrs: Attrs | None = None):
     def result(*args):
         my_attrs = attrs
         if (
             args
             and args[0]
-            and not isinstance(args[0], (str, Node))
+            and not isinstance(args[0], str | Node)
             and not getattr(args[0], "flat", None)
             and "flat" not in args[0]
         ):
             my_attrs.update(args[0])
             args = args[1:]
-        nodes, tag = flatten(type.schema, args, id)
+        nodes, tag = flatten(type.schema, args, lambda x: x)
         node = type.create(my_attrs, nodes)
         if tag != NO_TAG:
             node.tag = tag
         return node
 
     if type.is_leaf:
-        try:
+        with contextlib.suppress(ValueError):
             result.flat = [type.create(attrs)]
-        except ValueError:
-            pass
 
     return result
 
 
-def mark(type, attrs):
+def mark(type: NodeType, attrs: Attrs):
     def result(*args):
         my_attrs = attrs.copy()
         if (
             args
             and args[0]
-            and not isinstance(args[0], (str, Node))
+            and not isinstance(args[0], str | Node)
             and not getattr(args[0], "flat", None)
             and "flat" not in args[0]
         ):
@@ -114,7 +110,7 @@ def mark(type, attrs):
     return result
 
 
-def builders(schema, names):
+def builders(schema: Schema[Any, Any], names):
     result = {"schema": schema}
     for name in schema.nodes:
         result[name] = block(schema.nodes[name], {})

@@ -18,7 +18,8 @@ hr = out["hr"]
 img = out["img"]
 
 custom_schema: Schema[
-    Literal["doc", "paragraph", "text", "contact", "hard_break"], str
+    Literal["doc", "paragraph", "text", "contact", "hard_break"],
+    str,
 ] = Schema({
     "nodes": {
         "doc": {"content": "paragraph+"},
@@ -72,13 +73,14 @@ class TestToString:
         )
         assert str(f) == "<custom_text, custom_hard_break, custom_text>"
 
-    def test_should_respect_custom_leafText_spec(self):
+    def test_should_respect_custom_leaf_text_spec(self):
         contact = custom_schema.nodes["contact"].create_checked({
             "name": "Bob",
             "email": "bob@example.com",
         })
         paragraph = custom_schema.nodes["paragraph"].create_checked(
-            {}, [custom_schema.text("Hello "), contact]
+            {},
+            [custom_schema.text("Hello "), contact],
         )
 
         assert contact.text_content, "Bob <bob@example.com>"
@@ -100,8 +102,9 @@ class TestCut:
         self.cut(
             doc(
                 blockquote(
-                    ul(li(p("a"), p("b<a>c")), li(p("d")), "<b>", li(p("e"))), p("3")
-                )
+                    ul(li(p("a"), p("b<a>c")), li(p("d")), "<b>", li(p("e"))),
+                    p("3"),
+                ),
             ),
             doc(blockquote(ul(li(p("c")), li(p("d"))))),
         )
@@ -128,15 +131,16 @@ class TestBetween:
             nonlocal i
 
             if i == len(nodes):
-                raise Exception(f"More nodes iterated than list ({node.type.name})")
+                msg = f"More nodes iterated than list ({node.type.name})"
+                raise Exception(msg)
             compare = node.text if node.is_text else node.type.name
             if compare != nodes[i]:
-                raise Exception(f"Expected {nodes[i]!r}, got {compare!r}")
+                msg = f"Expected {nodes[i]!r}, got {compare!r}"
+                raise Exception(msg)
             i += 1
             if not node.is_text and doc.node_at(pos) != node:
-                raise Exception(
-                    f"Pos {pos} does not point at node {node!r} {doc.nodeAt(pos)!r}"
-                )
+                msg = f"Pos {pos} does not point at node {node!r} {doc.nodeAt(pos)!r}"
+                raise Exception(msg)
 
         doc.nodes_between(doc.tag["a"], doc.tag["b"], iteratee)
 
@@ -164,7 +168,7 @@ class TestBetween:
                     em("bar", img, strong("baz"), br),
                     "quux",
                     code("xy<b>z"),
-                )
+                ),
             ),
             "paragraph",
             "foo",
@@ -190,7 +194,7 @@ class TestTextBetween:
         text = d.text_between(0, d.content.size, "", leaf_text)
         assert text == "foo<image><break>"
 
-    def test_works_with_leafText(self):
+    def test_works_with_leaf_text(self):
         d = custom_schema.nodes["doc"].create_checked(
             {},
             [
@@ -203,12 +207,12 @@ class TestTextBetween:
                             "email": "alice@example.com",
                         }),
                     ],
-                )
+                ),
             ],
         )
         assert d.text_between(0, d.content.size) == "Hello Alice <alice@example.com>"
 
-    def test_should_ignore_leafText_spec_when_passing_a_custom_leaf_text(self):
+    def test_should_ignore_leaf_text_spec_when_passing_a_custom_leaf_text(self):
         d = custom_schema.nodes["doc"].create_checked(
             {},
             [
@@ -221,7 +225,7 @@ class TestTextBetween:
                             "email": "alice@example.com",
                         }),
                     ],
-                )
+                ),
             ],
         )
         assert (
@@ -281,5 +285,5 @@ class TestToJSON:
 
     def test_serialize_nested_nodes(self):
         self.round_trip(
-            doc(blockquote(ul(li(p("a"), p("b")), li(p(img))), p("c")), p("d"))
+            doc(blockquote(ul(li(p("a"), p("b")), li(p(img))), p("c")), p("d")),
         )

@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture()
 def ist():
     def ist(a, b=None, key=None):
         if key is None:

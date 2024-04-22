@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from prosemirror.model import Fragment, Node, Schema, Slice
 from prosemirror.transform.map import Mappable, StepMap
@@ -37,7 +37,7 @@ class AttrStep(Step):
         assert node_at_pos is not None
         return AttrStep(self.pos, self.attr, node_at_pos.attrs[self.attr])
 
-    def map(self, mapping: Mappable) -> Optional[Step]:
+    def map(self, mapping: Mappable) -> Step | None:
         pos = mapping.map_result(self.pos, 1)
         return None if pos.deleted_after else AttrStep(pos.pos, self.attr, self.value)
 
@@ -50,18 +50,18 @@ class AttrStep(Step):
         }
 
     @staticmethod
-    def from_json(
-        schema: Schema[Any, Any], json_data: Union[JSONDict, str]
-    ) -> "AttrStep":
+    def from_json(schema: Schema[Any, Any], json_data: JSONDict | str) -> "AttrStep":
         if isinstance(json_data, str):
             import json
 
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not isinstance(json_data["pos"], int) or not isinstance(
-            json_data["attr"], str
+            json_data["attr"],
+            str,
         ):
-            raise ValueError("Invalid input for AttrStep.from_json")
+            msg = "Invalid input for AttrStep.from_json"
+            raise ValueError(msg)
         return AttrStep(json_data["pos"], json_data["attr"], json_data["value"])
 
 

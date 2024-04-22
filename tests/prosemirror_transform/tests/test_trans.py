@@ -4,10 +4,11 @@ from prosemirror.model import Fragment, Schema, Slice
 from prosemirror.test_builder import builders, out
 from prosemirror.test_builder import test_schema as schema
 from prosemirror.transform import Transform, TransformError, find_wrapping, lift_target
+from prosemirror.transform.structure import NodeTypeWithAttrs
 
 doc = out["doc"]
-docMetaOne = out["docMetaOne"]
-docMetaTwo = out["docMetaTwo"]
+doc_meta_one = out["docMetaOne"]
+doc_meta_two = out["docMetaTwo"]
 blockquote = out["blockquote"]
 pre = out["pre"]
 h1 = out["h1"]
@@ -26,7 +27,7 @@ hr = out["hr"]
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         (
             doc(p("hello <a>there<b>!")),
@@ -50,7 +51,9 @@ hr = out["hr"]
         ),
         (
             doc(
-                p("before"), blockquote(p("the variable is called <a>i<b>")), p("after")
+                p("before"),
+                blockquote(p("the variable is called <a>i<b>")),
+                p("after"),
             ),
             schema.mark("code"),
             doc(
@@ -82,8 +85,10 @@ def test_does_not_remove_non_excluded_marks_of_the_same_type():
     })
     tr = Transform(
         schema.node(
-            "doc", None, schema.text("hi", [schema.mark("comment", {"id": 10})])
-        )
+            "doc",
+            None,
+            schema.text("hi", [schema.mark("comment", {"id": 10})]),
+        ),
     )
     tr.add_mark(0, 2, schema.mark("comment", {"id": 20}))
     assert len(tr.doc.first_child.marks) == 2
@@ -99,7 +104,7 @@ def test_can_remote_multiple_excluded_marks():
             "doc",
             None,
             schema.text("hi", [schema.mark("small1"), schema.mark("small2")]),
-        )
+        ),
     )
     assert len(tr.doc.first_child.marks) == 2
     tr.add_mark(0, 2, schema.mark("big"))
@@ -107,7 +112,7 @@ def test_can_remote_multiple_excluded_marks():
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         (
             doc(p(em("hello <a>world<b>!"))),
@@ -123,11 +128,6 @@ def test_can_remote_multiple_excluded_marks():
             doc(p(em("one ", strong("<a>two<b>"), " three"))),
             schema.mark("strong"),
             doc(p(em("one two three"))),
-        ),
-        (
-            doc(p("<a>hello ", a("link<b>"))),
-            schema.mark("link", {"href": "foo"}),
-            doc(p("hello link")),
         ),
         (
             doc(p("<a>hello ", a("link<b>"))),
@@ -184,7 +184,7 @@ def test_remove_more_than_one_mark_of_same_type_from_block():
                 "hi",
                 [schema.mark("comment", {"id": 1}), schema.mark("comment", {"id": 2})],
             ),
-        )
+        ),
     )
     assert len(tr.doc.first_child.marks) == 2
     tr.remove_mark(0, 2, schema.marks["comment"])
@@ -192,7 +192,7 @@ def test_remove_more_than_one_mark_of_same_type_from_block():
 
 
 @pytest.mark.parametrize(
-    "doc,nodes,expect",
+    ("doc", "nodes", "expect"),
     [
         (
             doc(p("hello<a>there")),
@@ -234,7 +234,7 @@ def test_insert(doc, nodes, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (
             doc(p("<1>one"), "<a>", p("tw<2>o"), "<b>", p("<3>three")),
@@ -255,11 +255,14 @@ def test_delete(doc, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (
             doc(
-                blockquote(p("<before>a")), "<a>", blockquote(p("b")), p("after<after>")
+                blockquote(p("<before>a")),
+                "<a>",
+                blockquote(p("b")),
+                p("after<after>"),
             ),
             doc(blockquote(p("<before>a"), "<a>", p("b")), p("after<after>")),
         ),
@@ -270,12 +273,12 @@ def test_delete(doc, expect, test_transform):
                     blockquote(p("a"), p("b<before>")),
                     "<a>",
                     blockquote(p("c"), p("d<after>")),
-                )
+                ),
             ),
             doc(
                 blockquote(
-                    blockquote(p("a"), p("b<before>"), "<a>", p("c"), p("d<after>"))
-                )
+                    blockquote(p("a"), p("b<before>"), "<a>", p("c"), p("d<after>")),
+                ),
             ),
         ),
         (
@@ -295,7 +298,7 @@ def test_join(doc, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,args",
+    ("doc", "expect", "args"),
     [
         (
             doc(p("<1>a"), p("<2>foo<a>bar<3>"), p("<4>b")),
@@ -305,7 +308,8 @@ def test_join(doc, expect, test_transform):
         (
             doc(blockquote(blockquote(p("foo<a>bar"))), p("after<1>")),
             doc(
-                blockquote(blockquote(p("foo")), blockquote(p("<a>bar"))), p("after<1>")
+                blockquote(blockquote(p("foo")), blockquote(p("<a>bar"))),
+                p("after<1>"),
             ),
             [2],
         ),
@@ -333,7 +337,7 @@ def test_join(doc, expect, test_transform):
         (
             doc(h1("hell<a>o!")),
             doc(h1("hell"), p("<a>o!")),
-            [None, [{"type": schema.nodes["paragraph"]}]],
+            [None, [NodeTypeWithAttrs(schema.nodes["paragraph"])]],
         ),
         (doc(blockquote("<a>", p("x"))), "fail", []),
         (doc(blockquote(p("x"), "<a>")), "fail", []),
@@ -349,12 +353,14 @@ def test_split(doc, expect, args, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (
             doc(blockquote(p("<before>one"), p("<a>two"), p("<after>three"))),
             doc(
-                blockquote(p("<before>one")), p("<a>two"), blockquote(p("<after>three"))
+                blockquote(p("<before>one")),
+                p("<a>two"),
+                blockquote(p("<after>three")),
             ),
         ),
         (
@@ -383,8 +389,8 @@ def test_split(doc, expect, args, test_transform):
                         p("<3>three"),
                         p("<b>four"),
                         p("<5>five"),
-                    )
-                )
+                    ),
+                ),
             ),
             doc(
                 blockquote(
@@ -393,7 +399,7 @@ def test_split(doc, expect, args, test_transform):
                     p("<3>three"),
                     p("<b>four"),
                     blockquote(p("<5>five")),
-                )
+                ),
             ),
         ),
         (
@@ -408,14 +414,14 @@ def test_split(doc, expect, args, test_transform):
 )
 def test_lift(doc, expect, test_transform):
     range = doc.resolve(doc.tag.get("a")).block_range(
-        doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
+        doc.resolve(doc.tag.get("b") or doc.tag.get("a")),
     )
     tr = Transform(doc).lift(range, lift_target(range))
     test_transform(tr, expect)
 
 
 @pytest.mark.parametrize(
-    "doc,expect,type,attrs",
+    ("doc", "expect", "type", "attrs"),
     [
         (
             doc(p("one"), p("<a>two"), p("three")),
@@ -441,14 +447,14 @@ def test_lift(doc, expect, test_transform):
                     li(p("<1>one")),
                     li(p("..."), p("<a>two"), p("<b>three")),
                     li(p("<4>four")),
-                )
+                ),
             ),
             doc(
                 ol(
                     li(p("<1>one")),
                     li(p("..."), ol(li(p("<a>two"), p("<b>three")))),
                     li(p("<4>four")),
-                )
+                ),
             ),
             "ordered_list",
             None,
@@ -463,14 +469,14 @@ def test_lift(doc, expect, test_transform):
 )
 def test_wrap(doc, expect, type, attrs, test_transform):
     range = doc.resolve(doc.tag.get("a")).block_range(
-        doc.resolve(doc.tag.get("b") or doc.tag.get("a"))
+        doc.resolve(doc.tag.get("b") or doc.tag.get("a")),
     )
     tr = Transform(doc).wrap(range, find_wrapping(range, schema.nodes[type], attrs))
     test_transform(tr, expect)
 
 
 @pytest.mark.parametrize(
-    "doc,expect,node_type,attrs",
+    ("doc", "expect", "node_type", "attrs"),
     [
         (doc(p("am<a> i")), doc(h2("am i")), "heading", {"level": 2}),
         (
@@ -531,7 +537,7 @@ def test_set_block_type_works_after_another_step(test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,type,attrs",
+    ("doc", "expect", "type", "attrs"),
     [
         (doc("<a>", p("foo")), doc(h1("foo")), "heading", {"level": 1}),
         (
@@ -548,7 +554,7 @@ def test_set_node_markup(doc, expect, type, attrs, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,attr,value",
+    ("doc", "expect", "attr", "value"),
     [
         (doc("<a>", h1("foo")), doc(h2("foo")), "level", 2),
         (
@@ -565,11 +571,11 @@ def test_set_node_attribute(doc, expect, attr, value, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,expect,attr,value",
+    ("doc", "expect", "attr", "value"),
     [
-        (doc(h1("foo")), docMetaOne(h1("foo")), "meta", 1),
-        (docMetaOne(h1("foo")), docMetaTwo(h1("foo")), "meta", 2),
-        (docMetaTwo(h1("foo")), doc(h1("foo")), "meta", None),
+        (doc(h1("foo")), doc_meta_one(h1("foo")), "meta", 1),
+        (doc_meta_one(h1("foo")), doc_meta_two(h1("foo")), "meta", 2),
+        (doc_meta_two(h1("foo")), doc(h1("foo")), "meta", None),
     ],
 )
 def test_set_doc_attribute(doc, expect, attr, value, test_transform):
@@ -578,7 +584,7 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,source,expect",
+    ("doc", "source", "expect"),
     [
         (doc(p("hell<a>o y<b>ou")), None, doc(p("hell<a><b>ou"))),
         (doc(p("hell<a>o"), p("y<b>ou")), None, doc(p("hell<a><b>ou"))),
@@ -615,8 +621,14 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
         (
             doc(
                 blockquote(
-                    ul(li(p("a")), li(p("b<a>")), li(p("c")), li(p("<b>d")), li(p("e")))
-                )
+                    ul(
+                        li(p("a")),
+                        li(p("b<a>")),
+                        li(p("c")),
+                        li(p("<b>d")),
+                        li(p("e")),
+                    ),
+                ),
             ),
             None,
             doc(blockquote(ul(li(p("a")), li(p("b<a><b>d")), li(p("e"))))),
@@ -680,8 +692,8 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
         (
             doc(
                 blockquote(
-                    blockquote(p("one"), p("tw<a>o"), p("t<b>hree<3>"), p("four<4>"))
-                )
+                    blockquote(p("one"), p("tw<a>o"), p("t<b>hree<3>"), p("four<4>")),
+                ),
             ),
             doc(ol(li(p("hello<a>world")), li(p("bye"))), p("ne<b>xt")),
             doc(
@@ -692,8 +704,8 @@ def test_set_doc_attribute(doc, expect, attr, value, test_transform):
                         ol(li(p("bye"))),
                         p("ne<b>hree<3>"),
                         p("four<4>"),
-                    )
-                )
+                    ),
+                ),
             ),
         ),
         (
@@ -760,7 +772,9 @@ def test_replace(doc, source, expect, test_transform):
     else:
         slice = source.slice(source.tag.get("a"), source.tag.get("b"))
     tr = Transform(doc).replace(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        slice,
     )
     test_transform(tr, expect)
 
@@ -845,7 +859,7 @@ def test_replacing_in_nodes_with_fixed_content():
             "b": {"content": "inline*"},
             "block": {"content": "a b"},
             "text": {"group": "inline"},
-        }
+        },
     })
 
     doc = s.node(
@@ -883,7 +897,7 @@ class TestTopLevelMarkReplace:
                     ms.node("paragraph", None, [ms.text("hey")], [ms.mark("em")]),
                     ms.node("paragraph", None, [ms.text("ok")], [ms.mark("strong")]),
                 ],
-            )
+            ),
         )
         tr.replace(2, 7, tr.doc.slice(2, 7))
         assert tr.doc.eq(tr.before)
@@ -891,7 +905,7 @@ class TestTopLevelMarkReplace:
     def test_preserves_marks_on_open_slice_block_nodes(self):
         ms = self.ms
         tr = Transform(
-            ms.node("doc", None, [ms.node("paragraph", None, [ms.text("a")])])
+            ms.node("doc", None, [ms.node("paragraph", None, [ms.text("a")])]),
         )
         tr.replace(
             3,
@@ -982,7 +996,7 @@ def test_keeps_isolating_nodes_together():
     })
     doc = s.node("doc", None, [s.node("paragraph", None, [s.text("one")])])
     iso = Fragment.from_(
-        s.node("iso", None, [s.node("paragraph", None, [s.text("two")])])
+        s.node("iso", None, [s.node("paragraph", None, [s.text("two")])]),
     )
     assert (
         Transform(doc)
@@ -996,7 +1010,7 @@ def test_keeps_isolating_nodes_together():
                     s.node("iso", None, [s.node("paragraph", None, [s.text("two")])]),
                     s.node("paragraph", None, [s.text("e")]),
                 ],
-            )
+            ),
         )
     )
     assert (
@@ -1007,7 +1021,7 @@ def test_keeps_isolating_nodes_together():
 
 
 @pytest.mark.parametrize(
-    "doc,source,expect",
+    ("doc", "source", "expect"),
     [
         (doc(p("foo<a>b<b>ar")), p("<a>xx<b>"), doc(p("foo<a>xx<b>ar"))),
         (doc(p("<a>")), doc(h1("<a>text<b>")), doc(h1("text"))),
@@ -1049,13 +1063,15 @@ def test_replace_range(doc, source, expect, test_transform):
     else:
         slice = source.slice(source.tag.get("a"), source.tag.get("b"), True)
     tr = Transform(doc).replace_range(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), slice
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        slice,
     )
     test_transform(tr, expect)
 
 
 @pytest.mark.parametrize(
-    "doc,node,expect",
+    ("doc", "node", "expect"),
     [
         (doc(p("fo<a>o")), img(), doc(p("fo", img(), "<a>o"))),
         (doc(p("<a>fo<b>o")), img(), doc(p("<a>", img(), "o"))),
@@ -1073,13 +1089,15 @@ def test_replace_range(doc, source, expect, test_transform):
 )
 def test_replace_range_with(doc, node, expect, test_transform):
     tr = Transform(doc).replace_range_with(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a"), node
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
+        node,
     )
     test_transform(tr, expect)
 
 
 @pytest.mark.parametrize(
-    "doc,expect",
+    ("doc", "expect"),
     [
         (doc(p("fo<a>o"), p("b<b>ar")), doc(p("fo<a><b>ar"))),
         (
@@ -1105,13 +1123,14 @@ def test_replace_range_with(doc, node, expect, test_transform):
 )
 def test_delete_range(doc, expect, test_transform):
     tr = Transform(doc).delete_range(
-        doc.tag.get("a"), doc.tag.get("b") or doc.tag.get("a")
+        doc.tag.get("a"),
+        doc.tag.get("b") or doc.tag.get("a"),
     )
     test_transform(tr, expect)
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         # adds a mark
         (doc(p("<a>", img())), schema.mark("em"), doc(p("<a>", em(img())))),
@@ -1130,7 +1149,7 @@ def test_add_node_mark(doc, mark, expect, test_transform):
 
 
 @pytest.mark.parametrize(
-    "doc,mark,expect",
+    ("doc", "mark", "expect"),
     [
         # removes a mark
         (doc(p("<a>", em(img()))), schema.mark("em"), doc(p("<a>", img()))),
