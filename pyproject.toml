@@ -29,6 +29,7 @@ dev = [
 
 [tool.ruff.lint]
 select = [
+    "ANN",
     "B",
     "COM",
     "E",
@@ -44,7 +45,12 @@ select = [
     "UP",
     "W",
 ]
+ignore = ["COM812"]
 preview = true
+
+[tool.ruff.lint.per-file-ignores]
+"prosemirror/test_builder/**" = ["ANN"]
+"tests/**" = ["ANN"]
 
 [tool.ruff.format]
 preview = true

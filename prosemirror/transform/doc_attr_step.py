@@ -7,7 +7,7 @@ from prosemirror.utils import JSON, JSONDict
 
 
 class DocAttrStep(Step):
-    def __init__(self, attr: str, value: JSON):
+    def __init__(self, attr: str, value: JSON) -> None:
         super().__init__()
         self.attr = attr
         self.value = value

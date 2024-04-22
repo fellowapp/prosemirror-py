@@ -5,8 +5,8 @@ import re
 from collections.abc import Callable
 from typing import Any
 
-from prosemirror.model import Node, Schema
-from prosemirror.utils import JSONDict
+from prosemirror.model import Node, NodeType, Schema
+from prosemirror.utils import Attrs, JSONDict
 
 NO_TAG = Node.tag = {}
 
@@ -60,11 +60,7 @@ def flatten(
     return result, tag
 
 
-def id(x):
-    return x
-
-
-def block(type, attrs):
+def block(type: NodeType, attrs: Attrs | None = None):
     def result(*args):
         my_attrs = attrs
         if (
@@ -76,7 +72,7 @@ def block(type, attrs):
         ):
             my_attrs.update(args[0])
             args = args[1:]
-        nodes, tag = flatten(type.schema, args, id)
+        nodes, tag = flatten(type.schema, args, lambda x: x)
         node = type.create(my_attrs, nodes)
         if tag != NO_TAG:
             node.tag = tag
@@ -89,7 +85,7 @@ def block(type, attrs):
     return result
 
 
-def mark(type, attrs):
+def mark(type: NodeType, attrs: Attrs):
     def result(*args):
         my_attrs = attrs.copy()
         if (
@@ -114,7 +110,7 @@ def mark(type, attrs):
     return result
 
 
-def builders(schema, names):
+def builders(schema: Schema[Any, Any], names):
     result = {"schema": schema}
     for name in schema.nodes:
         result[name] = block(schema.nodes[name], {})

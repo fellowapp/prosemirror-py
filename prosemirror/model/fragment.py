@@ -8,7 +8,7 @@ from typing import (
     cast,
 )
 
-from prosemirror.utils import JSONList, text_length
+from prosemirror.utils import JSON, JSONList, text_length
 
 if TYPE_CHECKING:
     from prosemirror.model.schema import Schema
@@ -254,7 +254,7 @@ class Fragment:
         return None
 
     @classmethod
-    def from_json(cls, schema: "Schema[Any, Any]", value: Any) -> "Fragment":
+    def from_json(cls, schema: "Schema[Any, Any]", value: JSON) -> "Fragment":
         if not value:
             return cls.empty
 
