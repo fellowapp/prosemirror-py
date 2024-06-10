@@ -568,7 +568,7 @@ class ParseContext:
                     re.search(r"^[ \t\r\n\u000c]", value) is not None
                     and self.open == len(self.nodes) - 1
                 ):
-                    node_before = top.content[-1]
+                    node_before = top.content[-1] if top.content else None
                     dom_node_before = dom_.getprevious()
                     if (
                         node_before is None
