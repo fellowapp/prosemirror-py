@@ -179,6 +179,25 @@ def test_html_is_escaped():
             },
         ),
         (
+            "Indented HTML",
+            """
+            <div>
+                <p>
+                    test
+                </p>
+            </div>
+            """,
+            {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "test"}],
+                    },
+                ],
+            },
+        ),
+        (
             "Styled(marks) nodes pt1",
             """<div><p>test <strong>some bolded text</strong></p></div>""",
             {
