@@ -35,5 +35,5 @@ jobs:
       - run: uv venv
       - run: uv pip install --requirement pyproject.toml --all-extras
       - run: .venv/bin/ruff format --check prosemirror tests
-      - run: .venv/bin/ruff prosemirror tests
+      - run: .venv/bin/ruff check prosemirror tests
       - run: .venv/bin/mypy prosemirror
