@@ -17,7 +17,7 @@ doc = out["doc"]
 p = out["p"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_mapping():
     def t_mapping(mapping, *cases):
         inverted = mapping.invert()
@@ -32,7 +32,7 @@ def test_mapping():
     return t_mapping
 
 
-@pytest.fixture()
+@pytest.fixture
 def make_mapping():
     def mk(*args):
         mapping = Mapping()
@@ -47,7 +47,7 @@ def make_mapping():
     return mk
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_del():
     def t_del(mapping: Mapping, pos: int, side: int, flags: str):
         r = mapping.map_result(pos, side)
@@ -65,7 +65,7 @@ def test_del():
     return t_del
 
 
-@pytest.fixture()
+@pytest.fixture
 def make_step():
     return _make_step
 
@@ -82,7 +82,7 @@ def _make_step(from_: int, to: int, val: str | None) -> Step:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_doc():
     return doc(p("foobar"))
 
@@ -90,7 +90,7 @@ def test_doc():
 _test_doc = doc(p("foobar"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_transform():
     def invert(transform):
         out = Transform(transform.doc)

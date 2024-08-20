@@ -267,7 +267,7 @@ class Node:
         if end is None:
             end = replacement.child_count
         one = self.content_match_at(from_).match_fragment(replacement, start, end)
-        two: "ContentMatch" | None = None
+        two: ContentMatch | None = None
         if one:
             two = one.match_fragment(self.content, to)
         if not two or not two.valid_end:
@@ -287,7 +287,7 @@ class Node:
         if marks and not self.type.allows_marks(marks):
             return False
         start = self.content_match_at(from_).match_type(type)
-        end: "ContentMatch" | None = None
+        end: ContentMatch | None = None
         if start:
             end = start.match_fragment(self.content, to)
         return end.valid_end if end else False

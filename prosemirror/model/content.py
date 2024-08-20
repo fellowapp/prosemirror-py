@@ -86,7 +86,7 @@ class ContentMatch:
     ) -> Optional["ContentMatch"]:
         if end is None:
             end = frag.child_count
-        cur: "ContentMatch" | None = self
+        cur: ContentMatch | None = self
         i = start
         while cur and i < end:
             cur = cur.match_type(frag.child(i).type)

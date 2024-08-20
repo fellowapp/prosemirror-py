@@ -5,6 +5,7 @@ from .replace import (
     close_fragment,
     covered_depths,
     fits_trivially,
+    replace_step,
 )
 from .replace_step import ReplaceAroundStep, ReplaceStep
 from .step import Step, StepResult
@@ -44,6 +45,5 @@ __all__ = [
     "insert_point",
     "join_point",
     "lift_target",
-    "replace_step",
     "replace_step",
 ]

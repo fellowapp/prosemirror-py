@@ -246,7 +246,7 @@ def replace_three_way(
 ) -> Fragment:
     open_start = joinable(from_, start, depth + 1) if from_.depth > depth else None
     open_end = joinable(end, to, depth + 1) if to.depth > depth else None
-    content: list["Node"] = []
+    content: list[Node] = []
     add_range(None, from_, depth, content)
     if open_start and open_end and start.index(depth) == end.index(depth):
         check_join(open_start, open_end)
@@ -268,7 +268,7 @@ def replace_three_way(
 
 
 def replace_two_way(from_: "ResolvedPos", to: "ResolvedPos", depth: int) -> Fragment:
-    content: list["Node"] = []
+    content: list[Node] = []
     add_range(None, from_, depth, content)
     if from_.depth > depth:
         type = joinable(from_, to, depth + 1)

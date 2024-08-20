@@ -71,7 +71,7 @@ def test_resolvedpos_str(pos, result):
     assert str(test_doc.resolve(pos)) == result
 
 
-@pytest.fixture()
+@pytest.fixture
 def doc_for_pos_at_index():
     return doc(blockquote(p("one"), blockquote(p("two ", em("three")), p("four"))))
 

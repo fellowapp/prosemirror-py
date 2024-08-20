@@ -212,7 +212,7 @@ class NodeType:
         nodes: dict["Nodes", "NodeSpec"],
         schema: "Schema[Nodes, Marks]",
     ) -> dict["Nodes", "NodeType"]:
-        result: dict["Nodes", "NodeType"] = {}
+        result: dict[Nodes, NodeType] = {}
 
         for name, spec in nodes.items():
             result[name] = NodeType(name, schema, spec)

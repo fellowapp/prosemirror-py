@@ -126,7 +126,7 @@ class Fragment:
             to = self.size
         if from_ == 0 and to == self.size:
             return self
-        result: list["Node"] = []
+        result: list[Node] = []
         size = 0
         if to <= from_:
             return Fragment(result, size)
@@ -273,7 +273,7 @@ class Fragment:
     def from_array(cls, array: list["Node"]) -> "Fragment":
         if not array:
             return cls.empty
-        joined: list["Node"] | None = None
+        joined: list[Node] | None = None
         size = 0
         for i in range(len(array)):
             node = array[i]

@@ -188,7 +188,7 @@ class ResolvedPos:
         if not (pos >= 0 and pos <= doc.content.size):
             msg = f"Position {pos} out of range"
             raise ValueError(msg)
-        path: list["Node" | int] = []
+        path: list[Node | int] = []
         start = 0
         parent_offset = pos
         node = doc
