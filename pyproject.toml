@@ -23,7 +23,7 @@ dev = [
     "lxml-stubs~=0.5",
     "mypy~=1.9",
     "pytest~=8.1",
-    "pytest-cov~=5.0",
+    "pytest-cov>=5,<7",
     "ruff~=0.4",
 ]
 
