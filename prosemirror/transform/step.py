@@ -43,7 +43,7 @@ class Step(metaclass=abc.ABCMeta):
             raise ValueError(msg)
         type = STEPS_BY_ID.get(cast(str, json_data["stepType"]))
         if not type:
-            msg = f'no step type {json_data["stepType"]} defined'
+            msg = f"no step type {json_data['stepType']} defined"
             raise ValueError(msg)
         return type.from_json(schema, json_data)
 

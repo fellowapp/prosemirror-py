@@ -556,7 +556,7 @@ def check_for_dead_ends(match: ContentMatch, stream: TokenStream) -> None:
                 work.append(next)
         if dead:
             stream.err(
-                f'Only non-generatable nodes ({", ".join(nodes)}) in a required '
+                f"Only non-generatable nodes ({', '.join(nodes)}) in a required "
                 "position (see https://prosemirror.net/docs/guide/#generatable)",
             )
         i += 1
