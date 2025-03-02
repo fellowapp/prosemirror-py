@@ -20,8 +20,8 @@ jobs:
       - run: pip install uv
       - run: uv venv
       - run: uv sync
-      - run: .venv/bin/pytest --cov=./prosemirror/
-      - run: .venv/bin/codecov
+      - run: uv run pytest --cov=./prosemirror/
+      - run: uv run codecov
         if: matrix.python-version == '3.11'
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -36,6 +36,6 @@ jobs:
       - run: pip install uv
       - run: uv venv
       - run: uv sync
-      - run: .venv/bin/ruff format --check prosemirror tests
-      - run: .venv/bin/ruff check prosemirror tests
-      - run: .venv/bin/pyright prosemirror
+      - run: uv run ruff format --check prosemirror tests
+      - run: uv run ruff check prosemirror tests
+      - run: uv run pyright prosemirror
