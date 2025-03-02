@@ -56,6 +56,3 @@ preview = true
 
 [tool.ruff.format]
 preview = true
-
-[tool.mypy]
-strict = true
