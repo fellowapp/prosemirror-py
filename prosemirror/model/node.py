@@ -71,8 +71,11 @@ class Node:
 
     @property
     def text_content(self) -> str:
-        if self.is_leaf and self.type.spec.get("leafText") is not None:
-            return self.type.spec["leafText"](self)
+        if (
+            self.is_leaf
+            and (node_leaf_text := self.type.spec.get("leafText")) is not None
+        ):
+            return node_leaf_text(self)
         return self.text_between(0, self.content.size, "")
 
     def text_between(
@@ -351,7 +354,10 @@ class Node:
             if not isinstance(json_data["marks"], list):
                 msg = "Invalid mark data for Node.fromJSON"
                 raise ValueError(msg)
-            marks = [schema.mark_from_json(item) for item in json_data["marks"]]
+            marks = [
+                schema.mark_from_json(cast(JSONDict, item))
+                for item in json_data["marks"]
+            ]
         if json_data["type"] == "text":
             return schema.text(str(json_data["text"]), marks)
         content = Fragment.from_json(schema, json_data.get("content"))
