@@ -59,3 +59,6 @@ preview = true
 
 [tool.mypy]
 strict = true
+
+[tool.pyright]
+# strict = ["**"]

@@ -113,7 +113,7 @@ class ContentMatch:
         to_end: bool = False,
         start_index: int = 0,
     ) -> Fragment | None:
-        seen = [self]
+        seen: list[ContentMatch] = [self]
 
         def search(match: ContentMatch, types: list["NodeType"]) -> Fragment | None:
             nonlocal seen
@@ -284,7 +284,7 @@ Expr = ChoiceExpr | SeqExpr | PlusExpr | StarExpr | OptExpr | RangeExpr | NameEx
 
 
 def parse_expr(stream: TokenStream) -> Expr:
-    exprs = []
+    exprs: list[Expr] = []
     while True:
         exprs.append(parse_expr_seq(stream))
         if not stream.eat("|"):
@@ -295,7 +295,7 @@ def parse_expr(stream: TokenStream) -> Expr:
 
 
 def parse_expr_seq(stream: TokenStream) -> Expr:
-    exprs = []
+    exprs: list[Expr] = []
     while True:
         exprs.append(parse_expr_subscript(stream))
         next_ = stream.next()
@@ -307,7 +307,7 @@ def parse_expr_seq(stream: TokenStream) -> Expr:
 
 
 def parse_expr_subscript(stream: TokenStream) -> Expr:
-    expr = parse_expr_atom(stream)
+    expr: Expr = parse_expr_atom(stream)
     while True:
         if stream.eat("+"):
             expr = {"type": "plus", "expr": expr}

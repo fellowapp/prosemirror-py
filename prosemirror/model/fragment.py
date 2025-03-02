@@ -8,7 +8,7 @@ from typing import (
     cast,
 )
 
-from prosemirror.utils import JSON, JSONList, text_length
+from prosemirror.utils import JSON, JSONDict, JSONList, text_length
 
 if TYPE_CHECKING:
     from prosemirror.model.schema import Schema
@@ -89,8 +89,8 @@ class Fragment:
             elif node.is_leaf:
                 if leaf_text:
                     text.append(leaf_text(node) if callable(leaf_text) else leaf_text)
-                elif node.type.spec.get("leafText") is not None:
-                    text.append(node.type.spec["leafText"](node))
+                elif (node_leaf_text := node.type.spec.get("leafText")) is not None:
+                    text.append(node_leaf_text(node))
                 separated = not block_separator
             elif not separated and node.is_block:
                 text.append(block_separator)
@@ -267,7 +267,7 @@ class Fragment:
             msg = "Invalid input for Fragment.from_json"
             raise ValueError(msg)
 
-        return cls([schema.node_from_json(item) for item in value])
+        return cls([schema.node_from_json(cast(JSONDict, item)) for item in value])
 
     @classmethod
     def from_array(cls, array: list["Node"]) -> "Fragment":

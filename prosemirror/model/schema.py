@@ -242,7 +242,7 @@ Attributes: TypeAlias = dict[str, "Attribute"]
 class Attribute:
     def __init__(self, options: "AttributeSpec") -> None:
         self.has_default = "default" in options
-        self.default = options["default"] if self.has_default else None
+        self.default = options.get("default")
 
     @property
     def is_required(self) -> bool:
@@ -480,7 +480,8 @@ def gather_marks(schema: Schema[Any, Any], marks: list[str]) -> list[MarkType]:
         else:
             for mark in schema.marks.values():
                 if name == "_" or (
-                    mark.spec.get("group") and name in mark.spec["group"].split(" ")
+                    (mark_group := mark.spec.get("group"))
+                    and name in mark_group.split(" ")
                 ):
                     ok = mark
                     found.append(mark)
