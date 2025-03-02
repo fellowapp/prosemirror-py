@@ -16,15 +16,16 @@ license = { text = "BSD-3-Clause" }
 keywords = ["prosemirror", "collaborative", "editing"]
 dependencies = ["typing-extensions>=4.1", "lxml>=4.9", "cssselect>=1.2"]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "codecov~=2.1",
     "coverage~=7.6",
-    "lxml-stubs~=0.5",
     "mypy~=1.15",
+    "pyright>=1.1.396",
     "pytest~=8.3",
     "pytest-cov~=6.0",
     "ruff~=0.9",
+    "types-lxml>=2025.2.24",
 ]
 
 [tool.setuptools_scm]
@@ -37,7 +38,6 @@ select = [
     "E",
     "EM",
     "F",
-    "I",
     "I",
     "N",
     "PT",
