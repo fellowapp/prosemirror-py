@@ -1096,8 +1096,7 @@ class ParseContext:
 
 
 def normalize_list(dom_: DOMNode) -> None:
-    child: lxml.html.HtmlElement | None = next(iter(dom_))
-
+    child: lxml.html.HtmlElement | None = next(iter(dom_), None)
     prev_item: DOMNode | None = None
 
     while child is not None:
