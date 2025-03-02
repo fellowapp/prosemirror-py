@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from functools import cmp_to_key, reduce
 from typing import (
     TYPE_CHECKING,
@@ -18,22 +19,16 @@ if TYPE_CHECKING:
     from .schema import NodeType
 
 
+@dataclass
 class MatchEdge:
     type: "NodeType"
     next: "ContentMatch"
 
-    def __init__(self, type: "NodeType", next: "ContentMatch") -> None:
-        self.type = type
-        self.next = next
 
-
+@dataclass
 class WrapCacheEntry:
     target: "NodeType"
     computed: list["NodeType"] | None
-
-    def __init__(self, target: "NodeType", computed: list["NodeType"] | None) -> None:
-        self.target = target
-        self.computed = computed
 
 
 class Active(TypedDict):

@@ -1109,12 +1109,12 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
             i = 0
             while i < match.edge_count:
                 result = match.edge(i)
-                _type = result.type
-                _next = result.next
+                type_ = result.type
+                next_ = result.next
 
-                if _type == node_type:
+                if type_ == node_type:
                     return True
-                if _next not in seen and scan(_next):  # noqa: B023
+                if next_ not in seen and scan(next_):  # noqa: B023
                     return True
 
                 i += 1

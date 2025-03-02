@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import cast
 
 from prosemirror.model import (
@@ -43,44 +44,26 @@ def fits_trivially(
     return False
 
 
+@dataclass(slots=True)
 class _FrontierItem:
-    __slots__ = ("match", "type")
-
-    def __init__(self, type_: NodeType, match: ContentMatch) -> None:
-        self.type = type_
-        self.match = match
+    type: NodeType
+    match: ContentMatch
 
 
+@dataclass(slots=True)
 class _Fittable:
-    __slots__ = ("frontier_depth", "inject", "parent", "slice_depth", "wrap")
-
-    def __init__(
-        self,
-        slice_depth: int,
-        frontier_depth: int,
-        parent: Node | None,
-        inject: Fragment | None = None,
-        wrap: list[NodeType] | None = None,
-    ) -> None:
-        self.slice_depth = slice_depth
-        self.frontier_depth = frontier_depth
-        self.parent = parent
-        self.inject = inject
-        self.wrap = wrap
+    slice_depth: int
+    frontier_depth: int
+    parent: Node | None
+    inject: Fragment | None = None
+    wrap: list[NodeType] | None = None
 
 
+@dataclass(slots=True)
 class _CloseLevel:
-    __slots__ = ("depth", "fit", "move")
-
-    def __init__(
-        self,
-        depth: int,
-        fit: Fragment,
-        move: ResolvedPos,
-    ) -> None:
-        self.depth = depth
-        self.fit = fit
-        self.move = move
+    depth: int
+    fit: Fragment
+    move: ResolvedPos
 
 
 class Fitter:
@@ -353,12 +336,12 @@ class Fitter:
             return -1
         top = self.frontier[self.depth]
 
-        _nothing = object()
-        level = _nothing
+        nothing_ = object()
+        level = nothing_
 
         def _lazy_level() -> _CloseLevel | None:
             nonlocal level
-            if level is _nothing:
+            if level is nothing_:
                 level = self.find_close_level(self.to_)
             return cast(_CloseLevel | None, level)
 
