@@ -19,6 +19,26 @@ license = { text = "BSD-3-Clause" }
 keywords = ["prosemirror", "collaborative", "editing"]
 dependencies = ["typing-extensions>=4.1", "lxml>=4.9", "cssselect>=1.2"]
 
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/fellowapp/prosemirror-py"
+Repository = "https://github.com/fellowapp/prosemirror-py"
+Changelog = "https://github.com/fellowapp/prosemirror-py/releases"
+
 [dependency-groups]
 dev = [
     "codecov~=2.1",
@@ -30,8 +50,6 @@ dev = [
     "ruff~=0.9",
     "types-lxml>=2025.2.24",
 ]
-
-[tool.setuptools_scm]
 
 [tool.ruff.lint]
 select = [
