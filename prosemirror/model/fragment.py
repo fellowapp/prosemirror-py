@@ -242,7 +242,7 @@ class Fragment:
             other_pos = other.size
         return find_diff_end(self, other, pos, other_pos)
 
-    def find_index(self, pos: int, round: int = -1) -> dict[str, int]:
+    def find_index(self, pos: int) -> dict[str, int]:
         if pos == 0:
             return ret_index(0, pos)
         if pos == self.size:
@@ -256,7 +256,7 @@ class Fragment:
             cur = self.child(i)
             end = cur_pos + cur.node_size
             if end >= pos:
-                if end == pos or round > 0:
+                if end == pos:
                     return ret_index(i + 1, end)
                 return ret_index(i, cur_pos)
             i += 1
