@@ -182,25 +182,22 @@ class Mapping(Mappable):
         from_: int | None = None,
         to: int | None = None,
     ) -> None:
-        self.maps = maps or []
+        self.maps: list[StepMap] = maps if maps is not None else []
         self.from_ = from_ or 0
         self.to = len(self.maps) if to is None else to
         self.mirror = mirror
+        self._own_data = not (maps or mirror)
 
     def slice(self, from_: int = 0, to: int | None = None) -> "Mapping":
         if to is None:
             to = len(self.maps)
         return Mapping(self.maps, self.mirror, from_, to)
 
-    def copy(self) -> "Mapping":
-        return Mapping(
-            self.maps[:],
-            (self.mirror[:] if self.mirror else None),
-            self.from_,
-            self.to,
-        )
-
     def append_map(self, map: StepMap, mirrors: int | None = None) -> None:
+        if not self._own_data:
+            self.maps = self.maps[:]
+            self.mirror = self.mirror[:] if self.mirror else None
+            self._own_data = True
         self.maps.append(map)
         self.to = len(self.maps)
         if mirrors is not None:
