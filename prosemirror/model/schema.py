@@ -431,6 +431,7 @@ class MarkSpec(TypedDict, total=False):
     excludes: str
     group: str
     spanning: bool
+    code: bool
     toDOM: Callable[[Mark, bool], Any]  # FIXME: add types
     parseDOM: list[dict[str, Any]]  # FIXME: add types
 
