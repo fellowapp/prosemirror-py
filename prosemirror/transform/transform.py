@@ -423,6 +423,11 @@ class Transform:
                 from_ - from__.start(d) == from__.depth - d
                 and to > from__.end(d)
                 and to_.end(d) - to != to_.depth - d
+                and from__.start(d - 1) == to_.start(d - 1)
+                and from__.node(d - 1).can_replace(
+                    from__.index(d - 1),
+                    to_.index(d - 1),
+                )
             ):
                 return self.delete(from__.before(d), to)
             d += 1
