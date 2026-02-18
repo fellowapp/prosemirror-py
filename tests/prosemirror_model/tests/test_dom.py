@@ -471,3 +471,22 @@ def test_preserves_whitespace_in_white_space_pre_styled_elements():
     )
     expected = doc(p("  okay  then "), p("x"))
     assert result["content"] == expected.to_json()["content"]
+
+
+def test_can_move_block_node_out_of_paragraph():
+    import lxml.html
+
+    from prosemirror.model import DOMParser as PMDOMParser
+
+    hr = out["hr"]
+    dom = lxml.html.Element("p")
+    text_el = lxml.html.Element("lxmltext")
+    text_el.text = "Hello"
+    dom.append(text_el)
+    hr_el = lxml.html.Element("hr")
+    dom.append(hr_el)
+    wrapper = lxml.html.Element("document-fragment")
+    wrapper.append(dom)
+    result = PMDOMParser.from_schema(schema).parse(wrapper)
+    expected = doc(p("Hello"), hr)
+    assert result.to_json()["content"] == expected.to_json()["content"]

@@ -9,7 +9,7 @@
 This package provides Python implementations of the following
 [ProseMirror](https://prosemirror.net/) packages:
 
-- [`prosemirror-model`](https://github.com/ProseMirror/prosemirror-model) version 1.25.0
+- [`prosemirror-model`](https://github.com/ProseMirror/prosemirror-model) version 1.25.1
 - [`prosemirror-transform`](https://github.com/ProseMirror/prosemirror-transform) version 1.8.0
 - [`prosemirror-test-builder`](https://github.com/ProseMirror/prosemirror-test-builder)
 - [`prosemirror-schema-basic`](https://github.com/ProseMirror/prosemirror-schema-basic) version 1.1.2

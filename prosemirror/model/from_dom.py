@@ -589,7 +589,11 @@ class ParseContext:
                 value = re.sub(r"\r\n?", "\n", value)
 
             if value:
-                self.insert_node(self.parser.schema.text(value), marks)
+                self.insert_node(
+                    self.parser.schema.text(value),
+                    marks,
+                    not re.search(r"\S", value),
+                )
 
             self.find_in_text(dom_)
         else:
@@ -687,7 +691,7 @@ class ParseContext:
         if str(dom_.tag).upper() == "BR" and (
             not self.top.type or self.top.type.inline_content
         ):
-            self.find_place(self.parser.schema.text("-"), marks)
+            self.find_place(self.parser.schema.text("-"), marks, True)
 
     def read_styles(
         self,
@@ -755,6 +759,7 @@ class ParseContext:
             elif node_type and not self.insert_node(
                 node_type.create(rule.attrs),
                 marks,
+                str(dom_.tag).upper() == "BR",
             ):
                 self.leaf_fallback(dom_, marks)
         elif rule.mark is not None:
@@ -769,7 +774,7 @@ class ParseContext:
         elif rule.get_content is not None:
             self.find_inside(dom_)
             rule.get_content(dom_, self.parser.schema).for_each(
-                lambda node, offset, index: self.insert_node(node, marks),
+                lambda node, offset, index: self.insert_node(node, marks, False),
             )
         else:
             content_dom = dom_
@@ -783,6 +788,7 @@ class ParseContext:
 
             self.find_around(dom_, content_dom, True)
             self.add_all(content_dom, marks)
+            self.find_around(dom_, content_dom, False)
 
         if sync and self.sync(start_in):
             self.open -= 1
@@ -815,15 +821,19 @@ class ParseContext:
         self,
         node: Node,
         marks: list[Mark],
+        cautious: bool = False,
     ) -> list[Mark] | None:
         route: list[NodeType] | None = None
         sync: NodeContext | None = None
 
         depth = self.open
+        penalty = 0
         while depth >= 0:
             cx = self.nodes[depth]
             found = cx.find_wrapping(node)
-            if found is not None and (route is None or len(route) > len(found)):
+            if found is not None and (
+                route is None or len(route) > len(found) + penalty
+            ):
                 route = found
                 sync = cx
 
@@ -831,7 +841,9 @@ class ParseContext:
                     break
 
             if cx.solid:
-                break
+                if cautious:
+                    break
+                penalty += 2
 
             depth -= 1
 
@@ -846,13 +858,18 @@ class ParseContext:
 
         return marks
 
-    def insert_node(self, node: Node, marks: list[Mark]) -> bool:
+    def insert_node(
+        self,
+        node: Node,
+        marks: list[Mark],
+        cautious: bool = False,
+    ) -> bool:
         if node.is_inline and self.needs_block and self.top.type is None:
             block = self.textblock_from_context()
             if block is not None:
                 marks = self.enter_inner(block, None, marks)
 
-        inner_marks = self.find_place(node, marks)
+        inner_marks = self.find_place(node, marks, cautious)
         if inner_marks is not None:
             self.close_extra()
 
@@ -882,7 +899,7 @@ class ParseContext:
         marks: list[Mark],
         preserve_ws: WSType = None,
     ) -> list[Mark] | None:
-        inner_marks = self.find_place(type_.create(attrs), marks)
+        inner_marks = self.find_place(type_.create(attrs), marks, False)
         if inner_marks is not None:
             inner_marks = self.enter_inner(type_, attrs, marks, True, preserve_ws)
         return inner_marks
