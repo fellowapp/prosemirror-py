@@ -72,29 +72,39 @@ class Fragment:
         leaf_text: Callable[["Node"], str] | str = "",
     ) -> str:
         text = []
-        separated = True
+        first = True
 
         def iteratee(
             node: "Node",
             pos: int,
             _parent: Optional["Node"],
-            _to: int,
+            _index: int,
         ) -> None:
             nonlocal text
-            nonlocal separated
+            nonlocal first
+            node_text: str
             if node.is_text:
                 text_node = cast("TextNode", node)
-                text.append(text_node.text[max(from_, pos) - pos : to - pos])
-                separated = not block_separator
+                node_text = text_node.text[max(from_, pos) - pos : to - pos]
             elif node.is_leaf:
                 if leaf_text:
-                    text.append(leaf_text(node) if callable(leaf_text) else leaf_text)
+                    node_text = leaf_text(node) if callable(leaf_text) else leaf_text
                 elif (node_leaf_text := node.type.spec.get("leafText")) is not None:
-                    text.append(node_leaf_text(node))
-                separated = not block_separator
-            elif not separated and node.is_block:
-                text.append(block_separator)
-                separated = True
+                    node_text = node_leaf_text(node)
+                else:
+                    node_text = ""
+            else:
+                node_text = ""
+            if (
+                node.is_block
+                and ((node.is_leaf and node_text) or node.is_textblock)
+                and block_separator
+            ):
+                if first:
+                    first = False
+                else:
+                    text.append(block_separator)
+            text.append(node_text)
 
         self.nodes_between(from_, to, iteratee, 0)
         return "".join(text)

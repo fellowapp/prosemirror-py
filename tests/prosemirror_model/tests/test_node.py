@@ -232,6 +232,18 @@ class TestTextBetween:
             d.text_between(0, d.content.size, "", "<anonymous>") == "Hello <anonymous>"
         )
 
+    def test_adds_block_separator_around_empty_paragraphs(self):
+        assert doc(p("one"), p(), p("two")).text_between(0, 12, "\n") == "one\n\ntwo"
+
+    def test_adds_block_separator_around_leaf_nodes(self):
+        assert (
+            doc(p("one"), hr, hr, p("two")).text_between(0, 12, "\n", "---")
+            == "one\n---\n---\ntwo"
+        )
+
+    def test_doesnt_add_block_separator_around_non_rendered_leaf_nodes(self):
+        assert doc(p("one"), hr, hr, p("two")).text_between(0, 12, "\n") == "one\ntwo"
+
 
 class TestTextContent:
     def test_whole_doc(self):
