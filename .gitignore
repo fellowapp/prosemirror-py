@@ -123,3 +123,4 @@ dmypy.json
 .pyre/
 .DS_Store
 .vscode/
+uv.lock

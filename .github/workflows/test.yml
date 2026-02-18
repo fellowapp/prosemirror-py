@@ -38,4 +38,4 @@ jobs:
       - run: uv sync
       - run: uv run ruff format --check prosemirror tests
       - run: uv run ruff check prosemirror tests
-      - run: uv run pyright prosemirror
+      - run: uv run ty check prosemirror tests
