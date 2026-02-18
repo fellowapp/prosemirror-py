@@ -1,4 +1,5 @@
 import re
+from collections.abc import Callable
 from typing import Optional, TypedDict
 
 from prosemirror.model import (
@@ -514,7 +515,7 @@ class Transform:
         from_: int,
         to: int | None,
         type: NodeType,
-        attrs: Attrs | None,
+        attrs: Attrs | Callable[["Node"], Attrs] | None = None,
     ) -> "Transform":
         if to is None:
             to = from_
@@ -529,9 +530,10 @@ class Transform:
             parent: Optional["Node"],
             i: int,
         ) -> bool | None:
+            attrs_here = attrs(node) if callable(attrs) else attrs
             if (
                 node.is_textblock
-                and not node.has_markup(type, attrs)
+                and not node.has_markup(type, attrs_here)
                 and structure.can_change_type(
                     self.doc,
                     self.mapping.slice(map_from).map(pos),
@@ -568,7 +570,9 @@ class Transform:
                         start_m + 1,
                         end_m - 1,
                         Slice(
-                            Fragment.from_(type.create(attrs, None, node.marks)),
+                            Fragment.from_(
+                                type.create(attrs_here, None, node.marks),
+                            ),
                             0,
                             0,
                         ),
