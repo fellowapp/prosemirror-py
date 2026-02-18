@@ -5,7 +5,7 @@ import re
 from collections.abc import Callable
 from typing import Any
 
-from prosemirror.model import Node, NodeType, Schema
+from prosemirror.model import MarkType, Node, NodeType, Schema
 from prosemirror.utils import Attrs, JSONDict
 
 NO_TAG = Node.tag = {}
@@ -19,16 +19,6 @@ def flatten(
     result, pos, tag = [], 0, NO_TAG
 
     for child in children:
-        if hasattr(child, "tag") and child.tag != NO_TAG:
-            if tag == NO_TAG:
-                tag = {}
-            for id in child.tag:
-                tag[id] = child.tag[id] + (0 if child.is_text else 1) + pos
-        if isinstance(child, dict) and "tag" in child and child["tag"] != Node.tag:
-            if tag == NO_TAG:
-                tag = {}
-            for id in child["tag"]:
-                tag[id] = child["tag"][id] + (0 if "flat" in child else 1) + pos
         if isinstance(child, str):
             at = 0
             out = ""
@@ -43,35 +33,64 @@ def flatten(
             pos += len(child) - at
             if out:
                 result.append(f(schema.text(out)))
-        elif isinstance(child, dict) and "flat" in child:
-            for item in child["flat"]:
-                node = f(item)
-                pos += node.node_size
-                result.append(node)
-        elif getattr(child, "flat", 0):
-            for item in child.flat:
-                node = f(item)
-                pos += node.node_size
-                result.append(node)
         else:
-            node = f(child)
-            pos += node.node_size
-            result.append(node)
+            # Merge tag info from child (Node with .tag or dict with "tag" key)
+            child_tag = (
+                getattr(child, "tag", NO_TAG)
+                if isinstance(child, Node)
+                else child.get("tag", NO_TAG)
+                if isinstance(child, dict)
+                else NO_TAG
+            )
+            if child_tag and child_tag != NO_TAG:
+                if tag == NO_TAG:
+                    tag = {}
+                is_flat = getattr(child, "flat", None) or (
+                    isinstance(child, dict) and "flat" in child
+                )
+                is_text = getattr(child, "is_text", False)
+                for id in child_tag:
+                    tag[id] = child_tag[id] + (0 if is_flat or is_text else 1) + pos
+            # Process flat children or single node
+            flat = getattr(child, "flat", None) or (
+                child.get("flat") if isinstance(child, dict) else None
+            )
+            if flat:
+                for item in flat:
+                    node = f(item)
+                    pos += node.node_size
+                    result.append(node)
+            else:
+                node = f(child)
+                pos += node.node_size
+                result.append(node)
     return result, tag
+
+
+def _take_attrs(
+    attrs: Attrs | None, args: tuple[Any, ...]
+) -> tuple[Attrs | None, tuple[Any, ...]]:
+    if not args:
+        return attrs, args
+    a0 = args[0]
+    if a0 and (
+        isinstance(a0, str | Node)
+        or getattr(a0, "flat", None)
+        or (isinstance(a0, dict) and "flat" in a0)
+    ):
+        return attrs, args
+    args = args[1:]
+    if not attrs:
+        return a0, args
+    if not a0:
+        return attrs, args
+    result = {**attrs, **a0}
+    return result, args
 
 
 def block(type: NodeType, attrs: Attrs | None = None):
     def result(*args):
-        my_attrs = attrs
-        if (
-            args
-            and args[0]
-            and not isinstance(args[0], str | Node)
-            and not getattr(args[0], "flat", None)
-            and "flat" not in args[0]
-        ):
-            my_attrs.update(args[0])
-            args = args[1:]
+        my_attrs, args = _take_attrs(attrs, args)
         nodes, tag = flatten(type.schema, args, lambda x: x)
         node = type.create(my_attrs, nodes)
         if tag != NO_TAG:
@@ -85,24 +104,14 @@ def block(type: NodeType, attrs: Attrs | None = None):
     return result
 
 
-def mark(type: NodeType, attrs: Attrs):
+def mark(type: MarkType, attrs: Attrs):
     def result(*args):
-        my_attrs = attrs.copy()
-        if (
-            args
-            and args[0]
-            and not isinstance(args[0], str | Node)
-            and not getattr(args[0], "flat", None)
-            and "flat" not in args[0]
-        ):
-            my_attrs.update(args[0])
-            args = args[1:]
+        my_attrs, args = _take_attrs(attrs, args)
         mark = type.create(my_attrs)
 
         def f(n):
-            return (
-                n if mark.type.is_in_set(n.marks) else n.mark(mark.add_to_set(n.marks))
-            )
+            new_marks = mark.add_to_set(n.marks)
+            return n.mark(new_marks) if len(new_marks) > len(n.marks) else n
 
         nodes, tag = flatten(type.schema, args, f)
         return {"flat": nodes, "tag": tag}

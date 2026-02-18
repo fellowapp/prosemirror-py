@@ -11,7 +11,7 @@ This package provides Python implementations of the following
 
 - [`prosemirror-model`](https://github.com/ProseMirror/prosemirror-model) version 1.25.4
 - [`prosemirror-transform`](https://github.com/ProseMirror/prosemirror-transform) version 1.8.0
-- [`prosemirror-test-builder`](https://github.com/ProseMirror/prosemirror-test-builder)
+- [`prosemirror-test-builder`](https://github.com/ProseMirror/prosemirror-test-builder) version 1.1.1
 - [`prosemirror-schema-basic`](https://github.com/ProseMirror/prosemirror-schema-basic) version 1.2.4
 - [`prosemirror-schema-list`](https://github.com/ProseMirror/prosemirror-schema-list) version 1.5.1 (node specs and `wrapRangeInList` only; command functions that depend on `prosemirror-state` are excluded)
 
