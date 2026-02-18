@@ -49,7 +49,7 @@ def insert_into(
             return None
         return content.cut(0, dist).append(insert).append(content.cut(dist))
     assert child
-    inner = insert_into(child.content, dist - offset - 1, insert, None)
+    inner = insert_into(child.content, dist - offset - 1, insert, child)
     if inner:
         return content.replace_child(index, child.copy(inner))
     return None
