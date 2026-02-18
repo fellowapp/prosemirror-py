@@ -170,6 +170,12 @@ class StepMap(Mappable):
     def __str__(self) -> str:
         return ("-" if self.inverted else "") + str(self.ranges)
 
+    @staticmethod
+    def offset(n: int) -> "StepMap":
+        if n == 0:
+            return StepMap.empty
+        return StepMap([0, -n, 0] if n < 0 else [0, 0, n])
+
 
 StepMap.empty = StepMap([])
 

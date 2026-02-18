@@ -78,8 +78,31 @@ class Transform:
             self.add_step(step, result.doc)
         return result
 
+    @property
     def doc_changed(self) -> bool:
-        return bool(len(self.steps))
+        return len(self.steps) > 0
+
+    def changed_range(self) -> dict[str, int] | None:
+        from_ = int(1e9)
+        to = int(-1e9)
+        for i in range(len(self.mapping.maps)):
+            map_ = self.mapping.maps[i]
+            if i:
+                from_ = map_.map(from_, 1)
+                to = map_.map(to, -1)
+
+            def update_range(
+                _f: int,
+                _t: int,
+                from_b: int,
+                to_b: int,
+            ) -> None:
+                nonlocal from_, to
+                from_ = min(from_, from_b)
+                to = max(to, to_b)
+
+            map_.for_each(update_range)
+        return None if from_ == int(1e9) else {"from": from_, "to": to}
 
     def add_step(self, step: Step, doc: Node) -> None:
         self.docs.append(self.doc)
