@@ -285,7 +285,10 @@ class TestCheck:
     def test_notices_wrong_attribute_types(self):
         import pytest
 
-        with pytest.raises(ValueError, match="Expected value of type"):
+        with pytest.raises(
+            ValueError,
+            match=r"Expected value of type.*attribute src.*image.*boolean",
+        ):
             schema.nodes["image"].create({"src": True}).check()
 
 

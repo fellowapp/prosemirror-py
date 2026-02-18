@@ -58,11 +58,11 @@ def check_attrs(
             attr.validate(values[attr_name])
 
 
-def init_attrs(attrs: Optional["AttributeSpecs"]) -> "Attributes":
+def init_attrs(type_name: str, attrs: Optional["AttributeSpecs"]) -> "Attributes":
     result = {}
     if attrs:
         for name in attrs:
-            result[name] = Attribute(attrs[name])
+            result[name] = Attribute(type_name, name, attrs[name])
     return result
 
 
@@ -89,7 +89,7 @@ class NodeType:
         self.schema = schema
         self.spec = spec
         self.groups = spec["group"].split(" ") if "group" in spec else []
-        self.attrs = init_attrs(spec.get("attrs"))
+        self.attrs = init_attrs(name, spec.get("attrs"))
         self.default_attrs = default_attrs(self.attrs)
         self._content_match: ContentMatch | None = None
         self.mark_set = None
@@ -261,7 +261,11 @@ class NodeType:
 Attributes: TypeAlias = dict[str, "Attribute"]
 
 
-def _validate_type(type_str: str) -> Callable[[JSON], None]:
+def _validate_type(
+    type_name: str,
+    attr_name: str,
+    type_str: str,
+) -> Callable[[JSON], None]:
     types = type_str.split("|")
 
     def validator(value: JSON) -> None:
@@ -273,19 +277,31 @@ def _validate_type(type_str: str) -> Callable[[JSON], None]:
             )
         )
         if name not in types:
-            msg = f"Expected value of type {types}, got {name}"
+            msg = (
+                f"Expected value of type {types} for attribute"
+                f" {attr_name} on type {type_name}, got {name}"
+            )
             raise ValueError(msg)
 
     return validator
 
 
 class Attribute:
-    def __init__(self, options: "AttributeSpec") -> None:
+    def __init__(
+        self,
+        type_name: str,
+        attr_name: str,
+        options: "AttributeSpec",
+    ) -> None:
         self.has_default = "default" in options
         self.default = options.get("default")
         validate = options.get("validate")
         if isinstance(validate, str):
-            self.validate: Callable[[JSON], None] | None = _validate_type(validate)
+            self.validate: Callable[[JSON], None] | None = _validate_type(
+                type_name,
+                attr_name,
+                validate,
+            )
         else:
             self.validate = validate
 
@@ -308,7 +324,7 @@ class MarkType:
         self.name = name
         self.schema = schema
         self.spec = spec
-        self.attrs = init_attrs(spec.get("attrs"))
+        self.attrs = init_attrs(name, spec.get("attrs"))
         self.rank = rank
         self.excluded = None  # type: ignore[assignment]
         defaults = default_attrs(self.attrs)
