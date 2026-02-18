@@ -415,7 +415,10 @@ def test_can_temporary_shadow_mark_with_another_configuration():
         "marks": {
             "color": {
                 "attrs": {"color": {}},
-                "toDOM": lambda m: ["span", {"style": f"color: {m.attrs['color']}"}],
+                "toDOM": lambda m, _inline: [
+                    "span",
+                    {"style": f"color: {m.attrs['color']}"},
+                ],
                 "parseDOM": [
                     {"style": "color", "getAttrs": lambda v: {"color": v}},
                 ],

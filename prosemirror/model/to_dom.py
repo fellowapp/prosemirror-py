@@ -157,7 +157,7 @@ class DOMSerializer:
         cls,
         structure: HTMLOutputSpec,
         xml_ns: str | None = None,
-        block_arrays_in: dict[str, Any] | None = None,
+        block_arrays_in: Mapping[str, Any] | None = None,
     ) -> tuple[HTMLNode, Element | None]:
         return _render_spec(structure, xml_ns, block_arrays_in)
 
@@ -183,7 +183,7 @@ class DOMSerializer:
         return gather_to_dom(schema.marks)
 
 
-def _suspicious_attributes(attrs: dict[str, Any]) -> list[Any] | None:
+def _suspicious_attributes(attrs: Mapping[str, Any]) -> list[Any] | None:
     result: list[Any] | None = None
 
     def scan(value: object) -> None:
@@ -208,7 +208,7 @@ def _suspicious_attributes(attrs: dict[str, Any]) -> list[Any] | None:
 def _render_spec(
     structure: HTMLOutputSpec,
     xml_ns: str | None = None,
-    block_arrays_in: dict[str, Any] | None = None,
+    block_arrays_in: Mapping[str, Any] | None = None,
 ) -> tuple[HTMLNode, Element | None]:
     if isinstance(structure, str):
         return html.escape(structure), None
