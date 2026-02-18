@@ -1,4 +1,5 @@
 from .attr_step import AttrStep
+from .doc_attr_step import DocAttrStep
 from .map import Mapping, MapResult, StepMap
 from .mark_step import AddMarkStep, AddNodeMarkStep, RemoveMarkStep, RemoveNodeMarkStep
 from .replace import (
@@ -24,6 +25,7 @@ __all__ = [
     "AddMarkStep",
     "AddNodeMarkStep",
     "AttrStep",
+    "DocAttrStep",
     "MapResult",
     "Mapping",
     "RemoveMarkStep",

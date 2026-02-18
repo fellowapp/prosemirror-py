@@ -1171,3 +1171,78 @@ def test_add_node_mark(doc, mark, expect, test_transform):
 )
 def test_remove_node_mark(doc, mark, expect, test_transform):
     test_transform(Transform(doc).remove_node_mark(doc.tag["a"], mark), expect)
+
+
+def test_remove_node_mark_multiple_instances(test_transform):
+    s = Schema({
+        "nodes": {
+            "doc": {"content": "p+", "marks": "comment"},
+            "p": {"content": "text*"},
+            "text": {},
+        },
+        "marks": {"comment": {"excludes": "", "attrs": {"id": {}}}},
+    })
+    d = s.node(
+        "doc",
+        None,
+        [
+            s.node(
+                "p",
+                None,
+                [s.text("abc")],
+                [s.mark("comment", {"id": 1}), s.mark("comment", {"id": 2})],
+            ),
+        ],
+    )
+    test_transform(
+        Transform(d).remove_node_mark(0, s.marks["comment"]),
+        s.node("doc", None, [s.node("p", None, [s.text("abc")])]),
+    )
+
+
+def test_set_block_type_function_attrs(test_transform):
+    d = doc("<a>", h1("a"), p("b"), "<b>")
+    tr = Transform(d).set_block_type(
+        d.tag["a"],
+        d.tag["b"],
+        schema.nodes["heading"],
+        lambda node: {"level": (node.attrs.get("level") or 0) + 1},
+    )
+    test_transform(tr, doc(h2("a"), h1("b")))
+
+
+def test_changed_range_returns_none_when_no_changes():
+    d = doc(p("hello"))
+    tr = Transform(d)
+    assert tr.changed_range() is None
+    tr.add_mark(1, 3, schema.mark("strong"))
+    assert tr.changed_range() is None
+
+
+def test_changed_range_returns_range():
+    d = doc(p("ab"))
+    tr = Transform(d).insert(3, schema.text("c"))
+    ch = tr.changed_range()
+    assert ch is not None
+    assert f"{ch['from']}-{ch['to']}" == "3-4"
+
+
+def test_changed_range_multiple_steps():
+    d = doc(p("ab"))
+    tr = (
+        Transform(d)
+        .insert(3, schema.text("c"))
+        .insert(2, schema.text("d"))
+        .insert(1, schema.text("e"))
+    )
+    ch = tr.changed_range()
+    assert ch is not None
+    assert f"{ch['from']}-{ch['to']}" == "1-6"
+
+
+def test_changed_range_deletions_before_earlier_step():
+    d = doc(p("abcde"))
+    tr = Transform(d).insert(6, schema.text("f")).delete(1, 4)
+    ch = tr.changed_range()
+    assert ch is not None
+    assert f"{ch['from']}-{ch['to']}" == "1-4"

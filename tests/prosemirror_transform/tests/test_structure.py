@@ -272,3 +272,39 @@ def test_replace(doc, from_, to, content, open_start, open_end, result):
     slice = Slice(content.content, open_start, open_end) if content else Slice.empty
     tr = Transform(doc).replace(from_, to, slice)
     assert tr.doc.eq(result)
+
+
+def test_lift_target_notices_unliftable_content():
+    s = Schema({
+        "nodes": {
+            "doc": {"content": "section+"},
+            "section": {"content": "heading? p+"},
+            "heading": {"content": "p+"},
+            "p": {"content": "text*"},
+            "text": {"inline": True},
+        },
+    })
+    p_node = s.node("p", None, [s.text("A")])
+    d = s.node(
+        "doc",
+        None,
+        [
+            s.node(
+                "section",
+                None,
+                [s.node("heading", None, [p_node, p_node, p_node]), p_node],
+            ),
+        ],
+    )
+    r1 = d.resolve(3).block_range()
+    assert r1 is not None
+    assert lift_target(r1) is None
+    r2 = d.resolve(6).block_range()
+    assert r2 is not None
+    assert lift_target(r2) is None
+    r3 = d.resolve(3).block_range(d.resolve(6))
+    assert r3 is not None
+    assert lift_target(r3) is None
+    r4 = d.resolve(9).block_range()
+    assert r4 is not None
+    assert lift_target(r4) == 1
