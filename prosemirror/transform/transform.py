@@ -197,6 +197,7 @@ class Transform:
         pos: int,
         parent_type: NodeType,
         match: ContentMatch | None = None,
+        clear_newlines: bool = True,
     ) -> "Transform":
         if match is None:
             match = parent_type.content_match
@@ -217,7 +218,7 @@ class Transform:
                 for j in range(len(child.marks)):
                     if not parent_type.allows_mark_type(child.marks[j].type):
                         self.step(RemoveMarkStep(cur, end, child.marks[j]))
-                if child.is_text and not parent_type.spec.get("code"):
+                if clear_newlines and child.is_text and parent_type.whitespace != "pre":
                     assert isinstance(child, TextNode)
                     newline = re.compile(r"\r?\n|\r")
                     slice = None
@@ -537,7 +538,26 @@ class Transform:
                     type,
                 )
             ):
-                self.clear_incompatible(self.mapping.slice(map_from).map(pos, 1), type)
+                convert_newlines = None
+                if type.schema.linebreak_replacement:
+                    pre = type.whitespace == "pre"
+                    support_linebreak = bool(
+                        type.content_match.match_type(
+                            type.schema.linebreak_replacement
+                        ),
+                    )
+                    if pre and not support_linebreak:
+                        convert_newlines = False
+                    elif not pre and support_linebreak:
+                        convert_newlines = True
+
+                if convert_newlines is False:
+                    structure.replace_linebreaks(self, node, pos, map_from)
+                self.clear_incompatible(
+                    self.mapping.slice(map_from).map(pos, 1),
+                    type,
+                    clear_newlines=convert_newlines is None,
+                )
                 mapping = self.mapping.slice(map_from)
                 start_m = mapping.map(pos, 1)
                 end_m = mapping.map(pos + node.node_size, 1)
@@ -556,6 +576,8 @@ class Transform:
                         True,
                     ),
                 )
+                if convert_newlines is True:
+                    structure.replace_newlines(self, node, pos, map_from)
                 return False
             return None
 
@@ -649,5 +671,51 @@ class Transform:
         )
 
     def join(self, pos: int, depth: int = 1) -> "Transform":
-        step = ReplaceStep(pos - depth, pos + depth, Slice.empty, True)
-        return self.step(step)
+        convert_newlines = None
+        linebreak_replacement = self.doc.type.schema.linebreak_replacement
+        before = self.doc.resolve(pos - depth)
+        before_type = before.parent.type
+        if linebreak_replacement and before_type.inline_content:
+            pre = before_type.whitespace == "pre"
+            support_linebreak = bool(
+                before_type.content_match.match_type(linebreak_replacement),
+            )
+            if pre and not support_linebreak:
+                convert_newlines = False
+            elif not pre and support_linebreak:
+                convert_newlines = True
+        map_from = len(self.steps)
+        if convert_newlines is False:
+            after = self.doc.resolve(pos + depth)
+            structure.replace_linebreaks(
+                self,
+                after.parent,
+                after.before(),
+                map_from,
+            )
+        if before_type.inline_content:
+            self.clear_incompatible(
+                pos + depth - 1,
+                before_type,
+                before.parent.content_match_at(before.index()),
+                convert_newlines is None,
+            )
+        mapping = self.mapping.slice(map_from)
+        start = mapping.map(pos - depth)
+        self.step(
+            ReplaceStep(
+                start,
+                mapping.map(pos + depth, -1),
+                Slice.empty,
+                True,
+            ),
+        )
+        if convert_newlines is True:
+            full = self.doc.resolve(start)
+            structure.replace_newlines(
+                self,
+                full.parent,
+                full.before(),
+                len(self.steps),
+            )
+        return self

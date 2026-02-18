@@ -180,8 +180,10 @@ class ReplaceAroundStep(Step):
     def map(self, mapping: Mappable) -> Optional["ReplaceAroundStep"]:
         from_ = mapping.map_result(self.from_, 1)
         to = mapping.map_result(self.to, -1)
-        gap_from = mapping.map(self.gap_from, -1)
-        gap_to = mapping.map(self.gap_to, 1)
+        gap_from = (
+            from_.pos if self.from_ == self.gap_from else mapping.map(self.gap_from, -1)
+        )
+        gap_to = to.pos if self.to == self.gap_to else mapping.map(self.gap_to, 1)
         if (from_.deleted and to.deleted) or gap_from < from_.pos or gap_to > to.pos:
             return None
         return ReplaceAroundStep(

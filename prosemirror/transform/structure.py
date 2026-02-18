@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+import re
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from prosemirror.model import ContentMatch, Node, NodeRange, NodeType, Slice
+from prosemirror.model.node import TextNode
 from prosemirror.utils import Attrs
+
+if TYPE_CHECKING:
+    from prosemirror.transform.transform import Transform
 
 
 def can_cut(node: Node, start: int, end: int) -> bool:
@@ -110,6 +117,69 @@ def can_change_type(doc: Node, pos: int, type: NodeType) -> bool:
     return pos_.parent.can_replace_with(index, index + 1, type)
 
 
+def replace_newlines(tr: Transform, node: Node, pos: int, map_from: int) -> None:
+    newline = re.compile(r"\r?\n|\r")
+    node.for_each(
+        lambda child, offset, _index: _replace_newlines_child(
+            tr,
+            node,
+            pos,
+            map_from,
+            child,
+            offset,
+            newline,
+        )
+    )
+
+
+def _replace_newlines_child(
+    tr: Transform,
+    node: Node,
+    pos: int,
+    map_from: int,
+    child: Node,
+    offset: int,
+    newline: re.Pattern[str],
+) -> None:
+    if child.is_text:
+        assert isinstance(child, TextNode)
+        m = newline.search(child.text)
+        while m:
+            start = tr.mapping.slice(map_from).map(
+                pos + 1 + offset + m.start(),
+            )
+            assert node.type.schema.linebreak_replacement is not None
+            lb_repl = node.type.schema.linebreak_replacement
+            tr.replace_with(start, start + 1, lb_repl.create())
+            m = newline.search(child.text, m.end())
+
+
+def replace_linebreaks(tr: Transform, node: Node, pos: int, map_from: int) -> None:
+    node.for_each(
+        lambda child, offset, _index: _replace_linebreaks_child(
+            tr,
+            node,
+            pos,
+            map_from,
+            child,
+            offset,
+        )
+    )
+
+
+def _replace_linebreaks_child(
+    tr: Transform,
+    node: Node,
+    pos: int,
+    map_from: int,
+    child: Node,
+    offset: int,
+) -> None:
+    if child.type == child.type.schema.linebreak_replacement:
+        start = tr.mapping.slice(map_from).map(pos + 1 + offset)
+        tr.replace_with(start, start + 1, node.type.schema.text("\n"))
+
+
 def can_split(
     doc: Node,
     pos: int,
@@ -181,10 +251,30 @@ def can_join(doc: Node, pos: int) -> bool | None:
     )
 
 
+def can_append_with_substituted_linebreaks(a: Node, b: Node) -> bool:
+    if not b.content.size:
+        a.type.compatible_content(b.type)
+    match: ContentMatch | None = a.content_match_at(a.child_count)
+    linebreak_replacement = a.type.schema.linebreak_replacement
+    for i in range(b.child_count):
+        child = b.child(i)
+        type_ = (
+            a.type.schema.nodes["text"]
+            if child.type == linebreak_replacement
+            else child.type
+        )
+        match = match.match_type(type_)
+        if not match:
+            return False
+        if not a.type.allows_marks(child.marks):
+            return False
+    return match.valid_end
+
+
 def joinable(a: Node | None, b: Node | None) -> bool:
-    if a and b and not a.is_leaf:
-        return a.can_append(b)
-    return False
+    return bool(
+        a and b and not a.is_leaf and can_append_with_substituted_linebreaks(a, b),
+    )
 
 
 def join_point(doc: Node, pos: int, dir: int = -1) -> int | None:
