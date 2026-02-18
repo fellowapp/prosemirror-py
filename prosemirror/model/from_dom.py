@@ -558,32 +558,26 @@ class ParseContext:
         if get_node_type(dom_) == 3:
             self.add_text_node(dom_)
         elif get_node_type(dom_) == 1:
-            style = ";".join(dom_.get("style", [""]))
+            self.add_element(dom_)
 
-            if not style:
-                self.add_element(dom_)
-            else:
-                marks = self.read_styles(parse_styles(style))
-
-                if marks is None:
-                    return None
-
-                add_marks, remove_marks = marks
-                top = self.top
-
-                for remove_mark in remove_marks:
-                    self.remove_pending_mark(remove_mark, top)
-                for add_mark in add_marks:
-                    self.add_pending_mark(add_mark)
-
-                self.add_element(dom_)
-
-                for add_mark in add_marks:
-                    self.remove_pending_mark(add_mark, top)
-                for remove_mark in remove_marks:
-                    self.add_pending_mark(remove_mark)
-
-        return None
+    def with_style_rules(self, dom_: DOMNode, f: Callable[[], None]) -> None:
+        style = ";".join(dom_.get("style", [""]))
+        if not style:
+            return f()
+        marks = self.read_styles(parse_styles(style))
+        if marks is None:
+            return  # A style with ignore: true
+        add_marks, remove_marks = marks
+        top = self.top
+        for remove_mark in remove_marks:
+            self.remove_pending_mark(remove_mark, top)
+        for add_mark in add_marks:
+            self.add_pending_mark(add_mark)
+        f()
+        for add_mark in add_marks:
+            self.remove_pending_mark(add_mark, top)
+        for remove_mark in remove_marks:
+            self.add_pending_mark(remove_mark)
 
     def add_text_node(self, dom_: DOMNode) -> None:
         value = dom_.text or ""
@@ -673,7 +667,10 @@ class ParseContext:
                 self.leaf_fallback(dom_)
                 return
 
-            self.add_all(dom_)
+            if rule and rule.skip:
+                self.add_all(dom_)
+            else:
+                self.with_style_rules(dom_, lambda: self.add_all(dom_))
 
             if sync:
                 self.sync(top)
@@ -681,10 +678,13 @@ class ParseContext:
             self.needs_block = old_needs_block
 
         else:
-            self.add_element_by_rule(
+            self.with_style_rules(
                 dom_,
-                rule,
-                rule_id if rule.consuming is False else None,
+                lambda: self.add_element_by_rule(
+                    dom_,
+                    rule,
+                    rule_id if rule.consuming is False else None,
+                ),
             )
 
     def leaf_fallback(self, dom_: DOMNode) -> None:
