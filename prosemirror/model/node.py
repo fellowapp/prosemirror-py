@@ -41,6 +41,10 @@ class Node:
         return 1 if self.is_leaf else 2 + self.content.size
 
     @property
+    def children(self) -> list["Node"]:
+        return self.content.content
+
+    @property
     def child_count(self) -> int:
         return self.content.child_count
 
