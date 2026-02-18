@@ -356,6 +356,7 @@ class NodeSpec(TypedDict, total=False):
     parseDOM: list[dict[str, Any]]  # FIXME: add types
     toDebugString: Callable[[Node], str]
     leafText: Callable[[Node], str]
+    linebreakReplacement: bool
 
 
 AttributeSpecs: TypeAlias = dict[str, "AttributeSpec"]
@@ -382,8 +383,11 @@ class Schema(Generic[Nodes, Marks]):
 
     marks: dict[Marks, "MarkType"]
 
+    linebreak_replacement: "NodeType | None"
+
     def __init__(self, spec: SchemaSpec[Nodes, Marks]) -> None:
         self.spec = spec
+        self.linebreak_replacement = None
         self.nodes = NodeType.compile(self.spec["nodes"], self)
         self.marks = MarkType.compile(self.spec.get("marks", {}), self)
         content_expr_cache = {}
@@ -402,6 +406,14 @@ class Schema(Generic[Nodes, Marks]):
 
             type.content_match = content_expr_cache[content_expr]
             type.inline_content = type.content_match.inline_content
+            if type.spec.get("linebreakReplacement"):
+                if self.linebreak_replacement:
+                    msg = "Multiple linebreak nodes defined"
+                    raise ValueError(msg)
+                if not type.is_inline or not type.is_leaf:
+                    msg = "Linebreak replacement nodes must be inline leaf nodes"
+                    raise ValueError(msg)
+                self.linebreak_replacement = type
             if mark_expr == "_":
                 type.mark_set = None
             elif mark_expr:
