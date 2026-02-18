@@ -13,7 +13,7 @@ This package provides Python implementations of the following
 - [`prosemirror-transform`](https://github.com/ProseMirror/prosemirror-transform) version 1.8.0
 - [`prosemirror-test-builder`](https://github.com/ProseMirror/prosemirror-test-builder)
 - [`prosemirror-schema-basic`](https://github.com/ProseMirror/prosemirror-schema-basic) version 1.1.2
-- [`prosemirror-schema-list`](https://github.com/ProseMirror/prosemirror-schema-list)
+- [`prosemirror-schema-list`](https://github.com/ProseMirror/prosemirror-schema-list) version 1.5.1 (node specs and `wrapRangeInList` only; command functions that depend on `prosemirror-state` are excluded)
 
 The original implementation has been followed as closely as possible during
 translation to simplify keeping this package up-to-date with any upstream
@@ -44,11 +44,9 @@ from prosemirror.transform import Transform
 from prosemirror.schema.basic import schema
 
 # Create a document containing a single paragraph with the text "Hello, world!"
-doc = schema.node("doc", {}, [
-    schema.node("paragraph", {}, [
-        schema.text("Hello, world!")
-    ])
-])
+doc = schema.node(
+    "doc", {}, [schema.node("paragraph", {}, [schema.text("Hello, world!")])]
+)
 
 # Create a Transform which will be applied to the document.
 tr = Transform(doc)
@@ -60,31 +58,23 @@ tr.delete(3, 5)
 tr.add_mark(1, 4, schema.mark("strong"))
 
 # This transform can be converted to JSON to be sent and applied elsewhere.
-assert [step.to_json() for step in tr.steps] == [{
-    'stepType': 'replace',
-    'from': 3,
-    'to': 5
-}, {
-    'stepType': 'addMark',
-    'mark': {'type': 'strong'},
-    'from': 1,
-    'to': 4
-}]
+assert [step.to_json() for step in tr.steps] == [
+    {"stepType": "replace", "from": 3, "to": 5},
+    {"stepType": "addMark", "mark": {"type": "strong"}, "from": 1, "to": 4},
+]
 
 # The resulting document can also be converted to JSON.
 assert tr.doc.to_json() == {
-    'type': 'doc',
-    'content': [{
-        'type': 'paragraph',
-        'content': [{
-            'type': 'text',
-            'marks': [{'type': 'strong'}],
-            'text': 'Heo'
-        }, {
-            'type': 'text',
-            'text': ', world!'
-        }]
-    }]
+    "type": "doc",
+    "content": [
+        {
+            "type": "paragraph",
+            "content": [
+                {"type": "text", "marks": [{"type": "strong"}], "text": "Heo"},
+                {"type": "text", "text": ", world!"},
+            ],
+        }
+    ],
 }
 ```
 
