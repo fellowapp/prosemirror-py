@@ -403,3 +403,43 @@ def test_closes_block_with_inline_content_on_seeing_block_level_children():
         {"type": "paragraph", "content": [{"type": "text", "text": "DDD"}]},
         {"type": "paragraph", "content": [{"type": "hard_break"}]},
     ]
+
+
+def test_can_temporary_shadow_mark_with_another_configuration():
+    from prosemirror.model import Schema
+
+    s = Schema({
+        "nodes": {
+            **{name: schema.nodes[name].spec for name in schema.nodes},
+        },
+        "marks": {
+            "color": {
+                "attrs": {"color": {}},
+                "toDOM": lambda m: ["span", {"style": f"color: {m.attrs['color']}"}],
+                "parseDOM": [
+                    {"style": "color", "getAttrs": lambda v: {"color": v}},
+                ],
+            },
+        },
+    })
+    result = from_html(
+        s,
+        '<p><span style="color: red">abc'
+        '<span style="color: blue">def</span>ghi</span></p>',
+    )
+    expected = s.node(
+        "doc",
+        None,
+        [
+            s.node(
+                "paragraph",
+                None,
+                [
+                    s.text("abc", [s.mark("color", {"color": "red"})]),
+                    s.text("def", [s.mark("color", {"color": "blue"})]),
+                    s.text("ghi", [s.mark("color", {"color": "red"})]),
+                ],
+            ),
+        ],
+    )
+    assert result == expected.to_json()
