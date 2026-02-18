@@ -352,7 +352,7 @@ def resolve_name(stream: TokenStream, name: str) -> list["NodeType"]:
         return [type]
     result = []
     for _, type in types.items():
-        if name in type.groups:
+        if type.is_in_group(name):
             result.append(type)
     if not result:
         stream.err(f'No node type or group "{name}" found')

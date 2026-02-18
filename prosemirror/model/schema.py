@@ -122,6 +122,9 @@ class NodeType:
     def is_atom(self) -> bool:
         return self.is_leaf or bool(self.spec.get("atom"))
 
+    def is_in_group(self, group: str) -> bool:
+        return group in self.groups
+
     @property
     def whitespace(self) -> Literal["pre", "normal"]:
         return self.spec.get("whitespace") or (

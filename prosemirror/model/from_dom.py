@@ -1033,11 +1033,8 @@ class ParseContext:
                     if next is None:
                         return False
 
-                    try:
-                        next.groups.index(part)
-                    except IndexError:
-                        if next.name != part:
-                            return False
+                    if next.name != part and not next.is_in_group(part):
+                        return False
 
                     depth -= 1
                 i -= 1
