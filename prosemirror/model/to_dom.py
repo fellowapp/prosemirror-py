@@ -120,7 +120,11 @@ class DOMSerializer:
         return tgt
 
     def serialize_node_inner(self, node: Node) -> HTMLNode:
-        dom, content_dom = type(self).render_spec(self.nodes[node.type.name](node))
+        dom, content_dom = _render_spec(
+            self.nodes[node.type.name](node),
+            None,
+            node.attrs,
+        )
         if content_dom:
             if node.is_leaf:
                 msg = "Content hole not allowed in a leaf node spec"
@@ -145,47 +149,17 @@ class DOMSerializer:
     ) -> tuple[HTMLNode, Element | None] | None:
         to_dom = self.marks.get(mark.type.name)
         if to_dom:
-            return type(self).render_spec(to_dom(mark, inline))
+            return _render_spec(to_dom(mark, inline), None, mark.attrs)
         return None
 
     @classmethod
-    def render_spec(cls, structure: HTMLOutputSpec) -> tuple[HTMLNode, Element | None]:
-        if isinstance(structure, str):
-            return html.escape(structure), None
-        if isinstance(structure, Element):
-            return structure, None
-        tag_name = structure[0]
-        if " " in tag_name[1:]:
-            msg = "XML namespaces are not supported"
-            raise NotImplementedError(msg)
-        content_dom: Element | None = None
-        dom = Element(name=tag_name, attrs={}, children=[])
-        attrs = structure[1] if len(structure) > 1 else None
-        start = 1
-        if isinstance(attrs, dict):
-            start = 2
-            for name, value in attrs.items():
-                if value is None:
-                    continue
-                if " " in name[1:]:
-                    msg = "XML namespaces are not supported"
-                    raise NotImplementedError(msg)
-                dom.attrs[name] = value
-        for i in range(start, len(structure)):
-            child = structure[i]
-            if child == 0:
-                if i < len(structure) - 1 or i > start:
-                    msg = "Content hole must be the only child of its parent node"
-                    raise Exception(msg)
-                return dom, dom
-            inner, inner_content = cls.render_spec(child)
-            dom.children.append(inner)
-            if inner_content:
-                if content_dom:
-                    msg = "Multiple content holes"
-                    raise Exception(msg)
-                content_dom = inner_content
-        return dom, content_dom
+    def render_spec(
+        cls,
+        structure: HTMLOutputSpec,
+        xml_ns: str | None = None,
+        block_arrays_in: dict[str, Any] | None = None,
+    ) -> tuple[HTMLNode, Element | None]:
+        return _render_spec(structure, xml_ns, block_arrays_in)
 
     @classmethod
     def from_schema(cls, schema: Schema[Any, Any]) -> "DOMSerializer":
@@ -207,6 +181,82 @@ class DOMSerializer:
         schema: Schema[Any, Any],
     ) -> dict[str, Callable[["Mark", bool], HTMLOutputSpec]]:
         return gather_to_dom(schema.marks)
+
+
+def _suspicious_attributes(attrs: dict[str, Any]) -> list[Any] | None:
+    result: list[Any] | None = None
+
+    def scan(value: object) -> None:
+        nonlocal result
+        if value and isinstance(value, (list, dict)):
+            if isinstance(value, list):
+                if value and isinstance(value[0], str):
+                    if result is None:
+                        result = []
+                    result.append(value)
+                else:
+                    for item in value:
+                        scan(item)
+            else:
+                for prop in value.values():
+                    scan(prop)
+
+    scan(attrs)
+    return result
+
+
+def _render_spec(
+    structure: HTMLOutputSpec,
+    xml_ns: str | None = None,
+    block_arrays_in: dict[str, Any] | None = None,
+) -> tuple[HTMLNode, Element | None]:
+    if isinstance(structure, str):
+        return html.escape(structure), None
+    if isinstance(structure, Element):
+        return structure, None
+    tag_name = structure[0]
+    if not isinstance(tag_name, str):
+        msg = "Invalid array passed to renderSpec"
+        raise ValueError(msg)
+    if block_arrays_in:
+        suspicious = _suspicious_attributes(block_arrays_in)
+        if suspicious and structure in suspicious:
+            msg = (
+                "Using an array from an attribute object as a DOM spec. "
+                "This may be an attempted cross site scripting attack."
+            )
+            raise ValueError(msg)
+    if " " in tag_name[1:]:
+        msg = "XML namespaces are not supported"
+        raise NotImplementedError(msg)
+    content_dom: Element | None = None
+    dom = Element(name=tag_name, attrs={}, children=[])
+    attrs = structure[1] if len(structure) > 1 else None
+    start = 1
+    if isinstance(attrs, dict):
+        start = 2
+        for name, value in attrs.items():
+            if value is None:
+                continue
+            if " " in name[1:]:
+                msg = "XML namespaces are not supported"
+                raise NotImplementedError(msg)
+            dom.attrs[name] = value
+    for i in range(start, len(structure)):
+        child = structure[i]
+        if child == 0:
+            if i < len(structure) - 1 or i > start:
+                msg = "Content hole must be the only child of its parent node"
+                raise Exception(msg)
+            return dom, dom
+        inner, inner_content = _render_spec(child, xml_ns, block_arrays_in)
+        dom.children.append(inner)
+        if inner_content:
+            if content_dom:
+                msg = "Multiple content holes"
+                raise Exception(msg)
+            content_dom = inner_content
+    return dom, content_dom
 
 
 def gather_to_dom(
