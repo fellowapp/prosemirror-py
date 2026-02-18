@@ -531,6 +531,7 @@ class ParseContext:
         self.nodes = [top_context]
         self.find = options.find_positions
         self.needs_block = False
+        self.local_preserve_ws = False
 
     @property
     def top(self) -> NodeContext:
@@ -545,13 +546,18 @@ class ParseContext:
     def add_text_node(self, dom_: DOMNode, marks: list[Mark]) -> None:
         value = dom_.text or ""
         top = self.top
+        preserve_ws: WSType = (
+            "full"
+            if (top.options & OPT_PRESERVE_WS_FULL)
+            else (self.local_preserve_ws or bool(top.options & OPT_PRESERVE_WS))
+        )
 
         if (
-            top.options & OPT_PRESERVE_WS_FULL
+            preserve_ws == "full"
             or top.inline_context(dom_)
             or re.search(r"[^ \t\r\n\u000c]", value) is not None
         ):
-            if not (top.options & OPT_PRESERVE_WS):
+            if not preserve_ws:
                 value = re.sub(r"[ \t\r\n\u000c]+", " ", value)
 
                 if (
@@ -577,7 +583,7 @@ class ParseContext:
                     ):
                         value = value[1:]
 
-            elif not (top.options & OPT_PRESERVE_WS_FULL):
+            elif preserve_ws != "full":
                 value = re.sub(r"\r?\n|\r", " ", value)
             else:
                 value = re.sub(r"\r\n?", "\n", value)
@@ -595,7 +601,12 @@ class ParseContext:
         marks: list[Mark],
         match_after: TagParseRule | None = None,
     ) -> None:
+        outer_ws = self.local_preserve_ws
+        top = self.top
         name = str(dom_.tag).lower()
+
+        if name == "pre" or re.search(r"white-space\s*:\s*pre", dom_.get("style", "")):
+            self.local_preserve_ws = True
 
         if name in LIST_TAGS and self.parser.normalize_lists:
             normalize_list(dom_)
@@ -616,9 +627,9 @@ class ParseContext:
             elif rule is not None and get_node_type(cast(DOMNode, rule.skip)):
                 dom_ = cast(DOMNode, rule.skip)
 
-            top = self.top
             sync = False
             old_needs_block = self.needs_block
+            leaf_fallback_done = False
             if name in BLOCK_TAGS:
                 if top.content and top.content[0].is_inline and self.open:
                     self.open -= 1
@@ -631,23 +642,24 @@ class ParseContext:
 
             elif not list(dom_):
                 self.leaf_fallback(dom_, marks)
-                return
+                leaf_fallback_done = True
 
-            inner_marks = (
-                marks
-                if (rule and rule.skip)
-                else self.read_styles(
-                    dom_,
-                    marks,
+            if not leaf_fallback_done:
+                inner_marks = (
+                    marks
+                    if (rule and rule.skip)
+                    else self.read_styles(
+                        dom_,
+                        marks,
+                    )
                 )
-            )
-            if inner_marks is not None:
-                self.add_all(dom_, inner_marks)
+                if inner_marks is not None:
+                    self.add_all(dom_, inner_marks)
 
-            if sync:
-                self.sync(top)
+                if sync:
+                    self.sync(top)
 
-            self.needs_block = old_needs_block
+                self.needs_block = old_needs_block
 
         else:
             inner_marks = self.read_styles(dom_, marks)
@@ -658,6 +670,8 @@ class ParseContext:
                     inner_marks,
                     rule_id if rule.consuming is False else None,
                 )
+
+        self.local_preserve_ws = outer_ws
 
     def leaf_fallback(self, dom_: DOMNode, marks: list[Mark]) -> None:
         if (
@@ -940,6 +954,8 @@ class ParseContext:
             if self.nodes[i] == to_:
                 self.open = i
                 return True
+            elif self.local_preserve_ws:
+                self.nodes[i].options |= OPT_PRESERVE_WS
             i -= 1
 
         return False

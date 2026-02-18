@@ -443,3 +443,31 @@ def test_can_temporary_shadow_mark_with_another_configuration():
         ],
     )
     assert result == expected.to_json()
+
+
+def test_preserves_whitespace_in_pre_elements():
+    from prosemirror.model import Schema
+
+    s = Schema({
+        "nodes": {
+            "doc": {"content": "block+"},
+            "text": {"group": "inline"},
+            "p": {"group": "block", "content": "inline*"},
+        },
+    })
+    result = from_html(s, "<pre>  hello </pre>   ")
+    expected = s.node(
+        "doc",
+        None,
+        [s.node("p", None, [s.text("  hello ")])],
+    )
+    assert result == expected.to_json()
+
+
+def test_preserves_whitespace_in_white_space_pre_styled_elements():
+    result = from_html(
+        schema,
+        "  <div style='white-space: pre'>  okay  then </div>  <p> x</p>",
+    )
+    expected = doc(p("  okay  then "), p("x"))
+    assert result["content"] == expected.to_json()["content"]
