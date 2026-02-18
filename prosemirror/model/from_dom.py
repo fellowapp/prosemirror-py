@@ -551,6 +551,7 @@ class ParseContext:
             if (top.options & OPT_PRESERVE_WS_FULL)
             else (self.local_preserve_ws or bool(top.options & OPT_PRESERVE_WS))
         )
+        schema = self.parser.schema
 
         if (
             preserve_ws == "full"
@@ -583,14 +584,37 @@ class ParseContext:
                     ):
                         value = value[1:]
 
-            elif preserve_ws != "full":
-                value = re.sub(r"\r?\n|\r", " ", value)
-            else:
+            elif preserve_ws == "full":
                 value = re.sub(r"\r\n?", "\n", value)
+            elif (
+                schema.linebreak_replacement
+                and re.search(r"[\r\n]", value)
+                and self.top.find_wrapping(
+                    schema.linebreak_replacement.create(),
+                )
+                is not None
+            ):
+                lines = re.split(r"\r?\n|\r", value)
+                for i, line in enumerate(lines):
+                    if i:
+                        self.insert_node(
+                            schema.linebreak_replacement.create(),
+                            marks,
+                            True,
+                        )
+                    if line:
+                        self.insert_node(
+                            schema.text(line),
+                            marks,
+                            not re.search(r"\S", line),
+                        )
+                value = ""
+            else:
+                value = re.sub(r"\r?\n|\r", " ", value)
 
             if value:
                 self.insert_node(
-                    self.parser.schema.text(value),
+                    schema.text(value),
                     marks,
                     not re.search(r"\S", value),
                 )

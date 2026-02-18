@@ -490,3 +490,30 @@ def test_can_move_block_node_out_of_paragraph():
     result = PMDOMParser.from_schema(schema).parse(wrapper)
     expected = doc(p("Hello"), hr)
     assert result.to_json()["content"] == expected.to_json()["content"]
+
+
+def test_inserts_line_break_replacements():
+    from prosemirror.model import Schema
+
+    hb_spec = {**schema.nodes["hard_break"].spec, "linebreakReplacement": True}
+    node_specs = {}
+    for name in schema.nodes:
+        if name == "hard_break":
+            node_specs[name] = hb_spec
+        else:
+            node_specs[name] = schema.nodes[name].spec
+    s = Schema({"nodes": node_specs})
+
+    result = from_html(
+        s,
+        "<p><span style='white-space: pre'>one\ntwo\n\nthree</span></p>",
+    )
+    result_node = s.node_from_json(result)
+    assert (
+        str(result_node)
+        == 'doc(paragraph("one", hard_break, "two", hard_break, hard_break, "three"))'
+    )
+
+    result2 = from_html(s, "<p><span>one\ntwo\n\nthree</span></p>")
+    result2_node = s.node_from_json(result2)
+    assert str(result2_node) == 'doc(paragraph("one two three"))'
