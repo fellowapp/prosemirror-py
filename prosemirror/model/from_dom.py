@@ -119,9 +119,20 @@ class DOMParser:
     def __init__(self, schema: Schema[Any, Any], rules: list[ParseRule]) -> None:
         self.schema = schema
         self.rules = rules
-        self._tags = [rule for rule in rules if isinstance(rule, TagParseRule)]
+        self._tags: list[TagParseRule] = []
+        self._styles: list[StyleParseRule] = []
+        self.matched_styles: list[str] = []
 
-        self._styles = [rule for rule in rules if isinstance(rule, StyleParseRule)]
+        for rule in rules:
+            if isinstance(rule, TagParseRule):
+                self._tags.append(rule)
+            elif isinstance(rule, StyleParseRule):
+                if rule.style is not None:
+                    prop = re.match(r"[^=]*", rule.style)
+                    prop_name = prop.group(0) if prop else ""
+                    if prop_name and prop_name not in self.matched_styles:
+                        self.matched_styles.append(prop_name)
+                self._styles.append(rule)
 
         self.normalize_lists = not any([
             schema.nodes[r.node].content_match.match_type(schema.nodes[r.node])
@@ -579,6 +590,12 @@ class ParseContext:
         for remove_mark in remove_marks:
             self.add_pending_mark(remove_mark)
 
+    def _build_style_dict(self, styles: list[str]) -> dict[str, str]:
+        result: dict[str, str] = {}
+        for i in range(0, len(styles), 2):
+            result[styles[i]] = styles[i + 1]
+        return result
+
     def add_text_node(self, dom_: DOMNode) -> None:
         value = dom_.text or ""
         top = self.top
@@ -706,11 +723,15 @@ class ParseContext:
     def read_styles(self, styles: list[str]) -> tuple[list[Mark], list[Mark]] | None:
         add: list[Mark] = Mark.none
         remove: list[Mark] = Mark.none
+        style_dict = self._build_style_dict(styles)
 
-        for i in range(0, len(styles), 2):
+        for name in self.parser.matched_styles:
+            value = style_dict.get(name)
+            if not value:
+                continue
             after: StyleParseRule | None = None
             while True:
-                rule = self.parser.match_style(styles[i], styles[i + 1], self, after)
+                rule = self.parser.match_style(name, value, self, after)
                 if not rule:
                     break
                 if rule.ignore:
