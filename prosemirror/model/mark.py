@@ -73,7 +73,9 @@ class Mark:
         if not type:
             msg = f"There is no mark type {name} in this schema"
             raise ValueError(msg)
-        return type.create(cast(JSONDict | None, json_data.get("attrs")))
+        mark = type.create(cast(JSONDict | None, json_data.get("attrs")))
+        type.check_attrs(mark.attrs)
+        return mark
 
     @classmethod
     def same_set(cls, a: list["Mark"], b: list["Mark"]) -> bool:

@@ -257,6 +257,38 @@ class TestTextContent:
         assert node.text_content == "hiab"
 
 
+class TestCheck:
+    def test_notices_invalid_content(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="Invalid content for node doc"):
+            doc(li(p("x"))).check()
+
+    def test_notices_marks_in_wrong_places(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="Invalid content for node doc"):
+            doc(
+                schema.nodes["paragraph"].create(
+                    None, [], [schema.marks["em"].create()]
+                )
+            ).check()
+
+    def test_notices_incorrect_sets_of_marks(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="Invalid collection of marks"):
+            schema.text(
+                "a", [schema.marks["em"].create(), schema.marks["em"].create()]
+            ).check()
+
+    def test_notices_wrong_attribute_types(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="Expected value of type"):
+            schema.nodes["image"].create({"src": True}).check()
+
+
 class TestFrom:
     @staticmethod
     def from_(arg, expect):

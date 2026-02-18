@@ -43,6 +43,21 @@ def compute_attrs(attrs: "Attributes", value: Attrs | None) -> Attrs:
     return built
 
 
+def check_attrs(
+    attrs: "Attributes",
+    values: Attrs,
+    type_str: str,
+    name: str,
+) -> None:
+    for attr_name in values:
+        if attr_name not in attrs:
+            msg = f"Unsupported attribute {attr_name} for {type_str} of type {name}"
+            raise ValueError(msg)
+    for attr_name, attr in attrs.items():
+        if attr.validate:
+            attr.validate(values[attr_name])
+
+
 def init_attrs(attrs: Optional["AttributeSpecs"]) -> "Attributes":
     result = {}
     if attrs:
@@ -185,6 +200,9 @@ class NodeType:
             msg = f"Invalid content for node {self.name}: {str(content)[:50]}"
             raise ValueError(msg)
 
+    def check_attrs(self, attrs: Attrs) -> None:
+        check_attrs(self.attrs, attrs, "node", self.name)
+
     def allows_mark_type(self, mark_type: "MarkType") -> bool:
         return self.mark_set is None or mark_type in self.mark_set
 
@@ -243,10 +261,33 @@ class NodeType:
 Attributes: TypeAlias = dict[str, "Attribute"]
 
 
+def _validate_type(type_str: str) -> Callable[[JSON], None]:
+    types = type_str.split("|")
+
+    def validator(value: JSON) -> None:
+        name = (
+            "null"
+            if value is None
+            else {str: "string", int: "number", float: "number", bool: "boolean"}.get(
+                type(value), type(value).__name__
+            )
+        )
+        if name not in types:
+            msg = f"Expected value of type {types}, got {name}"
+            raise ValueError(msg)
+
+    return validator
+
+
 class Attribute:
     def __init__(self, options: "AttributeSpec") -> None:
         self.has_default = "default" in options
         self.default = options.get("default")
+        validate = options.get("validate")
+        if isinstance(validate, str):
+            self.validate: Callable[[JSON], None] | None = _validate_type(validate)
+        else:
+            self.validate = validate
 
     @property
     def is_required(self) -> bool:
@@ -299,6 +340,9 @@ class MarkType:
 
     def is_in_set(self, set: list[Mark]) -> Mark | None:
         return next((item for item in set if item.type == self), None)
+
+    def check_attrs(self, attrs: Attrs) -> None:
+        check_attrs(self.attrs, attrs, "mark", self.name)
 
     def excludes(self, other: "MarkType") -> bool:
         return other in self.excluded
@@ -374,6 +418,7 @@ class MarkSpec(TypedDict, total=False):
 
 class AttributeSpec(TypedDict, total=False):
     default: JSON
+    validate: str | Callable[[Any], None]
 
 
 class Schema(Generic[Nodes, Marks]):

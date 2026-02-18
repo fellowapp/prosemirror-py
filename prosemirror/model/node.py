@@ -302,8 +302,10 @@ class Node:
 
     def check(self) -> None:
         self.type.check_content(self.content)
+        self.type.check_attrs(self.attrs)
         copy = Mark.none
         for mark in self.marks:
+            mark.type.check_attrs(mark.attrs)
             copy = mark.add_to_set(copy)
         if not Mark.same_set(copy, self.marks):
             msg = (
@@ -349,11 +351,13 @@ class Node:
         if json_data["type"] == "text":
             return schema.text(str(json_data["text"]), marks)
         content = Fragment.from_json(schema, json_data.get("content"))
-        return schema.node_type(str(json_data["type"])).create(
+        node = schema.node_type(str(json_data["type"])).create(
             cast("Attrs", json_data.get("attrs")),
             content,
             marks,
         )
+        node.type.check_attrs(node.attrs)
+        return node
 
 
 class TextNode(Node):

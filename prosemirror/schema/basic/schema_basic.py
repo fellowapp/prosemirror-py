@@ -30,7 +30,7 @@ nodes: dict[str, NodeSpec] = {
         "toDOM": lambda _: hr_dom,
     },
     "heading": {
-        "attrs": {"level": {"default": 1}},
+        "attrs": {"level": {"default": 1, "validate": "number"}},
         "content": "inline*",
         "group": "block",
         "defining": True,
@@ -56,7 +56,11 @@ nodes: dict[str, NodeSpec] = {
     "text": {"group": "inline"},
     "image": {
         "inline": True,
-        "attrs": {"src": {}, "alt": {"default": None}, "title": {"default": None}},
+        "attrs": {
+            "src": {"validate": "string"},
+            "alt": {"default": None, "validate": "string|null"},
+            "title": {"default": None, "validate": "string|null"},
+        },
         "group": "inline",
         "draggable": True,
         "parseDOM": [
@@ -92,7 +96,10 @@ code_dom = ["code", 0]
 
 marks: dict[str, MarkSpec] = {
     "link": {
-        "attrs": {"href": {}, "title": {"default": None}},
+        "attrs": {
+            "href": {"validate": "string"},
+            "title": {"default": None, "validate": "string|null"},
+        },
         "inclusive": False,
         "parseDOM": [{"tag": "a", "getAttrs": lambda d: {"href": d.get("href")}}],
         "toDOM": lambda node, _: [
