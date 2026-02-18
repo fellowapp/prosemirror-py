@@ -301,9 +301,7 @@ class Node:
             return self.type.compatible_content(other.type)
 
     def check(self) -> None:
-        if not self.type.valid_content(self.content):
-            msg = f"Invalid content for node {self.type.name}: {str(self.content)[:50]}"
-            raise ValueError(msg)
+        self.type.check_content(self.content)
         copy = Mark.none
         for mark in self.marks:
             copy = mark.add_to_set(copy)

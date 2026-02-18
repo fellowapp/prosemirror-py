@@ -390,3 +390,16 @@ def test_parser(doc, expect, desc):
     behavior of existing files with the addition of this
     """
     assert from_html(schema, doc) == expect, desc
+
+
+def test_closes_block_with_inline_content_on_seeing_block_level_children():
+    result = from_html(
+        schema,
+        "<div><br><div>CCC</div><div>DDD</div><br></div>",
+    )
+    assert result["content"] == [
+        {"type": "paragraph", "content": [{"type": "hard_break"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "CCC"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "DDD"}]},
+        {"type": "paragraph", "content": [{"type": "hard_break"}]},
+    ]

@@ -237,7 +237,7 @@ def add_range(
 
 def close(node: "Node", content: Fragment) -> "Node":
     if not node.type.valid_content(content):
-        msg = f"Invalid content for node {node.type.name}"
+        msg = f"Invalid content for node {node.type.name}: {str(content)[:50]}"
         raise ReplaceError(msg)
     return node.copy(content)
 

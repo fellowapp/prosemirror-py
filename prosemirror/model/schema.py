@@ -147,8 +147,7 @@ class NodeType:
         marks: list[Mark] | None = None,
     ) -> Node:
         content = Fragment.from_(content)
-        if not self.valid_content(content):
-            raise ValueError("Invalid content for node " + self.name)
+        self.check_content(content)
         return Node(self, self.compute_attrs(attrs), content, Mark.set_from(marks))
 
     def create_and_fill(
@@ -180,6 +179,11 @@ class NodeType:
             if not self.allows_marks(content.child(i).marks):
                 return False
         return True
+
+    def check_content(self, content: Fragment) -> None:
+        if not self.valid_content(content):
+            msg = f"Invalid content for node {self.name}: {str(content)[:50]}"
+            raise ValueError(msg)
 
     def allows_mark_type(self, mark_type: "MarkType") -> bool:
         return self.mark_set is None or mark_type in self.mark_set
