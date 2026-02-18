@@ -22,10 +22,12 @@ def lift_target(range_: NodeRange) -> int | None:
     parent = range_.parent
     content = parent.content.cut_by_index(range_.start_index, range_.end_index)
     depth = range_.depth
+    content_before = 0
+    content_after = 0
     while True:
         node = range_.from_.node(depth)
-        index = range_.from_.index(depth)
-        end_index = range_.to.index_after(depth)
+        index = range_.from_.index(depth) + content_before
+        end_index = range_.to.index_after(depth) - content_after
         if depth < range_.depth and node.can_replace(index, end_index, content):
             return depth
         if (
@@ -34,6 +36,10 @@ def lift_target(range_: NodeRange) -> int | None:
             or not can_cut(node, index, end_index)
         ):
             break
+        if index:
+            content_before = 1
+        if end_index < node.child_count:
+            content_after = 1
         depth -= 1
 
     return None
