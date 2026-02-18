@@ -1,3 +1,4 @@
+import weakref
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Optional, Union, cast
 
@@ -208,8 +209,31 @@ class ResolvedPos:
 
     @classmethod
     def resolve_cached(cls, doc: "Node", pos: int) -> "ResolvedPos":
-        # no cache for now
-        return cls.resolve(doc, pos)
+        cache = _resolve_cache.get(id(doc))
+        if cache is not None and cache.doc_ref() is doc:
+            for elt in cache.elts:
+                if elt is not None and elt.pos == pos:
+                    return elt
+        else:
+            cache = _ResolveCache(doc)
+            _resolve_cache[id(doc)] = cache
+        result = cls.resolve(doc, pos)
+        cache.elts[cache.i] = result
+        cache.i = (cache.i + 1) % _RESOLVE_CACHE_SIZE
+        return result
+
+
+_RESOLVE_CACHE_SIZE = 12
+
+
+class _ResolveCache:
+    def __init__(self, doc: "Node") -> None:
+        self.doc_ref = weakref.ref(doc)
+        self.elts: list[ResolvedPos | None] = [None] * _RESOLVE_CACHE_SIZE
+        self.i = 0
+
+
+_resolve_cache: dict[int, _ResolveCache] = {}
 
 
 class NodeRange:
