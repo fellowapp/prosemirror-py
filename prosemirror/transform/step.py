@@ -39,7 +39,7 @@ class Step(metaclass=abc.ABCMeta):
             json_data = cast(JSONDict, json.loads(json_data))
 
         if not json_data or not json_data.get("stepType"):
-            msg = "Invalid inpit for Step.from_json"
+            msg = "Invalid input for Step.from_json"
             raise ValueError(msg)
         type = STEPS_BY_ID.get(cast(str, json_data["stepType"]))
         if not type:

@@ -138,7 +138,7 @@ class StepMap(Mappable):
         index = recover_index(recover)
         old_index = 2 if self.inverted else 1
         new_index = 1 if self.inverted else 2
-        for i in range(len(self.ranges), 3):
+        for i in range(0, len(self.ranges), 3):
             start = self.ranges[i] - (diff if self.inverted else 0)
             if start > pos:
                 break
@@ -161,6 +161,7 @@ class StepMap(Mappable):
             old_size = self.ranges[i + old_index]
             new_size = self.ranges[i + new_index]
             f(old_start, old_start + old_size, new_start, new_start + new_size)
+            diff += new_size - old_size
             i += 3
 
     def invert(self) -> "StepMap":
@@ -210,11 +211,11 @@ class Mapping(Mappable):
         start_size = len(self.maps)
         while i < len(mapping.maps):
             mirr = mapping.get_mirror(i)
-            i += 1
             self.append_map(
                 mapping.maps[i],
                 (start_size + mirr) if (mirr is not None and mirr < i) else None,
             )
+            i += 1
 
     def get_mirror(self, n: int) -> int | None:
         if self.mirror:

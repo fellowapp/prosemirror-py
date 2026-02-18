@@ -556,8 +556,8 @@ def covered_depths(
         if (
             (start < from__.pos - (from__.depth - d))
             or (to_.end(d) > to_.pos + (to_.depth - d))
-            or (from__.node(d).type.spec.get("isolation"))
-            or (to_.node(d).type.spec.get("isolation"))
+            or (from__.node(d).type.spec.get("isolating"))
+            or (to_.node(d).type.spec.get("isolating"))
         ):
             break
         if start == to_.start(d) or (
