@@ -634,20 +634,24 @@ class Transform:
         return self.step(AddNodeMarkStep(pos, mark))
 
     def remove_node_mark(self, pos: int, mark: Mark | MarkType) -> "Transform":
-        if isinstance(mark, MarkType):
-            node = self.doc.node_at(pos)
-
-            if not node:
-                msg = f"No node at position {pos}"
-                raise ValueError(msg)
-
-            mark_in_set = mark.is_in_set(node.marks)
-
-            if not mark_in_set:
-                return self
-
-            mark = mark_in_set
-        return self.step(RemoveNodeMarkStep(pos, mark))
+        node = self.doc.node_at(pos)
+        if not node:
+            msg = f"No node at position {pos}"
+            raise ValueError(msg)
+        if isinstance(mark, Mark):
+            if mark.is_in_set(node.marks):
+                self.step(RemoveNodeMarkStep(pos, mark))
+        else:
+            set_ = node.marks
+            steps: list[Step] = []
+            found = mark.is_in_set(set_)
+            while found:
+                steps.append(RemoveNodeMarkStep(pos, found))
+                set_ = found.remove_from_set(set_)
+                found = mark.is_in_set(set_)
+            for i in range(len(steps) - 1, -1, -1):
+                self.step(steps[i])
+        return self
 
     def split(
         self,

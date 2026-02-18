@@ -40,7 +40,12 @@ class ReplaceStep(Step):
         to = mapping.map_result(self.to, -1)
         if from_.deleted and to.deleted:
             return None
-        return ReplaceStep(from_.pos, max(from_.pos, to.pos), self.slice)
+        return ReplaceStep(
+            from_.pos,
+            max(from_.pos, to.pos),
+            self.slice,
+            self.structure,
+        )
 
     def merge(self, other: "Step") -> Optional["ReplaceStep"]:
         if not isinstance(other, ReplaceStep) or other.structure or self.structure:
