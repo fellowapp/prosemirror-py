@@ -1,14 +1,14 @@
 from typing import cast
 
-from prosemirror.model.schema import Nodes, NodeSpec
+from prosemirror.model.schema import AttributeSpec, Nodes, NodeSpec
 
 OL_DOM = ["ol", 0]
 UL_DOM = ["ul", 0]
 LI_DOM = ["li", 0]
 
 
-orderd_list = NodeSpec(
-    attrs={"order": {"default": 1}},
+ordered_list = NodeSpec(
+    attrs={"order": AttributeSpec(default=1)},
     parseDOM=[{"tag": "ol"}],
     toDOM=lambda node: (
         OL_DOM
@@ -34,7 +34,7 @@ def add_list_nodes(
     copy = nodes.copy()
     copy.update({
         cast(Nodes, "ordered_list"): add(
-            orderd_list,
+            ordered_list,
             NodeSpec(content="list_item+", group=list_group),
         ),
         cast(Nodes, "bullet_list"): add(

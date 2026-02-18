@@ -1,6 +1,9 @@
-from prosemirror.model import Node, Schema
+from typing import Any
 
-basic_spec = {
+from prosemirror.model import Node, Schema
+from prosemirror.model.schema import SchemaSpec
+
+basic_spec: SchemaSpec[Any, Any] = {
     "nodes": {
         "doc": {"content": "block+"},
         "paragraph": {

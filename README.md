@@ -66,7 +66,7 @@ assert [step.to_json() for step in tr.steps] == [{
     'to': 5
 }, {
     'stepType': 'addMark',
-    'mark': {'type': 'strong', 'attrs': {}},
+    'mark': {'type': 'strong'},
     'from': 1,
     'to': 4
 }]
@@ -78,7 +78,7 @@ assert tr.doc.to_json() == {
         'type': 'paragraph',
         'content': [{
             'type': 'text',
-            'marks': [{'type': 'strong', 'attrs': {}}],
+            'marks': [{'type': 'strong'}],
             'text': 'Heo'
         }, {
             'type': 'text',
@@ -87,3 +87,8 @@ assert tr.doc.to_json() == {
     }]
 }
 ```
+
+## AI Disclosure
+
+The initial version of this translation was written manually in 2019. AI is now
+used to help keep this translation up-to-date with upstream changes.

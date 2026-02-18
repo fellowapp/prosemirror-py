@@ -1,4 +1,3 @@
-import copy
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Optional, TypedDict, TypeGuard, Union, cast
 
@@ -110,9 +109,9 @@ class Node:
         marks: list[Mark] | None = None,
     ) -> bool:
         return (
-            self.type.name == type.name
-            and (compare_deep(self.attrs, attrs or type.default_attrs or empty_attrs))
-            and (Mark.same_set(self.marks, marks or Mark.none))
+            self.type == type
+            and compare_deep(self.attrs, attrs or type.default_attrs or empty_attrs)
+            and Mark.same_set(self.marks, marks or Mark.none)
         )
 
     def copy(self, content: Fragment | None = None) -> "Node":
@@ -323,20 +322,11 @@ class Node:
     def to_json(self) -> JSONDict:
         obj: JSONDict = {"type": self.type.name}
         if self.attrs:
-            obj = {
-                **obj,
-                "attrs": copy.deepcopy(self.attrs),
-            }
-        if getattr(self.content, "size", None):
-            obj = {
-                **obj,
-                "content": self.content.to_json(),
-            }
+            obj = {**obj, "attrs": self.attrs}
+        if self.content.size:
+            obj = {**obj, "content": self.content.to_json()}
         if len(self.marks):
-            obj = {
-                **obj,
-                "marks": [n.to_json() for n in self.marks],
-            }
+            obj = {**obj, "marks": [n.to_json() for n in self.marks]}
         return obj
 
     @classmethod

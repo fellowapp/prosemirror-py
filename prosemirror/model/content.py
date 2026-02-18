@@ -69,7 +69,7 @@ class ContentMatch:
 
     def match_type(self, type: "NodeType") -> Optional["ContentMatch"]:
         for next in self.next:
-            if next.type.name == type.name:
+            if next.type == type:
                 return next.next
         return None
 
@@ -103,7 +103,7 @@ class ContentMatch:
     def compatible(self, other: "ContentMatch") -> bool:
         for i in self.next:
             for j in other.next:
-                if i.type.name == j.type.name:
+                if i.type == j.type:
                     return True
         return False
 
@@ -136,7 +136,7 @@ class ContentMatch:
 
     def find_wrapping(self, target: "NodeType") -> list["NodeType"] | None:
         for entry in self.wrap_cache:
-            if entry.target.name == target.name:
+            if entry.target == target:
                 return entry.computed
         computed = self.compute_wrapping(target)
         self.wrap_cache.append(WrapCacheEntry(target, computed))
@@ -365,7 +365,7 @@ def parse_expr_atom(
     if stream.eat("("):
         expr = parse_expr(stream)
         if not stream.eat(")"):
-            stream.err("missing closing patren")
+            stream.err("Missing closing paren")
         return expr
     elif not re.match(r"\W", cast(str, stream.next())):
 
@@ -491,7 +491,7 @@ def null_from(
                 scan(cast(int, to))
 
     scan(node)
-    return sorted(result)
+    return sorted(result, key=cmp_to_key(cmp))
 
 
 class DFAState(NamedTuple):

@@ -22,7 +22,7 @@ class ReplaceStep(Step):
 
     def apply(self, doc: Node) -> StepResult:
         if self.structure and content_between(doc, self.from_, self.to):
-            return StepResult.fail("Structure replace would overrite content")
+            return StepResult.fail("Structure replace would overwrite content")
         return StepResult.from_replace(doc, self.from_, self.to, self.slice)
 
     def get_map(self) -> StepMap:
@@ -105,7 +105,7 @@ class ReplaceStep(Step):
             json_data["to"],
             int,
         ):
-            msg = "Invlid input for ReplaceStep.from_json"
+            msg = "Invalid input for ReplaceStep.from_json"
             raise ValueError(msg)
         return ReplaceStep(
             json_data["from"],
@@ -232,7 +232,7 @@ class ReplaceAroundStep(Step):
             or not isinstance(json_data["gapTo"], int)
             or not isinstance(json_data["insert"], int)
         ):
-            msg = "Invlid input for ReplaceAroundStep.from_json"
+            msg = "Invalid input for ReplaceAroundStep.from_json"
             raise ValueError(msg)
         return ReplaceAroundStep(
             json_data["from"],

@@ -14,18 +14,18 @@ class Step(metaclass=abc.ABCMeta):
     json_id: str
 
     @abc.abstractmethod
-    def apply(self, _doc: Node) -> "StepResult": ...
+    def apply(self, doc: Node) -> "StepResult": ...
 
     def get_map(self) -> StepMap:
         return StepMap.empty
 
     @abc.abstractmethod
-    def invert(self, _doc: Node) -> "Step": ...
+    def invert(self, doc: Node) -> "Step": ...
 
     @abc.abstractmethod
-    def map(self, _mapping: Mappable) -> Optional["Step"]: ...
+    def map(self, mapping: Mappable) -> Optional["Step"]: ...
 
-    def merge(self, _other: "Step") -> Optional["Step"]:
+    def merge(self, other: "Step") -> Optional["Step"]:
         return None
 
     @abc.abstractmethod

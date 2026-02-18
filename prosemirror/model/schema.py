@@ -297,7 +297,7 @@ class MarkType:
         return next((item for item in set if item.type == self), None)
 
     def excludes(self, other: "MarkType") -> bool:
-        return any(other.name == e.name for e in self.excluded)
+        return other in self.excluded
 
 
 Nodes = TypeVar("Nodes", bound=str, covariant=True)
@@ -486,6 +486,6 @@ def gather_marks(schema: Schema[Any, Any], marks: list[str]) -> list[MarkType]:
                     ok = mark
                     found.append(mark)
         if not ok:
-            msg = f"unknow mark type: '{mark}'"
+            msg = f"Unknown mark type: '{name}'"
             raise SyntaxError(msg)
     return found

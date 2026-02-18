@@ -1,4 +1,3 @@
-import copy
 from typing import TYPE_CHECKING, Any, Final, Union, cast
 
 from prosemirror.utils import Attrs, JSONDict
@@ -41,18 +40,24 @@ class Mark:
         return copy
 
     def remove_from_set(self, set: list["Mark"]) -> list["Mark"]:
-        return [item for item in set if not item.eq(self)]
+        for i in range(len(set)):
+            if self.eq(set[i]):
+                return set[:i] + set[i + 1 :]
+        return set
 
     def is_in_set(self, set: list["Mark"]) -> bool:
         return any(item.eq(self) for item in set)
 
     def eq(self, other: "Mark") -> bool:
-        if self == other:
+        if self is other:
             return True
-        return self.type.name == other.type.name and self.attrs == other.attrs
+        return self.type == other.type and self.attrs == other.attrs
 
     def to_json(self) -> JSONDict:
-        return {"type": self.type.name, "attrs": copy.deepcopy(self.attrs)}
+        obj: JSONDict = {"type": self.type.name}
+        if self.attrs:
+            obj = {**obj, "attrs": self.attrs}
+        return obj
 
     @classmethod
     def from_json(

@@ -27,7 +27,7 @@ def n(name, *content):
 
 
 def t(str, em=None):
-    return schema.text(str, [schema.mark["em"]] if em else None)
+    return schema.text(str, [schema.marks["em"].create()] if em else None)
 
 
 doc = n(

@@ -209,7 +209,7 @@ def test_html_is_escaped():
                             {"type": "text", "text": "test "},
                             {
                                 "type": "text",
-                                "marks": [{"type": "strong", "attrs": {}}],
+                                "marks": [{"type": "strong"}],
                                 "text": "some bolded text",
                             },
                         ],
@@ -230,7 +230,7 @@ def test_html_is_escaped():
                             {"type": "text", "text": "test "},
                             {
                                 "type": "text",
-                                "marks": [{"type": "strong", "attrs": {}}],
+                                "marks": [{"type": "strong"}],
                                 "text": "some bolded text",
                             },
                         ],
@@ -241,7 +241,7 @@ def test_html_is_escaped():
                             {"type": "text", "text": "another test "},
                             {
                                 "type": "text",
-                                "marks": [{"type": "em", "attrs": {}}],
+                                "marks": [{"type": "em"}],
                                 "text": "em",
                             },
                         ],
@@ -296,7 +296,7 @@ def test_html_is_escaped():
                         "content": [
                             {
                                 "type": "text",
-                                "marks": [{"type": "strong", "attrs": {}}],
+                                "marks": [{"type": "strong"}],
                                 "text": "Hello",
                             },
                         ],
@@ -311,14 +311,14 @@ def test_html_is_escaped():
                         "content": [
                             {
                                 "type": "text",
-                                "marks": [{"type": "em", "attrs": {}}],
+                                "marks": [{"type": "em"}],
                                 "text": "Test ",
                             },
                             {
                                 "type": "text",
                                 "marks": [
-                                    {"type": "em", "attrs": {}},
-                                    {"type": "strong", "attrs": {}},
+                                    {"type": "em"},
+                                    {"type": "strong"},
                                 ],
                                 "text": "break",
                             },
@@ -360,14 +360,14 @@ def test_html_is_escaped():
                             {"type": "text", "text": "result "},
                             {
                                 "type": "text",
-                                "marks": [{"type": "strong", "attrs": {}}],
+                                "marks": [{"type": "strong"}],
                                 "text": "o",
                             },
                             {
                                 "type": "text",
                                 "marks": [
-                                    {"type": "em", "attrs": {}},
-                                    {"type": "strong", "attrs": {}},
+                                    {"type": "em"},
+                                    {"type": "strong"},
                                 ],
                                 "text": "f",
                             },

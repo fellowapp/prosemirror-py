@@ -9,9 +9,13 @@ def yes(from1, to1, val1, from2, to2, val2):
         step2 = _make_step(from2, to2, val2)
         merged = step1.merge(step2)
         assert merged
-        assert merged.apply(_test_doc).doc.eq(
-            step2.apply(step1.apply(_test_doc).doc).doc,
-        )
+        result1 = merged.apply(_test_doc)
+        assert result1.doc is not None
+        inner_result = step1.apply(_test_doc)
+        assert inner_result.doc is not None
+        result2 = step2.apply(inner_result.doc)
+        assert result2.doc is not None
+        assert result1.doc.eq(result2.doc)
 
     return inner
 

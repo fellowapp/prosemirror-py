@@ -130,11 +130,15 @@ class Slice:
         open_start = 0
         open_end = 0
         n = fragment.first_child
-        while n and not n.is_leaf and (open_isolating or n.type.spec.get("isolating")):
+        while (
+            n and not n.is_leaf and (open_isolating or not n.type.spec.get("isolating"))
+        ):
             open_start += 1
             n = n.first_child
         n = fragment.last_child
-        while n and not n.is_leaf and (open_isolating or n.type.spec.get("isolating")):
+        while (
+            n and not n.is_leaf and (open_isolating or not n.type.spec.get("isolating"))
+        ):
             open_end += 1
             n = n.last_child
         return cls(fragment, open_start, open_end)
@@ -176,7 +180,8 @@ def replace_outer(
         content = parent.content
         return close(
             parent,
-            content.cut(0, from_.parent_offset)
+            content
+            .cut(0, from_.parent_offset)
             .append(slice.content)
             .append(content.cut(to.parent_offset)),
         )

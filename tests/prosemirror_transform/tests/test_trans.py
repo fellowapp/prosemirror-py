@@ -91,6 +91,7 @@ def test_does_not_remove_non_excluded_marks_of_the_same_type():
         ),
     )
     tr.add_mark(0, 2, schema.mark("comment", {"id": 20}))
+    assert tr.doc.first_child is not None
     assert len(tr.doc.first_child.marks) == 2
 
 
@@ -106,8 +107,10 @@ def test_can_remote_multiple_excluded_marks():
             schema.text("hi", [schema.mark("small1"), schema.mark("small2")]),
         ),
     )
+    assert tr.doc.first_child is not None
     assert len(tr.doc.first_child.marks) == 2
     tr.add_mark(0, 2, schema.mark("big"))
+    assert tr.doc.first_child is not None
     assert len(tr.doc.first_child.marks) == 1
 
 
@@ -186,8 +189,10 @@ def test_remove_more_than_one_mark_of_same_type_from_block():
             ),
         ),
     )
+    assert tr.doc.first_child is not None
     assert len(tr.doc.first_child.marks) == 2
     tr.remove_mark(0, 2, schema.marks["comment"])
+    assert tr.doc.first_child is not None
     assert not tr.doc.first_child.marks
 
 
@@ -416,7 +421,9 @@ def test_lift(doc, expect, test_transform):
     range = doc.resolve(doc.tag.get("a")).block_range(
         doc.resolve(doc.tag.get("b") or doc.tag.get("a")),
     )
-    tr = Transform(doc).lift(range, lift_target(range))
+    target = lift_target(range)
+    assert target is not None
+    tr = Transform(doc).lift(range, target)
     test_transform(tr, expect)
 
 
@@ -471,7 +478,9 @@ def test_wrap(doc, expect, type, attrs, test_transform):
     range = doc.resolve(doc.tag.get("a")).block_range(
         doc.resolve(doc.tag.get("b") or doc.tag.get("a")),
     )
-    tr = Transform(doc).wrap(range, find_wrapping(range, schema.nodes[type], attrs))
+    wrappers = find_wrapping(range, schema.nodes[type], attrs)
+    assert wrappers is not None
+    tr = Transform(doc).wrap(range, wrappers)
     test_transform(tr, expect)
 
 
@@ -882,7 +891,7 @@ class TestTopLevelMarkReplace:
     ms = Schema({
         "nodes": {
             **schema.spec["nodes"],
-            "doc": {**schema.spec["nodes"]["doc"], "marks": "_"},  # type: ignore
+            "doc": {**schema.spec["nodes"]["doc"], "marks": "_"},
         },
         "marks": schema.spec["marks"],
     })
@@ -917,13 +926,14 @@ class TestTopLevelMarkReplace:
             ).slice(1, 3),
         )
         assert tr.doc.child_count == 2
+        assert tr.doc.last_child is not None
         assert len(tr.doc.last_child.marks) == 1
 
 
 class TestEnforcingHeadingAndBody:
     nodes_sepc = schema.spec["nodes"].copy()
     nodes_sepc.update({
-        "doc": {**nodes_sepc["doc"], "content": "heading body"},  # type: ignore
+        "doc": {**nodes_sepc["doc"], "content": "heading body"},
         "body": {"content": "block+"},
     })
     hb_schema = Schema({"nodes": nodes_sepc, "marks": schema.spec["marks"]})

@@ -49,7 +49,7 @@ class AddMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Node | None = None) -> Step:
+    def invert(self, doc: Node) -> Step:
         return RemoveMarkStep(self.from_, self.to, self.mark)
 
     def map(self, mapping: Mappable) -> Step | None:
@@ -124,7 +124,7 @@ class RemoveMarkStep(Step):
         )
         return StepResult.from_replace(doc, self.from_, self.to, slice)
 
-    def invert(self, doc: Node | None = None) -> Step:
+    def invert(self, doc: Node) -> Step:
         return AddMarkStep(self.from_, self.to, self.mark)
 
     def map(self, mapping: Mappable) -> Step | None:

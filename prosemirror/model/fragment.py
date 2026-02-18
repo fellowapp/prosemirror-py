@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -46,7 +46,7 @@ class Fragment:
             if (
                 end > from_
                 and f(child, node_start + pos, parent, i) is not False
-                and getattr(child.content, "size", None)
+                and child.content.size
             ):
                 start = pos + 1
                 child.nodes_between(
@@ -192,7 +192,11 @@ class Fragment:
         return len(self.content)
 
     def child(self, index: int) -> "Node":
-        return self.content[index]
+        found = self.content[index] if index < len(self.content) else None
+        if not found:
+            msg = f"Index {index} out of range for {self}"
+            raise IndexError(msg)
+        return found
 
     def maybe_child(self, index: int) -> Optional["Node"]:
         try:
@@ -297,8 +301,8 @@ class Fragment:
             return cls.empty
         if isinstance(nodes, Fragment):
             return nodes
-        if isinstance(nodes, Iterable):
-            return cls.from_array(list(nodes))
+        if isinstance(nodes, Sequence):
+            return cls.from_array(cast(list["Node"], list(nodes)))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
         msg = f"cannot convert {nodes!r} to a fragment"

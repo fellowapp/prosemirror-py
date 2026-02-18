@@ -292,7 +292,9 @@ def test_fill3_before(expr, before, mid, after, left, right):
     if left:
         left = Node.from_json(schema, left)
         right = Node.from_json(schema, right)
+        assert a is not None
         assert a.eq(left.content)
+        assert b
         assert b.eq(right.content)
     else:
         assert not b

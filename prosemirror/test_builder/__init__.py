@@ -1,5 +1,3 @@
-# type: ignore
-
 from typing import Any
 
 from prosemirror.model import Node, Schema

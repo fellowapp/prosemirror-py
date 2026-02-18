@@ -721,7 +721,8 @@ class ParseContext:
                             remove = m.add_to_set(remove)
                 else:
                     add = (
-                        self.parser.schema.marks[cast(str, rule.mark)]
+                        self.parser.schema
+                        .marks[cast(str, rule.mark)]
                         .create(rule.attrs)
                         .add_to_set(add)
                     )
@@ -1042,7 +1043,8 @@ class ParseContext:
             d = context.depth
             while d >= 0:
                 default = (
-                    context.node(d)
+                    context
+                    .node(d)
                     .content_match_at(context.index_after(d))
                     .default_type
                 )
@@ -1230,7 +1232,7 @@ def get_node_type(element: DOMNode) -> int:
 
 
 def from_html(schema: Schema[Any, Any], html: str) -> JSONDict:
-    fragment = lxml.html.fragment_fromstring(html, create_parent="document-fragment")  # type: ignore[arg-type]
+    fragment = lxml.html.fragment_fromstring(html, create_parent="document-fragment")
 
     prose_doc = DOMParser.from_schema(schema).parse(fragment)
 

@@ -41,13 +41,12 @@ Changelog = "https://github.com/fellowapp/prosemirror-py/releases"
 
 [dependency-groups]
 dev = [
-    "codecov~=2.1",
-    "coverage~=7.6",
-    "mypy~=1.15",
-    "pyright>=1.1.396",
-    "pytest~=8.3",
-    "pytest-cov~=6.0",
-    "ruff~=0.9",
+    "codecov>=2.1",
+    "coverage>=7.6",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
+    "ty>=0.0.17",
     "types-lxml>=2025.2.24",
 ]
 
@@ -68,7 +67,7 @@ select = [
     "UP",
     "W",
 ]
-ignore = ["COM812"]
+ignore = ["COM812", "RUF067"]
 preview = true
 
 [tool.ruff.lint.per-file-ignores]
