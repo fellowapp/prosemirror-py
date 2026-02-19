@@ -249,7 +249,7 @@ def _render_spec(
             if " " in name[1:]:
                 msg = "XML namespaces are not supported"
                 raise NotImplementedError(msg)
-            dom.attrs[name] = value
+            dom.attrs[name] = str(value)
     for i in range(start, len(structure)):
         child = structure[i]
         if child == 0:
