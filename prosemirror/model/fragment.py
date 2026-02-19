@@ -206,13 +206,15 @@ class Fragment:
         return len(self.content)
 
     def child(self, index: int) -> "Node":
-        found = self.content[index] if index < len(self.content) else None
+        found = self.content[index] if 0 <= index < len(self.content) else None
         if not found:
             msg = f"Index {index} out of range for {self}"
             raise IndexError(msg)
         return found
 
     def maybe_child(self, index: int) -> Optional["Node"]:
+        if index < 0:
+            return None
         try:
             return self.content[index]
         except IndexError:
