@@ -228,7 +228,11 @@ _RESOLVE_CACHE_SIZE = 12
 
 class _ResolveCache:
     def __init__(self, doc: "Node") -> None:
-        self.doc_ref = weakref.ref(doc)
+        doc_id = id(doc)
+        self.doc_ref = weakref.ref(
+            doc,
+            lambda _ref: _resolve_cache.pop(doc_id, None),
+        )
         self.elts: list[ResolvedPos | None] = [None] * _RESOLVE_CACHE_SIZE
         self.i = 0
 
