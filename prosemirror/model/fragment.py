@@ -68,8 +68,8 @@ class Fragment:
         self,
         from_: int,
         to: int,
-        block_separator: str = "",
-        leaf_text: Callable[["Node"], str] | str = "",
+        block_separator: str | None = None,
+        leaf_text: Callable[["Node"], str] | str | None = None,
     ) -> str:
         text = []
         first = True

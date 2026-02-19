@@ -87,8 +87,8 @@ class Node:
         self,
         from_: int,
         to: int,
-        block_separator: str = "",
-        leaf_text: Callable[["Node"], str] | str = "",
+        block_separator: str | None = None,
+        leaf_text: Callable[["Node"], str] | str | None = None,
     ) -> str:
         return self.content.text_between(from_, to, block_separator, leaf_text)
 
@@ -400,8 +400,8 @@ class TextNode(Node):
         self,
         from_: int,
         to: int,
-        block_separator: str = "",
-        leaf_text: Callable[["Node"], str] | str = "",
+        block_separator: str | None = None,
+        leaf_text: Callable[["Node"], str] | str | None = None,
     ) -> str:
         return self.text.encode("utf-16-le")[2 * from_ : 2 * to].decode("utf-16-le")
 
