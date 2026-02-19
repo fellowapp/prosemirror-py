@@ -85,7 +85,11 @@ class Fragment:
             node_text: str
             if node.is_text:
                 text_node = cast("TextNode", node)
-                node_text = text_node.text[max(from_, pos) - pos : to - pos]
+                start = max(from_, pos) - pos
+                end = to - pos
+                node_text = text_node.text.encode("utf-16-le")[
+                    2 * start : 2 * end
+                ].decode("utf-16-le")
             elif node.is_leaf:
                 if leaf_text:
                     node_text = leaf_text(node) if callable(leaf_text) else leaf_text
