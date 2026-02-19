@@ -277,9 +277,14 @@ def _validate_type(
         name = (
             "null"
             if value is None
-            else {str: "string", int: "number", float: "number", bool: "boolean"}.get(
-                type(value), type(value).__name__
-            )
+            else {
+                str: "string",
+                int: "number",
+                float: "number",
+                bool: "boolean",
+                dict: "object",
+                list: "object",
+            }.get(type(value), type(value).__name__)
         )
         if name not in types:
             msg = (
