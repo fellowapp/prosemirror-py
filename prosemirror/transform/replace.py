@@ -436,7 +436,7 @@ class Fitter:
 
 def drop_from_fragment(fragment: Fragment, depth: int, count: int) -> Fragment:
     if depth == 0:
-        return fragment.cut_by_index(count)
+        return fragment.cut_by_index(count, fragment.child_count)
     first_child = fragment.first_child
     assert first_child
     return fragment.replace_child(

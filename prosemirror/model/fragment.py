@@ -166,7 +166,7 @@ class Fragment:
             i += 1
         return Fragment(result, size)
 
-    def cut_by_index(self, from_: int, to: int | None = None) -> "Fragment":
+    def cut_by_index(self, from_: int, to: int) -> "Fragment":
         if from_ == to:
             return Fragment.empty
         if from_ == 0 and to == len(self.content):
