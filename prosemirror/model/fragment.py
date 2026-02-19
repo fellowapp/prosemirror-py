@@ -321,7 +321,12 @@ class Fragment:
             return cls.from_array(cast(list["Node"], list(nodes)))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
-        msg = f"cannot convert {nodes!r} to a fragment"
+        hint = (
+            " (looks like multiple versions of prosemirror-model were loaded)"
+            if hasattr(nodes, "nodes_between")
+            else ""
+        )
+        msg = f"Can not convert {nodes!r} to a Fragment{hint}"
         raise ValueError(msg)
 
     def to_string_inner(self) -> str:
