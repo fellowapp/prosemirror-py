@@ -350,7 +350,7 @@ def test_join(doc, expect, test_transform):
 )
 def test_split(doc, expect, args, test_transform):
     if expect == "fail":
-        with pytest.raises(TransformError):
+        with pytest.raises((TransformError, ValueError)):
             Transform(doc).split(doc.tag.get("a"), *args)
     else:
         tr = Transform(doc).split(doc.tag.get("a"), *args)
