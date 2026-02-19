@@ -179,7 +179,7 @@ class DOMParser:
 
     def parse_slice(self, dom_: DOMNode, options: ParseOptions | None = None) -> Slice:
         if options is None:
-            options = ParseOptions(preserve_whitespace=True)
+            options = ParseOptions()
 
         context = ParseContext(self, options, True)
 
