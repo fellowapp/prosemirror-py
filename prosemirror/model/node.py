@@ -131,6 +131,8 @@ class Node:
         return self.__class__(self.type, self.attrs, self.content, marks)
 
     def cut(self, from_: int, to: int | None = None) -> "Node":
+        if to is None:
+            to = self.content.size
         if from_ == 0 and to == self.content.size:
             return self
         return self.copy(self.content.cut(from_, to))
