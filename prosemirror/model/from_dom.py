@@ -140,16 +140,8 @@ class DOMParser:
             if r.node is not None and re.match(r"^(ul|ol)\b", r.tag) is not None
         ])
 
-    def parse(
-        self,
-        dom_: lxml.html.HtmlElement,
-        options: ParseOptions | None = None,
-    ) -> Node:
-        if options is None:
-            options = ParseOptions()
-
-        context = ParseContext(self, options, False)
-
+    @staticmethod
+    def _wrap_lxml_text(dom_: lxml.html.HtmlElement) -> None:
         for d in itertools.chain([dom_], dom_.iterdescendants()):
             if (
                 d.text is not None
@@ -169,6 +161,18 @@ class DOMParser:
                     parent.insert(parent.index(d) + 1, child)
                     d.tail = None
 
+    def parse(
+        self,
+        dom_: lxml.html.HtmlElement,
+        options: ParseOptions | None = None,
+    ) -> Node:
+        if options is None:
+            options = ParseOptions()
+
+        context = ParseContext(self, options, False)
+
+        self._wrap_lxml_text(dom_)
+
         context.add_all(dom_, Mark.none, options.from_, options.to_)
 
         return cast(Node, context.finish())
@@ -178,6 +182,8 @@ class DOMParser:
             options = ParseOptions(preserve_whitespace=True)
 
         context = ParseContext(self, options, True)
+
+        self._wrap_lxml_text(dom_)
 
         context.add_all(dom_, Mark.none, options.from_, options.to_)
 
