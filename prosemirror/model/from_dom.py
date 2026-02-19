@@ -646,11 +646,11 @@ class ParseContext:
             normalize_list(dom_)
 
         rule_id = self.parser.match_tag(dom_, self, match_after)
-        rule = (
-            self.options.rule_from_node(dom_)
-            if self.options.rule_from_node
-            else rule_id
-        )
+        rule: TagParseRule | None = None
+        if self.options.rule_from_node:
+            rule = self.options.rule_from_node(dom_)
+        if not rule:
+            rule = rule_id
 
         if (rule and rule.ignore) or name in IGNORE_TAGS:
             self.find_inside(dom_)
