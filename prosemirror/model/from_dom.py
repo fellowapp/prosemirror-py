@@ -443,7 +443,7 @@ class NodeContext:
         return self.match.find_wrapping(node.type)
 
     def finish(self, open_end: bool) -> Node | Fragment:
-        if not self.options & OPT_PRESERVE_WS:
+        if not (self.options & OPT_PRESERVE_WS):
             try:
                 last: Node | None = self.content[-1]
             except IndexError:
