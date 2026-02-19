@@ -397,7 +397,7 @@ class TextNode(Node):
         block_separator: str = "",
         leaf_text: Callable[["Node"], str] | str = "",
     ) -> str:
-        return self.text[from_:to]
+        return self.text.encode("utf-16-le")[2 * from_ : 2 * to].decode("utf-16-le")
 
     @property
     def node_size(self) -> int:
