@@ -1067,18 +1067,14 @@ class ParseContext:
         )
         min_depth = -(option.depth + 1 if option is not None else 0) + int(not use_root)
 
-        def match(i: int, depth: int) -> bool:
-            while i >= 0:
+        def match(start: int, depth: int) -> bool:
+            for i in range(start, -1, -1):
                 part = parts[i]
 
                 if part == "":
                     if i == len(parts) - 1 or i == 0:
                         continue
-                    while depth >= min_depth:
-                        if match(i - 1, depth):
-                            return True
-                        depth -= 1
-                    return False
+                    return any(match(i - 1, d) for d in range(depth, min_depth - 1, -1))
                 else:
                     if depth > 0 or (depth == 0 and use_root):
                         next: NodeType | None = self.nodes[depth].type
@@ -1094,7 +1090,6 @@ class ParseContext:
                         return False
 
                     depth -= 1
-                i -= 1
             return True
 
         return match(len(parts) - 1, self.open)
