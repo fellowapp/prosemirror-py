@@ -464,6 +464,9 @@ def nfa(
             return [edge(cur)]
         elif expr["type"] == "name":
             return [edge(from_, None, expr["value"])]
+        else:
+            msg = "Unknown expr type"
+            raise ValueError(msg)
 
     connect(compile(expr, 0), node())
     return nfa_
