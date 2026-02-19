@@ -163,7 +163,12 @@ class DOMSerializer:
 
     @classmethod
     def from_schema(cls, schema: Schema[Any, Any]) -> "DOMSerializer":
-        return cls(cls.nodes_from_schema(schema), cls.marks_from_schema(schema))
+        cached = schema.cached.get("domSerializer")
+        if isinstance(cached, DOMSerializer):
+            return cached
+        result = cls(cls.nodes_from_schema(schema), cls.marks_from_schema(schema))
+        schema.cached["domSerializer"] = result
+        return result
 
     @classmethod
     def nodes_from_schema(
