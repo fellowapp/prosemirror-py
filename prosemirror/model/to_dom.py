@@ -62,7 +62,7 @@ class Element(DocumentFragment):
         return f"<{open_tag_str}>{children_str}</{self.name}>"
 
 
-HTMLOutputSpec = str | Sequence[Any] | Element
+HTMLOutputSpec = str | Sequence[Any] | Element | dict[str, Any]
 
 
 class DOMSerializer:
@@ -219,6 +219,9 @@ def _render_spec(
         return html.escape(structure), None
     if isinstance(structure, Element):
         return structure, None
+    if isinstance(structure, dict):
+        d = cast(dict[str, Any], structure)
+        return d["dom"], d.get("contentDOM")
     tag_name = structure[0]
     if not isinstance(tag_name, str):
         msg = "Invalid array passed to renderSpec"
