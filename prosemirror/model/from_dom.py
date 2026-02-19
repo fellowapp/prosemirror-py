@@ -713,7 +713,7 @@ class ParseContext:
 
     def ignore_fallback(self, dom_: DOMNode, marks: list[Mark]) -> None:
         if str(dom_.tag).upper() == "BR" and (
-            not self.top.type or self.top.type.inline_content
+            not self.top.type or not self.top.type.inline_content
         ):
             self.find_place(self.parser.schema.text("-"), marks, True)
 
