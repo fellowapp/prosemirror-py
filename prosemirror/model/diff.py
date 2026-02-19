@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, TypedDict, cast
 
+from prosemirror.utils import text_length
+
 if TYPE_CHECKING:
     from prosemirror.model.fragment import Fragment
     from prosemirror.model.node import TextNode
@@ -26,10 +28,12 @@ def find_diff_start(a: "Fragment", b: "Fragment", pos: int) -> int | None:
             text_a = cast("TextNode", child_a).text
             text_b = cast("TextNode", child_b).text
             if text_a != text_b:
+                a16 = text_a.encode("utf-16-le")
+                b16 = text_b.encode("utf-16-le")
                 j = 0
-                while j < len(text_a) and j < len(text_b) and text_a[j] == text_b[j]:
+                while j < len(a16) and j < len(b16) and a16[j] == b16[j]:
                     j += 1
-                    pos += 1
+                pos += j // 2
                 return pos
         if child_a.content.size or child_b.content.size:
             inner = find_diff_start(child_a.content, child_b.content, pos + 1)
@@ -61,10 +65,15 @@ def find_diff_end(a: "Fragment", b: "Fragment", pos_a: int, pos_b: int) -> Diff 
             text_b = cast("TextNode", child_b).text
             if text_a != text_b:
                 same = 0
-                min_size = min(len(text_a), len(text_b))
+                min_size = min(text_length(text_a), text_length(text_b))
+                a16 = text_a.encode("utf-16-le")
+                b16 = text_b.encode("utf-16-le")
+                a16_len = len(a16)
+                b16_len = len(b16)
                 while (
                     same < min_size
-                    and text_a[len(text_a) - same - 1] == text_b[len(text_b) - same - 1]
+                    and a16[a16_len - 2 * same - 2 : a16_len - 2 * same]
+                    == b16[b16_len - 2 * same - 2 : b16_len - 2 * same]
                 ):
                     same += 1
                     pos_a -= 1
