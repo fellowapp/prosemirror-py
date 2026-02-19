@@ -24,6 +24,8 @@ class ChildInfo(TypedDict):
 
 
 class Node:
+    text: str | None = None
+
     def __init__(
         self,
         type: "NodeType",
@@ -365,6 +367,8 @@ class Node:
 
 
 class TextNode(Node):
+    text: str
+
     def __init__(
         self,
         type: "NodeType",
