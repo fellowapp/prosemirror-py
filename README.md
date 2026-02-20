@@ -78,6 +78,76 @@ assert tr.doc.to_json() == {
 }
 ```
 
+## Differences from Upstream
+
+While the translation follows the original TypeScript implementation as closely
+as possible, some adaptations were necessary for Python. These are documented
+here for reference.
+
+### Naming Conventions
+
+Python's snake_case naming is used throughout:
+
+- `camelCase` methods/properties become `snake_case` (e.g. `nodeSize` ->
+  `node_size`, `isBlock` -> `is_block`, `textBetween` -> `text_between`)
+- `from` (a Python keyword) becomes `from_` in parameter names and the
+  `Fragment.from_()` static method
+
+### DOM Handling
+
+The upstream uses browser DOM APIs. The Python port uses
+[lxml](https://lxml.de/) for parsing and a lightweight custom `Element` /
+`DocumentFragment` model for serialization:
+
+- **`DOMParser`**: Uses `lxml.html` for HTML parsing. Text nodes are wrapped in
+  `<lxmltext>` pseudo-elements since lxml doesn't represent text nodes as
+  separate child elements. CSS selector matching uses `lxml.cssselect`.
+- **`DOMSerializer`**: Outputs HTML strings via custom `Element` and
+  `DocumentFragment` classes rather than creating real DOM nodes.
+- **XML namespaces**: Not supported (raises `NotImplementedError`). This only
+  affects SVG or MathML node serialization.
+
+### String Length and Slicing (UTF-16 Semantics)
+
+JavaScript strings use UTF-16 encoding, so `string.length` counts UTF-16 code
+units (surrogate pairs count as 2). The Python port preserves these semantics
+using a `text_length()` helper and UTF-16 encode/decode for slicing in:
+
+- `Node.node_size` / `TextNode.node_size`
+- `TextNode.cut()`
+- `TextNode.text_between()`
+- `Fragment.findIndex()` / `Fragment.cut()`
+- `diff.py` (character-by-character comparison)
+
+### Deep Comparison
+
+The upstream uses a custom `compareDeep` function for recursive comparison of
+arrays/objects. The Python port uses native `==`, which already performs deep
+comparison of dicts and lists.
+
+### Resolve Cache
+
+The upstream uses a `WeakMap<Node, ResolveCache>` for caching resolved
+positions. Python uses a `dict[int, _ResolveCache]` keyed by `id(doc)` with a
+`weakref.ref` callback to clean up entries when the document node is garbage
+collected.
+
+### Type System
+
+- TypeScript interfaces (`NodeSpec`, `MarkSpec`, `ParseOptions`, etc.) are
+  translated as `TypedDict` or frozen `dataclass` types.
+- Union types use `X | Y` syntax (Python 3.10+).
+
+### Additional Conveniences
+
+These are Python-specific additions not present in the upstream:
+
+- `Fragment.from_json()` accepts a JSON `str` and parses it automatically.
+- `from_dom.py` includes a `from_html()` helper to parse an HTML string
+  directly to a ProseMirror document.
+- `DOMSerializer` output type is named `HTMLOutputSpec` (instead of
+  `DOMOutputSpec`) to reflect that it produces HTML strings.
+
 ## AI Disclosure
 
 The initial version of this translation was written manually in 2019. AI is now
