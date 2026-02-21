@@ -92,7 +92,9 @@ class Fragment:
                 ].decode("utf-16-le")
             elif node.is_leaf:
                 if leaf_text:
-                    node_text = leaf_text(node) if callable(leaf_text) else leaf_text
+                    node_text = (
+                        leaf_text if isinstance(leaf_text, str) else leaf_text(node)
+                    )
                 elif (node_leaf_text := node.type.spec.get("leafText")) is not None:
                     node_text = node_leaf_text(node)
                 else:

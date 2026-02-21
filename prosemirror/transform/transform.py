@@ -1,6 +1,6 @@
 import re
 from collections.abc import Callable
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, cast
 
 from prosemirror.model import (
     ContentMatch,
@@ -552,13 +552,18 @@ class Transform:
             raise ValueError(msg)
         map_from = len(self.steps)
 
+        get_attrs = cast(
+            "Callable[[Node], Attrs] | None", attrs if callable(attrs) else None
+        )
+        static_attrs = cast("Attrs | None", None if callable(attrs) else attrs)
+
         def iteratee(
             node: "Node",
             pos: int,
             parent: Optional["Node"],
             i: int,
         ) -> bool | None:
-            attrs_here = attrs(node) if callable(attrs) else attrs
+            attrs_here = get_attrs(node) if get_attrs else static_attrs
             if (
                 node.is_textblock
                 and not node.has_markup(type, attrs_here)

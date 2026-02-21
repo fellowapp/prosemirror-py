@@ -811,10 +811,10 @@ class ParseContext:
 
             if isinstance(rule.content_element, str):
                 content_dom = dom_.cssselect(rule.content_element)[0]
-            elif callable(rule.content_element):
-                content_dom = rule.content_element(dom_)
-            elif rule.content_element is not None:
+            elif isinstance(rule.content_element, DOMNode):
                 content_dom = rule.content_element
+            elif rule.content_element is not None:
+                content_dom = rule.content_element(dom_)
 
             self.find_around(dom_, content_dom, True)
             self.add_all(content_dom, marks)
