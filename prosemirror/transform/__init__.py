@@ -20,6 +20,7 @@ from .structure import (
     lift_target,
 )
 from .transform import Transform, TransformError
+from .recreate_transform import RecreateOptions, RecreateTransform, recreate_transform
 
 __all__ = [
     "AddMarkStep",
@@ -32,11 +33,14 @@ __all__ = [
     "RemoveNodeMarkStep",
     "ReplaceAroundStep",
     "ReplaceStep",
+    "RecreateOptions",
+    "RecreateTransform",
     "Step",
     "StepMap",
     "StepResult",
     "Transform",
     "TransformError",
+    "recreate_transform",
     "can_join",
     "can_split",
     "close_fragment",
