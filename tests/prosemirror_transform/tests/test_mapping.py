@@ -1,5 +1,7 @@
 import pytest
 
+from prosemirror.transform import Mapping, StepMap
+
 
 @pytest.mark.parametrize(
     ("mapping_info", "cases"),
@@ -106,3 +108,19 @@ def test_all_mapping_cases(mapping_info, cases, test_mapping, make_mapping):
 )
 def test_all_del_cases(mapping_info, pos, side, flags, test_del, make_mapping):
     test_del(make_mapping(*mapping_info), pos, side, flags)
+
+
+def test_append_map_does_not_mutate_empty_list_passed_in():
+    shared: list[StepMap] = []
+    mapping = Mapping(shared)
+    mapping.append_map(StepMap([0, 0, 1]))
+    assert shared == []
+    assert len(mapping.maps) == 1
+
+
+def test_append_map_on_slice_of_empty_mapping_leaves_original():
+    original = Mapping()
+    sliced = original.slice()
+    sliced.append_map(StepMap([0, 0, 1]))
+    assert original.maps == []
+    assert len(sliced.maps) == 1
