@@ -604,3 +604,16 @@ def test_inserts_line_break_replacements():
     result2 = from_html(s, "<p><span>one\ntwo\n\nthree</span></p>")
     result2_node = s.node_from_json(result2)
     assert str(result2_node) == 'doc(paragraph("one two three"))'
+
+
+def test_treats_body_as_block_element():
+    import lxml.html
+
+    from prosemirror.model import DOMParser as PMDOMParser
+
+    body = lxml.html.document_fromstring(
+        "<html><body><p>a</p> <p>b</p> </body></html>"
+    ).find("body")
+    assert body is not None
+    result = PMDOMParser.from_schema(schema).parse_slice(body)
+    assert str(result.content) == '<paragraph("a"), paragraph("b")>'

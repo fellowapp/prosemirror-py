@@ -317,6 +317,7 @@ BLOCK_TAGS: dict[str, bool] = {
     "article": True,
     "aside": True,
     "blockquote": True,
+    "body": True,
     "canvas": True,
     "dd": True,
     "div": True,
