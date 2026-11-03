@@ -1,4 +1,3 @@
-import weakref
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Optional, Union, cast
 
@@ -209,14 +208,16 @@ class ResolvedPos:
 
     @classmethod
     def resolve_cached(cls, doc: "Node", pos: int) -> "ResolvedPos":
-        cache = _resolve_cache.get(id(doc))
-        if cache is not None and cache.doc_ref() is doc:
+        # The cache lives on the doc, so doc -> cache -> positions -> doc is a plain
+        # cycle that gc can free. A module-level dict would keep every doc alive.
+        cache: _ResolveCache | None = doc.__dict__.get("_resolve_cache")
+        if cache is None:
+            cache = _ResolveCache()
+            doc.__dict__["_resolve_cache"] = cache
+        else:
             for elt in cache.elts:
                 if elt is not None and elt.pos == pos:
                     return elt
-        else:
-            cache = _ResolveCache(doc)
-            _resolve_cache[id(doc)] = cache
         result = cls.resolve(doc, pos)
         cache.elts[cache.i] = result
         cache.i = (cache.i + 1) % _RESOLVE_CACHE_SIZE
@@ -227,17 +228,9 @@ _RESOLVE_CACHE_SIZE = 12
 
 
 class _ResolveCache:
-    def __init__(self, doc: "Node") -> None:
-        doc_id = id(doc)
-        self.doc_ref = weakref.ref(
-            doc,
-            lambda _ref: _resolve_cache.pop(doc_id, None),
-        )
+    def __init__(self) -> None:
         self.elts: list[ResolvedPos | None] = [None] * _RESOLVE_CACHE_SIZE
         self.i = 0
-
-
-_resolve_cache: dict[int, _ResolveCache] = {}
 
 
 class NodeRange:

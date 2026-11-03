@@ -97,3 +97,20 @@ def test_pos_at_index(index, depth, pos, doc_for_pos_at_index):
 
     p_three = d.resolve(12)
     assert p_three.pos_at_index(index, depth) == pos
+
+
+def test_resolve_cache_does_not_keep_docs_alive():
+    import gc
+    import weakref
+
+    d = doc(p("hello"))
+    d.resolve(2)
+    ref = weakref.ref(d)
+    del d
+    gc.collect()
+    assert ref() is None
+
+
+def test_resolve_cache_returns_cached_position():
+    d = doc(p("hello"))
+    assert d.resolve(2) is d.resolve(2)
