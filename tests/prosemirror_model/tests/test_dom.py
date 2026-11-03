@@ -1,9 +1,10 @@
 import pytest
 
-from prosemirror.model import DOMSerializer
+from prosemirror.model import DOMSerializer, Schema
 from prosemirror.model.from_dom import from_html
+from prosemirror.model.to_dom import Element
 from prosemirror.schema.basic import schema
-from prosemirror.test_builder import out
+from prosemirror.test_builder import builders, out
 
 doc = out["doc"]
 p = out["p"]
@@ -153,6 +154,49 @@ def test_serializer_first(doc, html, desc):
 )
 def test_serializer(serializer, doc, expect, desc):
     assert str(serializer.serialize_fragment(doc.content)) == expect, desc
+
+
+def test_supports_dom_content_dom_output_spec_with_element_nodes():
+    def wrapper_to_dom(_node):
+        inner = Element("p", {"class": "inner"}, [])
+        outer = Element("div", {"class": "outer"}, [inner])
+        return {"dom": outer, "contentDOM": inner}
+
+    wrapper_schema = Schema({
+        "nodes": {
+            "doc": {"content": "wrapper+"},
+            "wrapper": {
+                "content": "text*",
+                "toDOM": wrapper_to_dom,
+                "parseDOM": [{"tag": "div.outer", "contentElement": "p.inner"}],
+            },
+            "text": {},
+        }
+    })
+    b = builders(wrapper_schema, {})
+    dom = DOMSerializer.from_schema(wrapper_schema).serialize_fragment(
+        b["doc"](b["wrapper"]("hello")).content
+    )
+    assert str(dom) == '<div class="outer"><p class="inner">hello</p></div>'
+
+
+def test_supports_raw_element_output_spec():
+    def leaf_to_dom(_node):
+        el = Element("hr", {}, [])
+        return el
+
+    leaf_schema = Schema({
+        "nodes": {
+            "doc": {"content": "leaf+"},
+            "leaf": {"toDOM": leaf_to_dom, "parseDOM": [{"tag": "hr"}]},
+            "text": {},
+        }
+    })
+    b = builders(leaf_schema, {})
+    dom = DOMSerializer.from_schema(leaf_schema).serialize_fragment(
+        b["doc"](b["leaf"]()).content
+    )
+    assert str(dom) == "<hr>"
 
 
 def test_html_is_escaped():
