@@ -481,7 +481,7 @@ class NodeContext:
             return self.content[0].is_inline
 
         parent = node.getparent()
-        if parent:
+        if parent is not None:
             return str(parent.tag).lower() not in BLOCK_TAGS
         return False
 
