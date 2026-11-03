@@ -3,13 +3,14 @@ from typing import (
     Any,
     Generic,
     Literal,
+    NotRequired,
     Optional,
     TypeAlias,
     TypeVar,
     cast,
 )
 
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 from prosemirror.model.content import ContentMatch
 from prosemirror.model.fragment import Fragment

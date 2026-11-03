@@ -139,7 +139,7 @@ ordinary reference cycle that the garbage collector can free.
 
 - TypeScript interfaces (`NodeSpec`, `MarkSpec`, `ParseOptions`, etc.) are
   translated as `TypedDict` or frozen `dataclass` types.
-- Union types use `X | Y` syntax (Python 3.10+).
+- Union types use `X | Y` syntax.
 
 ### Additional Conveniences
 
