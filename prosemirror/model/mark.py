@@ -74,7 +74,6 @@ class Mark:
             msg = f"There is no mark type {name} in this schema"
             raise ValueError(msg)
         mark = type.create(cast(JSONDict | None, json_data.get("attrs")))
-        type.check_attrs(mark.attrs)
         return mark
 
     @classmethod

@@ -43,6 +43,12 @@ custom_em = custom["em"].create()
 custom_strong = custom["strong"].create()
 
 
+class TestCreate:
+    def test_checks_attributes_on_mark_creation(self):
+        with pytest.raises(ValueError, match="Expected value of type string"):
+            schema.marks["link"].create({"href": 55})
+
+
 @pytest.mark.parametrize(
     ("a", "b", "res"),
     [

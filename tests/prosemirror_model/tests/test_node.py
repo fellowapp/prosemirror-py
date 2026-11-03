@@ -39,6 +39,14 @@ custom_schema: Schema[
 })
 
 
+class TestCreate:
+    def test_checks_attributes_on_node_creation(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="Expected value of type number"):
+            schema.nodes["heading"].create({"level": "huh"})
+
+
 class TestToString:
     def test_nesting(self):
         node = doc(ul(li(p("hey"), p()), li(p("foo"))))

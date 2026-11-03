@@ -11,7 +11,7 @@ from .resolvedpos import ResolvedPos
 
 if TYPE_CHECKING:
     from .content import ContentMatch
-    from .schema import MarkType, NodeType, Schema
+    from .schema import Attributes, MarkType, NodeType, Schema
 
 
 empty_attrs: JSONDict = {}
@@ -310,10 +310,10 @@ class Node:
 
     def check(self) -> None:
         self.type.check_content(self.content)
-        self.type.check_attrs(self.attrs)
+        check_attrs(self.type.attrs, self.attrs, "node", self.type.name)
         copy = Mark.none
         for mark in self.marks:
-            mark.type.check_attrs(mark.attrs)
+            check_attrs(mark.type.attrs, mark.attrs, "mark", mark.type.name)
             copy = mark.add_to_set(copy)
         if not Mark.same_set(copy, self.marks):
             msg = (
@@ -364,7 +364,6 @@ class Node:
             content,
             marks,
         )
-        node.type.check_attrs(node.attrs)
         return node
 
 
@@ -447,6 +446,21 @@ def wrap_marks(marks: list[Mark], str: str) -> str:
         str = marks[i].type.name + "(" + str + ")"
         i -= 1
     return str
+
+
+def check_attrs(
+    attrs: "Attributes",
+    values: Attrs,
+    type_str: str,
+    name: str,
+) -> None:
+    for attr_name in values:
+        if attr_name not in attrs:
+            msg = f"Unsupported attribute {attr_name} for {type_str} of type {name}"
+            raise ValueError(msg)
+    for attr_name, attr in attrs.items():
+        if attr.validate:
+            attr.validate(values[attr_name])
 
 
 def is_text(node: Node) -> TypeGuard[TextNode]:
