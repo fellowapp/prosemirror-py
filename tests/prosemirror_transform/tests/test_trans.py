@@ -1250,3 +1250,25 @@ def test_changed_range_deletions_before_earlier_step():
     ch = tr.changed_range()
     assert ch is not None
     assert f"{ch['from']}-{ch['to']}" == "1-4"
+
+
+def test_drops_steps_that_produce_invalid_content():
+    schema = Schema({
+        "nodes": {
+            "doc": {"content": "block+"},
+            "paragraph": {"group": "block", "content": "inline*"},
+            "heading": {"group": "block", "content": "text*"},
+            "special": {"group": "inline", "inline": True},
+            "text": {"group": "inline"},
+        }
+    })
+    doc = schema.node(
+        "doc", None, [schema.node("paragraph", None, [schema.text("abc")])]
+    )
+
+    tr1 = Transform(doc).insert(2, schema.node("special"))
+    tr2 = Transform(doc).set_block_type(1, 4, schema.nodes["heading"])
+    step = tr1.steps[0].map(tr2.mapping)
+    assert step is not None
+    tr2.maybe_step(step)
+    assert len(tr2.steps) == 1
