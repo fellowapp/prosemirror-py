@@ -1,10 +1,38 @@
+import pytest
+
+from prosemirror.model import Fragment, Slice
 from prosemirror.test_builder import out
 from prosemirror.test_builder import test_schema as schema
-from prosemirror.transform import Transform, find_wrapping
+from prosemirror.transform import (
+    ReplaceAroundStep,
+    Transform,
+    TransformError,
+    find_wrapping,
+)
 
 doc = out["doc"]
 blockquote = out["blockquote"]
 p = out["p"]
+
+
+def test_replace_around_step_verifies_inserted_content_fits():
+    tr = Transform(doc(p("a")))
+    with pytest.raises(TransformError, match="Content does not fit in gap"):
+        tr.step(
+            ReplaceAroundStep(
+                1, 2, 1, 2, Slice(Fragment.from_(blockquote()), 0, 0), 1, True
+            )
+        )
+
+
+def test_replace_around_step_considers_slice_openness():
+    tr = Transform(doc(blockquote(p("x"))))
+    tr.step(
+        ReplaceAroundStep(
+            0, 1, 1, 1, Slice(Fragment.from_(blockquote()), 0, 1), 1, True
+        )
+    )
+    assert tr.doc.eq(doc(blockquote(p("x"))))
 
 
 def test_replace_around_step_map_wrap_insertion():
