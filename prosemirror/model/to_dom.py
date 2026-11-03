@@ -120,6 +120,8 @@ class DOMSerializer:
         return tgt
 
     def serialize_node_inner(self, node: Node) -> HTMLNode:
+        if node.is_text:
+            return html.escape(cast(str, node.text))
         dom, content_dom = _render_spec(
             self.nodes[node.type.name](node),
             None,
@@ -159,6 +161,10 @@ class DOMSerializer:
         xml_ns: str | None = None,
         block_arrays_in: Mapping[str, Any] | None = None,
     ) -> tuple[HTMLNode, Element | None]:
+        # Kludge for backwards-compatibility with accidental original behavior
+        if isinstance(structure, str):
+            return html.escape(structure), None
+
         return _render_spec(structure, xml_ns, block_arrays_in)
 
     @classmethod
@@ -211,12 +217,10 @@ def _suspicious_attributes(attrs: Mapping[str, Any]) -> list[Any] | None:
 
 
 def _render_spec(
-    structure: HTMLOutputSpec | str,
+    structure: HTMLOutputSpec,
     xml_ns: str | None = None,
     block_arrays_in: Mapping[str, Any] | None = None,
 ) -> tuple[HTMLNode, Element | None]:
-    if isinstance(structure, str):
-        return html.escape(structure), None
     if isinstance(structure, Element):
         return structure, None
     if isinstance(structure, dict):
@@ -257,13 +261,16 @@ def _render_spec(
                 msg = "Content hole must be the only child of its parent node"
                 raise Exception(msg)
             return dom, dom
-        inner, inner_content = _render_spec(child, xml_ns, block_arrays_in)
-        dom.children.append(inner)
-        if inner_content:
-            if content_dom:
-                msg = "Multiple content holes"
-                raise Exception(msg)
-            content_dom = inner_content
+        elif isinstance(child, str):
+            dom.children.append(html.escape(child))
+        else:
+            inner, inner_content = _render_spec(child, xml_ns, block_arrays_in)
+            dom.children.append(inner)
+            if inner_content:
+                if content_dom:
+                    msg = "Multiple content holes"
+                    raise Exception(msg)
+                content_dom = inner_content
     return dom, content_dom
 
 
