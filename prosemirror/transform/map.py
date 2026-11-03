@@ -192,7 +192,8 @@ class Mapping(Mappable):
         self.from_ = from_ or 0
         self.to = len(self.maps) if to is None else to
         self.mirror = mirror
-        self._own_data = not (maps or mirror)
+        # An empty list is still the caller's list, so test for None, not truthiness.
+        self._own_data = maps is None and mirror is None
 
     def slice(self, from_: int = 0, to: int | None = None) -> "Mapping":
         if to is None:
