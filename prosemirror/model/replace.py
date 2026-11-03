@@ -39,17 +39,31 @@ def insert_into(
     content: Fragment,
     dist: int,
     insert: Fragment,
+    open_start: int,
+    open_end: int,
     parent: Optional["Node"],
 ) -> Fragment | None:
     a = content.find_index(dist)
     index, offset = a["index"], a["offset"]
     child = content.maybe_child(index)
     if offset == dist or cast("Node", child).is_text:
-        if parent and not parent.can_replace(index, index, insert):
+        if (
+            parent
+            and open_start <= 0
+            and open_end <= 0
+            and not parent.can_replace(index, index, insert)
+        ):
             return None
         return content.cut(0, dist).append(insert).append(content.cut(dist))
     assert child
-    inner = insert_into(child.content, dist - offset - 1, insert, child)
+    inner = insert_into(
+        child.content,
+        dist - offset - 1,
+        insert,
+        open_start - 1 if index == 0 else 0,
+        open_end - 1 if index == content.child_count - 1 else 0,
+        child,
+    )
     if inner:
         return content.replace_child(index, child.copy(inner))
     return None
@@ -68,7 +82,14 @@ class Slice:
         return self.content.size - self.open_start - self.open_end
 
     def insert_at(self, pos: int, fragment: Fragment) -> Optional["Slice"]:
-        content = insert_into(self.content, pos + self.open_start, fragment, None)
+        content = insert_into(
+            self.content,
+            pos + self.open_start,
+            fragment,
+            self.open_start + 1,
+            self.open_end + 1,
+            None,
+        )
         if content:
             return Slice(content, self.open_start, self.open_end)
         return None
