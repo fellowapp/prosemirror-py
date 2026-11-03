@@ -1201,12 +1201,16 @@ def test_remove_node_mark_multiple_instances(test_transform):
 
 
 def test_set_block_type_function_attrs(test_transform):
+    def bump_level(node):
+        level = node.attrs.get("level")
+        return {"level": (level if isinstance(level, int) else 0) + 1}
+
     d = doc("<a>", h1("a"), p("b"), "<b>")
     tr = Transform(d).set_block_type(
         d.tag["a"],
         d.tag["b"],
         schema.nodes["heading"],
-        lambda node: {"level": (node.attrs.get("level") or 0) + 1},
+        bump_level,
     )
     test_transform(tr, doc(h2("a"), h1("b")))
 

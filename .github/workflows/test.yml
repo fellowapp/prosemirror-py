@@ -11,25 +11,43 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install uv
       - run: uv venv
       - run: uv sync
-      - run: uv run pytest --cov=./prosemirror/
-      - run: uv run codecov
-        if: matrix.python-version == '3.14'
+      - run: uv run pytest --cov=./prosemirror/ --cov-report=term --cov-report=json:coverage.json
+      # The two steps below report coverage changes on PRs. They are informational
+      # only and never fail the check, even when coverage drops.
+      - name: Measure coverage on the PR base
+        if: matrix.python-version == '3.14' && github.event_name == 'pull_request'
+        continue-on-error: true
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --depth=1 origin "$BASE_SHA"
+          git worktree add --detach "$RUNNER_TEMP/base" "$BASE_SHA"
+          cd "$RUNNER_TEMP/base"
+          uv sync
+          uv run pytest -q --cov=./prosemirror/ --cov-report=json:"$RUNNER_TEMP/base-coverage.json"
+      - name: Comment when coverage changed
+        if: matrix.python-version == '3.14' && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python .github/scripts/coverage_comment.py coverage.json "$RUNNER_TEMP/base-coverage.json" "${{ github.event.pull_request.number }}"
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.14"

@@ -1,1 +1,1 @@
-from .schema_list import *  # noqa
+from .schema_list import *  # ruff: ignore[undefined-local-with-import-star]

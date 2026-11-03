@@ -320,7 +320,7 @@ class Fragment:
         if isinstance(nodes, Fragment):
             return nodes
         if isinstance(nodes, Sequence):
-            return cls.from_array(cast(list["Node"], list(nodes)))
+            return cls.from_array(list(nodes))
         if hasattr(nodes, "attrs"):
             return cls([nodes], nodes.node_size)
         hint = (
@@ -343,4 +343,4 @@ class Fragment:
 
 Fragment.empty = Fragment([], 0)
 
-from . import node as pm_node  # noqa: E402
+from . import node as pm_node  # ruff: ignore[module-import-not-at-top-of-file]
