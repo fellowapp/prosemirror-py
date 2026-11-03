@@ -62,7 +62,7 @@ class Element(DocumentFragment):
         return f"<{open_tag_str}>{children_str}</{self.name}>"
 
 
-HTMLOutputSpec = str | Sequence[Any] | Element | dict[str, Any]
+HTMLOutputSpec = Sequence[Any] | Element | dict[str, Any]
 
 
 class DOMSerializer:
@@ -211,7 +211,7 @@ def _suspicious_attributes(attrs: Mapping[str, Any]) -> list[Any] | None:
 
 
 def _render_spec(
-    structure: HTMLOutputSpec,
+    structure: HTMLOutputSpec | str,
     xml_ns: str | None = None,
     block_arrays_in: Mapping[str, Any] | None = None,
 ) -> tuple[HTMLNode, Element | None]:
