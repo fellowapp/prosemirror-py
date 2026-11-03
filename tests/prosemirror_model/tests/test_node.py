@@ -334,3 +334,22 @@ class TestToJSON:
         self.round_trip(
             doc(blockquote(ul(li(p("a"), p("b")), li(p(img))), p("c")), p("d")),
         )
+
+    def test_joins_adjacent_text_nodes(self):
+        json = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {"type": "text", "text": "foo", "marks": [{"type": "em"}]},
+                        {"type": "text", "text": "bar", "marks": [{"type": "em"}]},
+                        {"type": "text", "text": "baz"},
+                        {"type": "text", "text": "quux"},
+                    ],
+                },
+            ],
+        }
+        node = schema.node_from_json(json)
+        assert node.eq(doc(p(em("foobar"), "bazquux")))
+        assert node.child(0).child_count == 2

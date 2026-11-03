@@ -289,7 +289,9 @@ class Fragment:
             msg = "Invalid input for Fragment.from_json"
             raise ValueError(msg)
 
-        return cls([schema.node_from_json(cast(JSONDict, item)) for item in value])
+        return cls.from_array([
+            schema.node_from_json(cast(JSONDict, item)) for item in value
+        ])
 
     @classmethod
     def from_array(cls, array: list["Node"]) -> "Fragment":
