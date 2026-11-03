@@ -128,9 +128,13 @@ comparison of dicts and lists.
 ### Resolve Cache
 
 The upstream uses a `WeakMap<Node, ResolveCache>` for caching resolved
-positions. Python uses a `dict[int, _ResolveCache]` keyed by `id(doc)` with a
-`weakref.ref` callback to clean up entries when the document node is garbage
-collected.
+positions. A JavaScript `WeakMap` has ephemeron semantics: the value is kept
+alive only as long as the key is, even though the cached positions reference
+the document. Python's `weakref.WeakKeyDictionary` holds its values strongly,
+so a literal port would keep every resolved document alive forever. The Python
+port instead stores the cache directly on the document node (as a
+`_resolve_cache` attribute), so document -> cache -> positions -> document is an
+ordinary reference cycle that the garbage collector can free.
 
 ### Type System
 
