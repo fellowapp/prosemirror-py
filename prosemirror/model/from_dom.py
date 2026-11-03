@@ -1174,7 +1174,7 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
         seen: list[ContentMatch] = []
 
         def scan(match: ContentMatch) -> bool:
-            seen.append(match)  # noqa: B023
+            seen.append(match)  # ruff: ignore[function-uses-loop-variable]
             i = 0
             while i < match.edge_count:
                 result = match.edge(i)
@@ -1183,7 +1183,7 @@ def mark_may_apply(mark_type: MarkType, node_type: NodeType) -> bool:
 
                 if type_ == node_type:
                     return True
-                if next_ not in seen and scan(next_):  # noqa: B023
+                if next_ not in seen and scan(next_):  # ruff: ignore[function-uses-loop-variable]
                     return True
 
                 i += 1

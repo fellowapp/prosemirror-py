@@ -42,7 +42,7 @@ custom_schema: Schema[
 class TestToString:
     def test_nesting(self):
         node = doc(ul(li(p("hey"), p()), li(p("foo"))))
-        expected = 'doc(bullet_list(list_item(paragraph("hey"), paragraph), list_item(paragraph("foo"))))'  # noqa
+        expected = 'doc(bullet_list(list_item(paragraph("hey"), paragraph), list_item(paragraph("foo"))))'  # ruff: ignore[line-too-long]
         assert str(node) == expected
 
     def test_shows_inline_children(self):

@@ -17,8 +17,6 @@ from prosemirror.model.mark import Mark
 from prosemirror.model.node import Node, TextNode
 from prosemirror.utils import JSON, Attrs, JSONDict
 
-_MISSING = object()
-
 
 def default_attrs(attrs: "Attributes") -> Attrs | None:
     defaults = {}
@@ -30,18 +28,16 @@ def default_attrs(attrs: "Attributes") -> Attrs | None:
 
 
 def compute_attrs(attrs: "Attributes", value: Attrs | None) -> Attrs:
-    built = {}
+    built: dict[str, JSON] = {}
     for name in attrs:
-        given = _MISSING
-        if value:
-            given = value.get(name, _MISSING)
-        if given is _MISSING:
+        if value and name in value:
+            built[name] = value[name]
+        else:
             attr = attrs[name]
             if attr.has_default:
-                given = attr.default
+                built[name] = attr.default
             else:
                 raise ValueError("No value supplied for attribute " + name)
-        built[name] = given
     return built
 
 
@@ -336,7 +332,7 @@ class MarkType:
         self.spec = spec
         self.attrs = init_attrs(name, spec.get("attrs"))
         self.rank = rank
-        self.excluded = None  # type: ignore[assignment]
+        self.excluded = None  # ty: ignore[invalid-assignment]
         defaults = default_attrs(self.attrs)
         self.instance = None
         if defaults:

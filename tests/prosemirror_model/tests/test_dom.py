@@ -496,10 +496,13 @@ def test_can_move_block_node_out_of_paragraph():
 
 
 def test_inserts_line_break_replacements():
-    from prosemirror.model import Schema
+    from prosemirror.model import NodeSpec, Schema
 
-    hb_spec = {**schema.nodes["hard_break"].spec, "linebreakReplacement": True}
-    node_specs = {}
+    hb_spec: NodeSpec = {
+        **schema.nodes["hard_break"].spec,
+        "linebreakReplacement": True,
+    }
+    node_specs: dict[str, NodeSpec] = {}
     for name in schema.nodes:
         if name == "hard_break":
             node_specs[name] = hb_spec

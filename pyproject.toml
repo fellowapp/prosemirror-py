@@ -46,7 +46,7 @@ dev = [
     "coverage>=7.6",
     "pytest>=8.3",
     "pytest-cov>=6.0",
-    "ruff>=0.9",
+    "ruff>=0.17",
     "ty>=0.0.17",
     "types-lxml>=2025.2.24",
 ]

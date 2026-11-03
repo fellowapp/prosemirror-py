@@ -295,4 +295,4 @@ def prepare_slice_for_replace(
     }
 
 
-from . import node as pm_node  # noqa: E402
+from . import node as pm_node  # ruff: ignore[module-import-not-at-top-of-file]

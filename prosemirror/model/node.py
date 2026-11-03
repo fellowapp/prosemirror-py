@@ -369,7 +369,8 @@ class Node:
 
 
 class TextNode(Node):
-    text: str
+    # Upstream declares `text` readonly on Node, so narrowing it here is safe.
+    text: str  # ty: ignore[invalid-mutable-override]
 
     def __init__(
         self,
