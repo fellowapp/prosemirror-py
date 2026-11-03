@@ -46,8 +46,10 @@ dev = [
     "coverage>=7.6",
     "pytest>=8.3",
     "pytest-cov>=6.0",
-    "ruff>=0.17",
-    "ty>=0.0.17",
+    # uv.lock is not committed, so ruff and ty are pinned exactly to keep CI
+    # from picking up new lint rules (or half-uploaded releases) on its own.
+    "ruff==0.17.3",
+    "ty==0.0.95",
     "types-lxml>=2025.2.24",
 ]
 
