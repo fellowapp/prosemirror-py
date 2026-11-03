@@ -32,6 +32,8 @@ strong = out["strong"]
         (doc(p("a"), "<a>", p("b")), doc(p("a"), h1("b"))),
         (doc("<a>", p("b")), doc(h1("b"))),
         (doc(p("a"), "<a>", h1("foo")), doc(p("a"), h2("foo"))),
+        # doesn't start in the middle of a surrogate pair
+        (doc(p("<a>\U0001d6ff")), doc(p("\U0001d6fe"))),
     ],
 )
 def test_find_diff_start(a, b):
@@ -59,6 +61,8 @@ def test_find_diff_start(a, b):
         (doc(p("a"), "<a>", p("b")), doc(h1("a"), p("b"))),
         (doc(p("b"), "<a>"), doc(h1("b"))),
         (doc("<a>", p("hello")), doc(p("hey"), p("hello"))),
+        # doesn't end in the middle of a surrogate pair
+        (doc(p("\U0001d2fe<a>")), doc(p("\U0001d6fe"))),
     ],
 )
 def test_find_diff_end(a, b):
