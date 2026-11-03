@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, TypedDict, cast
 
-from prosemirror.utils import text_length
-
 if TYPE_CHECKING:
     from prosemirror.model.fragment import Fragment
     from prosemirror.model.node import TextNode
@@ -28,12 +26,18 @@ def find_diff_start(a: "Fragment", b: "Fragment", pos: int) -> int | None:
             text_a = cast("TextNode", child_a).text
             text_b = cast("TextNode", child_b).text
             if text_a != text_b:
-                a16 = text_a.encode("utf-16-le")
-                b16 = text_b.encode("utf-16-le")
-                j = 0
-                while j < len(a16) and j < len(b16) and a16[j] == b16[j]:
+                t_a, t_b, j = _code_units(text_a), _code_units(text_b), 0
+                while j < len(t_a) and j < len(t_b) and t_a[j] == t_b[j]:
                     j += 1
-                pos += j // 2
+                    pos += 1
+                if (
+                    j
+                    and j < len(t_a)
+                    and j < len(t_b)
+                    and _surrogate_high(t_a[j - 1])
+                    and _surrogate_low(t_a[j])
+                ):
+                    pos -= 1
                 return pos
         if child_a.content.size or child_b.content.size:
             inner = find_diff_start(child_a.content, child_b.content, pos + 1)
@@ -64,20 +68,26 @@ def find_diff_end(a: "Fragment", b: "Fragment", pos_a: int, pos_b: int) -> Diff 
             text_a = cast("TextNode", child_a).text
             text_b = cast("TextNode", child_b).text
             if text_a != text_b:
-                same = 0
-                min_size = min(text_length(text_a), text_length(text_b))
-                a16 = text_a.encode("utf-16-le")
-                b16 = text_b.encode("utf-16-le")
-                a16_len = len(a16)
-                b16_len = len(b16)
+                t_a, t_b = _code_units(text_a), _code_units(text_b)
+                i_a_text, i_b_text = len(t_a), len(t_b)
                 while (
-                    same < min_size
-                    and a16[a16_len - 2 * same - 2 : a16_len - 2 * same]
-                    == b16[b16_len - 2 * same - 2 : b16_len - 2 * same]
+                    i_a_text > 0
+                    and i_b_text > 0
+                    and t_a[i_a_text - 1] == t_b[i_b_text - 1]
                 ):
-                    same += 1
+                    i_a_text -= 1
+                    i_b_text -= 1
                     pos_a -= 1
                     pos_b -= 1
+                if (
+                    i_a_text
+                    and i_b_text
+                    and i_a_text < len(t_a)
+                    and _surrogate_high(t_a[i_a_text - 1])
+                    and _surrogate_low(t_a[i_a_text])
+                ):
+                    pos_a += 1
+                    pos_b += 1
                 return {"a": pos_a, "b": pos_b}
 
         if child_a.content.size or child_b.content.size:
@@ -92,3 +102,17 @@ def find_diff_end(a: "Fragment", b: "Fragment", pos_a: int, pos_b: int) -> Diff 
 
         pos_a -= size
         pos_b -= size
+
+
+def _code_units(text: str) -> list[int]:
+    # UTF-16 code units, matching JS string indexing.
+    data = text.encode("utf-16-le")
+    return [data[k] | (data[k + 1] << 8) for k in range(0, len(data), 2)]
+
+
+def _surrogate_low(ch: int) -> bool:
+    return 0xDC00 <= ch < 0xE000
+
+
+def _surrogate_high(ch: int) -> bool:
+    return 0xD800 <= ch < 0xDC00
