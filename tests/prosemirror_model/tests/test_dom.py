@@ -448,6 +448,43 @@ def test_can_temporary_shadow_mark_with_another_configuration():
     assert result == expected.to_json()
 
 
+@pytest.mark.parametrize(
+    ("html", "expect"),
+    [
+        (
+            "<p><strong>bold</strong> <strong>text</strong></p>",
+            p(strong("bold"), " ", strong("text")),
+        ),
+        (
+            "<p><strong>bold</strong>\n  <strong>text</strong></p>",
+            p(strong("bold"), " ", strong("text")),
+        ),
+        (
+            "<p>one <strong>two</strong> three four</p>",
+            p("one ", strong("two"), " three four"),
+        ),
+        (
+            "<p>a<strong>b</strong>c</p>",
+            p("a", strong("b"), "c"),
+        ),
+        (
+            "<p><strong>a </strong><strong>b</strong></p>",
+            p(strong("a b")),
+        ),
+    ],
+)
+def test_keeps_whitespace_only_text_between_inline_elements(html, expect):
+    assert from_html(schema, html)["content"] == [expect.to_json()]
+
+
+def test_drops_whitespace_only_text_between_block_elements():
+    result = from_html(schema, "<div>\n  <p>a</p>\n  <p>b</p>\n</div>")
+    assert result["content"] == [
+        {"type": "paragraph", "content": [{"type": "text", "text": "a"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "b"}]},
+    ]
+
+
 def test_preserves_whitespace_in_pre_elements():
     from prosemirror.model import Schema
 

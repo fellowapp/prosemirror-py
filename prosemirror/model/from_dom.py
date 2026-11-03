@@ -143,17 +143,16 @@ class DOMParser:
     @staticmethod
     def _wrap_lxml_text(dom_: lxml.html.HtmlElement) -> None:
         for d in itertools.chain([dom_], dom_.iterdescendants()):
-            if (
-                d.text is not None
-                and d.text.strip()
-                and str(d.tag).lower() != "lxmltext"
-            ):
+            # Wrap any non-empty text, including whitespace-only text:
+            # `add_text_node` decides whether whitespace is significant
+            # (e.g. a single space between two inline elements).
+            if d.text and str(d.tag).lower() != "lxmltext":
                 child = lxml.html.Element("lxmltext")
                 child.text = d.text
                 d.insert(0, child)
                 d.text = None
 
-            if d.tail is not None and d.tail.strip():
+            if d.tail:
                 parent = d.getparent()
                 if parent is not None:
                     child = lxml.html.Element("lxmltext")
