@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     permissions:
       contents: read
       pull-requests: write
@@ -20,14 +20,14 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install uv
+      - run: pip install --upgrade uv
       - run: uv venv
       - run: uv sync
       - run: uv run pytest --cov=./prosemirror/ --cov-report=term --cov-report=json:coverage.json
       # The two steps below report coverage changes on PRs. They are informational
       # only and never fail the check, even when coverage drops.
       - name: Measure coverage on the PR base
-        if: matrix.python-version == '3.14' && github.event_name == 'pull_request'
+        if: matrix.python-version == '3.15' && github.event_name == 'pull_request'
         continue-on-error: true
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -38,7 +38,7 @@ jobs:
           uv sync
           uv run pytest -q --cov=./prosemirror/ --cov-report=json:"$RUNNER_TEMP/base-coverage.json"
       - name: Comment when coverage changed
-        if: matrix.python-version == '3.14' && github.event_name == 'pull_request'
+        if: matrix.python-version == '3.15' && github.event_name == 'pull_request'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.15"
-      - run: pip install uv
+      - run: pip install --upgrade uv
       - run: uv venv
       - run: uv sync
       - run: uv run ruff format --check prosemirror tests

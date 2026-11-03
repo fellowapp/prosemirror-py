@@ -16,6 +16,6 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.15"
-      - run: pip install uv
+      - run: pip install --upgrade uv
       - run: uv build
       - run: uv publish
