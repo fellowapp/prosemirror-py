@@ -6,7 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from prosemirror.model import MarkType, Node, NodeType, Schema
-from prosemirror.utils import Attrs, JSONDict
+from prosemirror.utils import Attrs, JSONDict, text_length
 
 NO_TAG = Node.tag = {}
 
@@ -24,13 +24,13 @@ def flatten(
             out = ""
             for m in re.finditer(r"<(\w+)>", child):
                 out += child[at : m.start()]
-                pos += m.start() - at
+                pos += text_length(child[at : m.start()])
                 at = m.start() + len(m[0])
                 if tag == NO_TAG:
                     tag = {}
                 tag[m[1]] = pos
             out += child[at:]
-            pos += len(child) - at
+            pos += text_length(child[at:])
             if out:
                 result.append(f(schema.text(out)))
         else:
