@@ -44,7 +44,7 @@ Changelog = "https://github.com/fellowapp/prosemirror-py/releases"
 dev = [
     # uv.lock is not committed, so dev tools are pinned exactly to keep CI from
     # picking up new lint rules (or half-uploaded releases) on its own.
-    "coverage==7.17.0",
+    "coverage==7.17.3",
     "pytest==9.2.0",
     "pytest-cov==7.1.0",
     "ruff==0.17.3",
